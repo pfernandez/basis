@@ -1,0 +1,171 @@
+// Core utility functions
+export const first = ([value]) => value
+
+export const second = ([_, value]) => value
+
+export const rest = ([_, ...array]) => array
+
+export const slice = (array, start, end) => array.slice(start, end)
+
+export const last = array => first(slice(array, -1))
+
+export const log = (...values) => (console.log(...values), last(values))
+
+export const error = string => { throw new Error(string) }
+
+export const length = array => array.length
+
+export const bool = value => !!value
+
+// Comparison
+export const eq = (x, y) => x === y
+export const neq = (x, y) => x !== y
+export const lt = (x, y) => x < y
+export const lte = (x, y) => x <= y
+export const gt = (x, y) => x > y
+export const gte = (x, y) => x >= y
+
+
+// Arithmetic
+export const add = (x, y) => x + y
+export const sub = (x, y) => x - y
+export const mul = (x, y) => x * y
+export const div = (x, y) => x / y
+export const mod = (x, y) => x % y
+export const inc = x => x + 1
+export const dec = x => x - 1
+
+// Aggregates
+export const max = array => Math.max(...array)
+export const min = array => Math.min(...array)
+export const avg = array => sum(...array) / length(array)
+
+// Functional control
+export const when = (value, then, otherwise) => value ? then : otherwise
+export const not = value => !value
+export const and = (x, y) => x && y
+export const or = (x, y) => x || y
+export const identity = value => value
+export const apply = (fn, array) => fn.apply(null, array)
+export const partial = (fn, ...values) => fn.bind(null, ...values)
+export const pipe = (...fns) => input => fns.reduce((x, f) => f(x), input)
+export const compose = (...fns) => input => fns.reduceRight((x, f) => f(x), input)
+export const constant = x => () => x
+
+export const exists = value => not(type(value, 'undefined'))
+
+export const type = (value, type) =>
+  type ? eq(typeof value, type) : typeof value
+
+// Value Predicates
+export const isInstance = (value, type) => value instanceof type
+export const isString = value => typeof value === 'string'
+export const isNumber = x => type(x, 'number')
+export const isBoolean = x => type(x, 'boolean')
+export const isNil = x => eq(x, null) || eq(x, undefined)
+export const isObject = value =>
+  and(type(value, 'object'), not(eq(value, null)))
+export const {isArray} = Array
+export const isFunction = value => type(value, 'function')
+export const isEmpty = value =>
+  isObject(value)
+    ? !length(isArray(value) ? value : keys(value))
+    : bool(value)
+
+export const {keys, entries} = Object
+
+export const some = (array, fn) => array.some(fn)
+
+export const every = (...values) => values.every(v => v)
+
+export const find = (array, fn) => array.find(fn)
+
+export const omit = (object, key) => (({[key]: _, ...o}) => o)(object)
+
+export const each = (array, fn) => array.forEach(fn)
+
+export const reduce = (array, fn, value) => array.reduce(fn, value)
+
+export const map = (array, fn) => array.map(fn)
+
+export const omap = (object, fn) =>
+  reduce(entries(object), (o, [k, v]) => ({...o, ...fn(k, v)}), {})
+
+export const deepMap = (value, fn) =>
+  isArray(value) ? map(value, v => deepMap(v, fn))
+    : isObject(value) ? omap(value, v => deepMap(v, fn))
+      : fn(value)
+
+export const replace = (string, match, replacement) =>
+  string.replace(match, replacement)
+
+export const split = (array, separator, limit) => array.split(separator, limit)
+
+export const filter = (array, fn) => array.filter(fn)
+
+export const join = (array, separator) => array.join(separator)
+
+export const append = (value, array) => array.concat([value])
+
+export const reverse = array => [...array].reverse()
+
+export const flat = (array, depth) => array.flat(depth)
+
+export const sum = (array) => array.reduce((x, y) => x + y)
+
+export const walk = (root, f) => each(f(root), node => walk(node, f))
+
+export const globalize = object =>
+  each(entries(object),
+       /* global global, window */
+       ([k, v]) => window ? window[k] = v : global[k] = v)
+
+/**
+ * Recursively evaluates an array expression.
+ *
+ * * If first element in the array is a function, the array is a "function
+ * application". The remaining elements will be passsed to it as its arguments.
+ * * Any arguments that themselves are function applications will be evaluated
+ * first, and so on down the tree.
+ * * Array expressions without a leading function are treated as data and
+ * returned unaffected. Any function applications they contain will _not_ be
+ * evaluated.
+ *
+ * @param {array} [f, ...rest]
+ * @returns {*} The the result of the evaluated array expression.
+ *
+ * @example
+ * evaluate(
+ *   [log,
+ *     1,
+ *     [add, 1, 1],
+ *     [add,
+ *       1,
+ *       [add, 1, 1]]])  // -> 1 2 3
+ */
+export const evaluate = ([fn, ...rest]) =>
+  apply(fn,
+        map(rest, value =>
+          !(isArray(value) && isFunction(first(value)))
+            ? value : evaluate(value)))
+
+// TODO: Keep necessary spaces and combine regexes.
+export const parseLisp = string =>
+  eval(string
+    .replace(/\n/g, ' ')
+    .split(' ')
+    .filter(s => s)
+    .join()
+    .replace(/\(/g, '[')
+    .replace(/\)/g, ']'))
+
+/*
+evaluate(parseLisp(`
+  (log
+    1
+    (add 1 1)
+    (add
+      1
+      (add 1 1)))
+`))
+*/
