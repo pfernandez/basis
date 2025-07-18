@@ -1,6 +1,6 @@
-import { runExperiment } from './growth.js';
+import { reportChiralityStats, runBatch, runExperiment } from './growth.js';
 
-console.log('Running experiment...');
-
-runExperiment();
+// runExperiment();
+runBatch(100);
+reportChiralityStats();
 

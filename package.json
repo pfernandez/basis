@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "start": "npx http-server -o",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "print:catalan": "node src/catalan.js 3 --center --match='()()'"
   },
   "author": "Paul Fernandez",
   "license": "UNLICENSED"
