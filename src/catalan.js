@@ -1,28 +1,34 @@
 #!/usr/bin/env node
 
-function generate(n) {
-  if (n === 0) return ['()'];
+const BLUE = '\x1b[34m';
+const RED = '\x1b[31m';
+const RESET = '\x1b[0m';
+
+function generateColored(n, side = null) {
+  if (n === 0) {
+    return ['()'];
+  }
   const result = [];
   for (let k = 0; k < n; k++) {
-    const lefts = generate(k);
-    const rights = generate(n - 1 - k);
+    const lefts = generateColored(k, 'left');
+    const rights = generateColored(n - 1 - k, 'right');
     for (const left of lefts) {
       for (const right of rights) {
-        result.push(`(${left}${right})`);
+        const parenColor = side === 'left' ? BLUE : side === 'right' ? RED : '';
+        result.push(`${parenColor}(${RESET}${left}${right}${parenColor})${RESET}`);
       }
     }
   }
   return result;
 }
 
-function catalanPyramid(maxN = 3) {
+function catalanPyramidColored(maxN = 3) {
   for (let n = 0; n <= maxN; n++) {
-    const forms = generate(n);
+    const forms = generateColored(n);
     console.log(`n=${n}: ${forms.join(' ')}`);
   }
 }
 
-// If called directly from command line with argument
 const maxN = process.argv[2] ? parseInt(process.argv[2], 10) : 3;
-catalanPyramid(maxN);
+catalanPyramidColored(maxN);
 
