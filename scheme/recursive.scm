@@ -1,7 +1,6 @@
 (define (link x y) (cons x y))
 (define (focus frame) (car frame))
 (define (next frame) (cdr frame))
-(define (atom-frame x) (link x '()))
 
 (define frame
   (link 'A (link 'B (link 'C 'D))))
@@ -14,7 +13,7 @@
 
 (define (step cursor program)
   (cond
-    ((not (pair? cursor)) '())
+    ((not (pair? cursor)) '())  ; null  != empty pair in Scheme
     (else
      (let ((op (focus program)))
        (step
@@ -25,10 +24,5 @@
         (next program))))))
 
 
-
-#!##############################################################################
-
 (step frame (next agent))
-
-##############################################################################!#
 
