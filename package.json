@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "dyck": "node src/index.js --simulation=dyck",
+    "dyck:tools": "node src/dyck-tools.cjs",
     "dyck:center": "node src/index.js --center --simulation=dyck",
     "pairs": "node src/index.js --simulation=pairs",
     "pairs:center": "node src/index.js --center --simulation=pairs",
