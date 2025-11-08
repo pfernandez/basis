@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url';
+
 /* dyck-tools.js
  *
  * Utilities for working with Dyck words (balanced parentheses), η-normalization,
@@ -219,7 +221,8 @@ function stripEtaText(s) {
 
 /////////////////////////////// CLI demo //////////////////////////////////////
 
-if (require.main === module) {
+const currentFile = fileURLToPath(import.meta.url);
+if (process.argv[1] === currentFile) {
   // Demo 1: analyze a few user-supplied strings or defaults
   const inputs = process.argv.slice(2);
   const samples = inputs.length ? inputs : [
@@ -270,7 +273,7 @@ if (require.main === module) {
 
 /////////////////////////////// Exports ///////////////////////////////////////
 
-module.exports = {
+export {
   Leaf, Node, isLeaf,
   factorDyck, parseTree, etaNormalizeTree, canonicalize,
   serialize, hashTree, countPairs,

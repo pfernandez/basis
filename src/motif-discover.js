@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { fileURLToPath } from 'node:url';
+
 /**
  * motif-discover.js
  *
@@ -230,7 +232,8 @@ function discoverMotifs(maxN = MAX_N, runsPerTree = RUNS_PER_TREE) {
 
 //////////////////// CLI //////////////////////////////////////////////////////
 
-if (require.main === module) {
+const currentFile = fileURLToPath(import.meta.url);
+if (process.argv[1] === currentFile) {
   const { motifs, startCounts } = discoverMotifs();
 
   console.log('=== Start cores (primitive only, η-normalized=' + USE_ETA + ', freezeBalanced=' + FREEZE_BALANCED + ') ===');
@@ -253,4 +256,3 @@ Notes:
   - drop --freeze-balanced to let everything flow to terminals
 `);
 }
-

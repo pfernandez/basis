@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "dyck": "node src/index.js --simulation=dyck",
-    "dyck:tools": "node src/dyck-tools.cjs",
+    "dyck:tools": "node src/dyck-tools.js",
     "dyck:center": "node src/index.js --center --simulation=dyck",
     "pairs": "node src/index.js --simulation=pairs",
     "pairs:center": "node src/index.js --center --simulation=pairs",
@@ -15,7 +15,7 @@
     "motzkin:center": "node src/index.js --center --simulation=motzkin",
     "motzkin:spine": "node src/index.js --simulation=motzkin --spine",
     "motzkin:spine:center": "node src/index.js --center --simulation=motzkin --spine",
-    "test": "node tests/*"
+    "test": "node --test tests/*.test.js"
   },
   "author": "Paul Fernandez",
   "license": "UNLICENSED"
