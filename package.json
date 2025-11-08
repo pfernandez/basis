@@ -21,6 +21,7 @@
     "motifs:lighter": "node src/motif-discover.js --policy=lighter",
     "motifs:left": "node src/motif-discover.js --policy=left",
     "motifs:right": "node src/motif-discover.js --policy=right",
+    "sk": "node src/sk.js",
     "bijections": "node src/bijection.js",
     "test": "node --test tests/*.test.js"
   },
