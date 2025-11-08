@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { fileURLToPath } from 'node:url';
+import { createCollapsePolicy, COLLAPSE_MODES } from './collapse-policy.js';
 
 /**
  * motif-discover.js
@@ -25,6 +26,8 @@ const MAX_STEPS = 800;
 const MIN_MOTIF_SIZE = 3;
 const USE_ETA = !process.argv.includes('--no-eta');
 const FREEZE_BALANCED = process.argv.includes('--freeze-balanced');
+const policyArg = process.argv.find(arg => arg.startsWith('--policy='));
+const COLLAPSE_MODE = policyArg ? policyArg.split('=')[1] : COLLAPSE_MODES.HEAVIER;
 const EPS = 0.2; // 20% explore, 80% deepest-first
 
 //////////////////// BASIC TREE STUFF //////////////////////////////////
@@ -37,6 +40,11 @@ function countPairs(t) {
   if (isLeaf(t)) return 0;
   return 1 + countPairs(t.L) + countPairs(t.R);
 }
+
+const collapseWithPolicy = createCollapsePolicy(countPairs, {
+  mode: COLLAPSE_MODE,
+  freezeBalanced: FREEZE_BALANCED,
+});
 
 function serialize(t) {
   if (isLeaf(t)) return '()';
@@ -140,23 +148,6 @@ function setByPath(t, path, sub) {
   return Node(t.L, setByPath(t.R, rest, sub));
 }
 
-/** local collapse (keep-heavier) with optional motif freeze + 5% keep-lighter */
-function collapseNode(node) {
-  if (isLeaf(node)) return Leaf;
-  const { L, R } = node;
-  const uL = countPairs(L), uR = countPairs(R);
-
-  if (FREEZE_BALANCED && Math.abs(uL - uR) <= 1) {
-    return node; // treat as motif, don't collapse
-  }
-
-  // small chance to pick the lighter branch so we don't get stuck
-  if (Math.random() < 0.05) {
-    return uL <= uR ? L : R;
-  }
-  return uL >= uR ? L : R;
-}
-
 /** one ε-greedy deepest-first collapse step */
 function randomCollapseStep(t) {
   const redexes = collectRedexes(t);
@@ -179,7 +170,7 @@ function randomCollapseStep(t) {
     return { tree: t, done: true };
   }
 
-  const collapsed = collapseNode(sub);
+  const collapsed = collapseWithPolicy(sub);
   const done = collapsed === sub; // frozen
   return { tree: setByPath(t, choicePath, collapsed), done };
 }
@@ -238,7 +229,7 @@ const currentFile = fileURLToPath(import.meta.url);
 if (process.argv[1] === currentFile) {
   const { motifs, startCounts } = discoverMotifs();
 
-  console.log('=== Start cores (primitive only, η-normalized=' + USE_ETA + ', freezeBalanced=' + FREEZE_BALANCED + ') ===');
+  console.log('=== Start cores (primitive only, η-normalized=' + USE_ETA + ', freezeBalanced=' + FREEZE_BALANCED + ', policy=' + COLLAPSE_MODE + ') ===');
   for (const [h, c] of startCounts.entries()) {
     console.log(`${h}  starts=${c}`);
   }
@@ -252,6 +243,7 @@ if (process.argv[1] === currentFile) {
 Flags:
   --no-eta           disable (() x) -> x pre-collapse
   --freeze-balanced  stop collapsing when |L|-|R| <= 1
+  --policy=<mode>    pick collapse strategy (heavier | lighter | left | right)
 
 Notes:
   - raise MIN_MOTIF_SIZE to 4–5 to preserve even bigger motifs

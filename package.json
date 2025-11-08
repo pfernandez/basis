@@ -15,6 +15,12 @@
     "motzkin:center": "node src/index.js --center --simulation=motzkin",
     "motzkin:spine": "node src/index.js --simulation=motzkin --spine",
     "motzkin:spine:center": "node src/index.js --center --simulation=motzkin --spine",
+    "motifs": "node src/motif-discover.js",
+    "motifs:freeze": "node src/motif-discover.js --freeze-balanced",
+    "motifs:heavier": "node src/motif-discover.js --policy=heavier",
+    "motifs:lighter": "node src/motif-discover.js --policy=lighter",
+    "motifs:left": "node src/motif-discover.js --policy=left",
+    "motifs:right": "node src/motif-discover.js --policy=right",
     "bijections": "node src/bijection.js",
     "test": "node --test tests/*.test.js"
   },
