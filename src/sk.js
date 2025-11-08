@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 /*
@@ -10,19 +11,19 @@ import { fileURLToPath } from 'node:url';
  *   K ≡ ((()())())
  *   S ≡ (((()())())())
  *
- * Expressions are written in a tiny Lisp syntax. `(f a b c)` means
- * (((f a) b) c) and identifiers other than I/K/S are treated as variables.
+ * In this version, those Dyck shapes are loaded from an external Lisp file so
+ * that we can experiment with deriving everything from the base leaf `()`.
+ * See `programs/sk-basis.lisp` for the canonical construction using only
+ * `(node … …)` and the leaf. Expressions are written in a tiny Lisp syntax:
+ * `(f a b c)` means (((f a) b) c) and identifiers other than I/K/S are treated
+ * as variables.
  * Reduction uses normal-order SK rules so we can demonstrate identities such
  * as K a b → a and S K K → I.
  */
 
-const DYCK_COMBINATORS = Object.freeze({
-  I: '(()())',
-  K: '((()())())',
-  S: '(((()())())())',
-});
+const combinatorDyck = new Map();
 
-const COMBINATOR_NAMES = new Set(Object.keys(DYCK_COMBINATORS));
+const COMBINATOR_NAMES = new Set(['I', 'K', 'S']);
 
 const TYPE = {
   APP: 'app',
@@ -33,6 +34,9 @@ const TYPE = {
 const App = (fn, arg) => ({ type: TYPE.APP, fn, arg });
 const Comb = (name) => ({ type: TYPE.COMB, name });
 const Var = (name) => ({ type: TYPE.VAR, name });
+
+const Leaf = null;
+const Node = (L, R) => ({ L, R });
 
 function tokenize(input) {
   return input.match(/[()]|[^\s()]+/g) ?? [];
@@ -179,14 +183,112 @@ function expressionsEqual(a, b) {
 }
 
 function dyckFor(expr) {
-  if (expr.type === TYPE.COMB && DYCK_COMBINATORS[expr.name]) {
-    return DYCK_COMBINATORS[expr.name];
+  if (expr.type === TYPE.COMB && combinatorDyck.has(expr.name)) {
+    return combinatorDyck.get(expr.name);
   }
   return null;
 }
 
+function serializeTree(tree) {
+  if (tree === Leaf) return '()';
+  return `(${serializeTree(tree.L)}${serializeTree(tree.R)})`;
+}
+
+function sanitizeSource(source) {
+  return source.replace(/;.*$/gm, '').trim();
+}
+
+function tokenizeDefs(source) {
+  return sanitizeSource(source).match(/[()]|[^\s()]+/g) ?? [];
+}
+
+function readAllForms(tokens) {
+  const forms = [];
+  let index = 0;
+
+  function read() {
+    const token = tokens[index++];
+    if (token === undefined) {
+      throw new Error('Unexpected end of definitions while reading');
+    }
+    if (token === '(') {
+      const list = [];
+      while (tokens[index] !== ')' && index < tokens.length) {
+        list.push(read());
+      }
+      if (tokens[index] !== ')') {
+        throw new Error('Missing ) in definition');
+      }
+      index += 1; // consume ')'
+      return list;
+    }
+    if (token === ')') {
+      throw new Error('Unexpected ) in definition');
+    }
+    return token;
+  }
+
+  while (index < tokens.length) {
+    forms.push(read());
+  }
+  return forms;
+}
+
+function evalTreeExpr(expr, env) {
+  if (Array.isArray(expr)) {
+    if (expr.length === 0) {
+      return Leaf; // () literal
+    }
+    const [op, ...rest] = expr;
+    if (op === 'node') {
+      if (rest.length !== 2) {
+        throw new Error('(node left right) expects exactly two arguments');
+      }
+      const left = evalTreeExpr(rest[0], env);
+      const right = evalTreeExpr(rest[1], env);
+      return Node(left, right);
+    }
+    if (op === 'def') {
+      throw new Error('Nested def is not allowed');
+    }
+    throw new Error(`Unknown operator in definition: ${op}`);
+  }
+  if (expr === 'leaf') return Leaf;
+  if (env.has(expr)) return env.get(expr);
+  throw new Error(`Unknown symbol in definition: ${expr}`);
+}
+
+function loadCombinatorDefinitions(path, { reset = true } = {}) {
+  const source = readFileSync(path, 'utf8');
+  const tokens = tokenizeDefs(source);
+  const forms = readAllForms(tokens);
+  const env = new Map();
+
+  if (reset) combinatorDyck.clear();
+
+  forms.forEach((form) => {
+    if (!Array.isArray(form) || form.length !== 3 || form[0] !== 'def') {
+      throw new Error('Each top-level form must be (def NAME EXPR)');
+    }
+    const [, name, expr] = form;
+    const tree = evalTreeExpr(expr, env);
+    env.set(name, tree);
+    combinatorDyck.set(name, serializeTree(tree));
+  });
+
+  return env;
+}
+
 function runCli() {
-  const samples = process.argv.slice(2);
+  const defsArg = process.argv.find(arg => arg.startsWith('--defs='));
+  const defsPath = defsArg
+    ? defsArg.slice('--defs='.length)
+    : fileURLToPath(new URL('../programs/sk-basis.lisp', import.meta.url));
+  loadCombinatorDefinitions(defsPath);
+
+  const samples = process.argv
+    .slice(2)
+    .filter(arg => !arg.startsWith('--defs='));
   const programs = samples.length ? samples : [
     '(I x)',
     '((K x) y)',
@@ -216,5 +318,6 @@ export {
   App,
   Comb,
   Var,
-  DYCK_COMBINATORS,
+  loadCombinatorDefinitions,
+  combinatorDyck,
 };

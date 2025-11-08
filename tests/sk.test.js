@@ -1,10 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import {
   parse,
   format,
   reduce,
+  loadCombinatorDefinitions,
 } from '../src/sk.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+loadCombinatorDefinitions(join(__dirname, '../programs/sk-basis.lisp'));
 
 function reduceToString(source) {
   const { expr } = reduce(parse(source));
