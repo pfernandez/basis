@@ -19,6 +19,11 @@ function evaluateFocus(expr) {
   return treeToString(focus);
 }
 
+function evaluateCollapsed(expr) {
+  const { collapsed } = evaluateExpression(expr, env);
+  return treeToString(collapsed);
+}
+
 test('I returns its argument', () => {
   assert.equal(evaluateFocus('(I a)'), 'a');
 });
@@ -27,8 +32,10 @@ test('K exposes its first argument at the focus', () => {
   assert.equal(evaluateFocus('((K a) b)'), 'a');
 });
 
-test('S duplicates the context at the focus', () => {
-  assert.equal(evaluateFocus('(((S a) b) c)'), '((a c)(b c))');
+test('S duplicates the context structure', () => {
+  // We compare full structure (not focus) because the future branch must
+  // remain entangled as ((a c) (b c)). Spacing is significant here.
+  assert.equal(evaluateCollapsed('(((S a) b) c)'), '((a c) (b c))');
 });
 
 test('structural potential counts internal pairs (gravitational U)', () => {
@@ -44,7 +51,7 @@ test('gravity trace describes why (() x) collapses to x', () => {
     logger: message => logs.push(message),
   });
   assert.ok(
-    logs.some(line => line.includes('before: L=1, R=0')),
-    `expected gravity trace to mention pre-collapse structural potentials, saw: ${logs.join('\n')}`,
+    logs.some(line => line.includes('left collapsed') && line.includes('U_after=0')),
+    `expected gravity trace to mention collapse potentials, saw: ${logs.join('\n')}`,
   );
 });

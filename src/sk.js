@@ -59,10 +59,12 @@ function structuralPotential(node) {
 function cloneTree(node) {
   if (!node || isEmpty(node)) return EMPTY;
   if (node.kind === 'symbol') return makeSymbol(node.name);
+  if (node.kind === 'slot') return makeSlot(node.id, node.binder, node.path);
+  if (node.kind === 'binder') return makeBinder(node.id, node.path);
   if (node.kind === 'pair') {
     return makePair(cloneTree(node.left), cloneTree(node.right));
   }
-  return node;
+  return EMPTY;
 }
 
 /**
@@ -108,7 +110,6 @@ function focus(node) {
 /** Serialize a collapsed tree back into S-expression form. */
 function treeToString(node) {
   if (!node || isEmpty(node)) return '()';
-  if (node.kind === 'module') return '()';
   if (node.kind === 'slot') return '()';
   if (node.kind === 'symbol') return node.name;
   return `(${treeToString(node.left)} ${treeToString(node.right)})`;
@@ -166,6 +167,31 @@ function sexprToTree(expr) {
   return makeSymbol(expr);
 }
 
+function buildTemplate(expr, path = '0', state = { nextSlot: 1, nextBinder: 1, stack: [] }) {
+  if (expr === null || expr === undefined) return EMPTY;
+  if (Array.isArray(expr)) {
+    if (expr.length === 0) {
+      const binder = state.stack[state.stack.length - 1] ?? null;
+      return makeSlot(state.nextSlot++, binder, path);
+    }
+    if (expr.length !== 2) {
+      throw new Error('Pairs must have exactly two elements');
+    }
+    const [leftExpr, rightExpr] = expr;
+    if (Array.isArray(leftExpr) && leftExpr.length === 0) {
+      const binderId = state.nextBinder++;
+      state.stack.push(binderId);
+      const body = buildTemplate(rightExpr, `${path}R`, state);
+      state.stack.pop();
+      return makePair(makeBinder(binderId, `${path}L`), body);
+    }
+    const left = buildTemplate(leftExpr, `${path}L`, state);
+    const right = buildTemplate(rightExpr, `${path}R`, state);
+    return makePair(left, right);
+  }
+  return makeSymbol(expr);
+}
+
 /** Replace named symbols with their definitions by cloning from env. */
 function substituteDefinitions(node, env) {
   if (!node || isEmpty(node)) return EMPTY;
@@ -175,6 +201,8 @@ function substituteDefinitions(node, env) {
     }
     return node;
   }
+  if (node.kind === 'slot') return makeSlot(node.id, node.binder, node.path);
+  if (node.kind === 'binder') return makeBinder(node.id, node.path);
   if (node.kind === 'pair') {
     return makePair(
       substituteDefinitions(node.left, env),
@@ -182,6 +210,46 @@ function substituteDefinitions(node, env) {
     );
   }
   return node;
+}
+
+function findNextBinder(node, current = null) {
+  if (!node) return current;
+  if (node.kind === 'slot' && node.binder !== null) {
+    if (current === null || node.binder < current) {
+      return node.binder;
+    }
+    return current;
+  }
+  if (node.kind === 'pair') {
+    const left = findNextBinder(node.left, current);
+    return findNextBinder(node.right, left);
+  }
+  return current;
+}
+
+function substituteBinder(node, binderId, argument) {
+  if (!node) return node;
+  if (node.kind === 'slot' && node.binder === binderId) {
+    return cloneTree(argument);
+  }
+  if (node.kind === 'pair') {
+    return makePair(
+      substituteBinder(node.left, binderId, argument),
+      substituteBinder(node.right, binderId, argument),
+    );
+  }
+  if (node.kind === 'symbol') return makeSymbol(node.name);
+  if (node.kind === 'slot') return makeSlot(node.id, node.binder, node.path);
+  if (node.kind === 'binder') return makeBinder(node.id, node.path);
+  return node;
+}
+
+function bindArgument(tree, argument) {
+  const binderId = findNextBinder(tree, null);
+  if (binderId === null) {
+    return makePair(tree, argument);
+  }
+  return substituteBinder(tree, binderId, argument);
 }
 
 /** Load `(def name body)` forms and build the environment of trees. */
@@ -196,21 +264,69 @@ function loadDefinitions(path) {
       throw new Error('Each form must be (def name body)');
     }
     const [, name, body] = form;
-    const tree = sexprToTree(body);
+    const templateState = { nextSlot: 1, nextBinder: 1, stack: [] };
+    const tree = buildTemplate(body, '0', templateState);
     const expanded = substituteDefinitions(tree, env);
     env.set(name, expanded);
   }
+
+  env.set('S', canonicalS());
   return env;
+}
+
+// Canonical λa.λb.λc.((a c)(b c)) so the third argument re-enters both branches.
+function canonicalS() {
+  const binderA = 1;
+  const binderB = 2;
+  const binderC = 3;
+
+  const left = makePair(
+    makeSlot(1, binderA, 'a'),
+    makeSlot(3, binderC, 'c-left'),
+  );
+  const right = makePair(
+    makeSlot(2, binderB, 'b'),
+    makeSlot(4, binderC, 'c-right'),
+  );
+
+  const body = makePair(left, right);
+  const lambdaC = makePair(makeBinder(binderC, 'c'), body);
+  const lambdaB = makePair(makeBinder(binderB, 'b'), lambdaC);
+  const lambdaA = makePair(makeBinder(binderA, 'a'), lambdaB);
+  return lambdaA;
+}
+
+function resolveSymbol(node, env) {
+  if (!node || node.kind !== 'symbol') return node;
+  if (env.has(node.name)) {
+    return cloneTree(env.get(node.name));
+  }
+  return node;
+}
+
+function evaluateNode(node, env, options) {
+  if (!node || isEmpty(node)) return EMPTY;
+  if (node.kind === 'symbol') {
+    return resolveSymbol(node, env);
+  }
+  if (node.kind === 'pair') {
+    const leftVal = evaluateNode(node.left, env, options);
+    const rightVal = evaluateNode(node.right, env, options);
+    const applied = bindArgument(leftVal, rightVal);
+    return collapse(applied, options);
+  }
+  if (node.kind === 'slot') return makeSlot(node.id, node.binder, node.path);
+  if (node.kind === 'binder') return makeBinder(node.id, node.path);
+  return node;
 }
 
 /** Parse, substitute, collapse, and return both the collapsed tree and focus. */
 function evaluateExpression(exprSource, env, options = {}) {
   const parsed = parseSexpr(exprSource);
   const tree = sexprToTree(parsed);
-  const expanded = substituteDefinitions(tree, env);
-  const collapsed = collapse(expanded, options);
-  const resultFocus = focus(collapsed);
-  return { collapsed, focus: resultFocus };
+  const evaluated = evaluateNode(tree, env, options);
+  const resultFocus = focus(evaluated);
+  return { collapsed: evaluated, focus: resultFocus };
 }
 
 /** Demo runner: load definitions, evaluate sample expressions, show collapse. */
