@@ -20,6 +20,7 @@ import { fileURLToPath } from 'node:url';
  * single rule fires and how the `car` (focus) is extracted afterward.
  */
 
+/** Sentinel node used everywhere the theory refers to the raw void `()`. */
 const EMPTY = { kind: 'empty' };
 
 const NODE_TYPES = {
@@ -30,10 +31,12 @@ const NODE_TYPES = {
 };
 
 let binderCounter = 1;
+/** Create a unique binder node so slots can point back to the same identity. */
 function makeBinder() {
   return { kind: NODE_TYPES.BINDER, token: Symbol('binder'), label: binderCounter++ };
 }
 
+/** Create a slot that re-enters the supplied binder when collapse occurs. */
 function makeSlot(binder) {
   return { kind: NODE_TYPES.SLOT, binder };
 }
@@ -53,6 +56,11 @@ function makeSymbol(name) {
   return { kind: 'symbol', name };
 }
 
+/**
+ * Convert an expression that still contains friendly parameter names into
+ * explicit De Bruijn slots. Once desugared, every reference becomes `#n`, which
+ * the template builder can translate directly into pointer-equal slots.
+ */
 function convertExprToDeBruijn(expr, context) {
   if (expr === null || expr === undefined) return expr;
   if (Array.isArray(expr)) {
@@ -69,6 +77,11 @@ function convertExprToDeBruijn(expr, context) {
   return expr;
 }
 
+/**
+ * Recursively wrap a body with as many binder pairs as there are parameters.
+ * Each step pushes the new name into `context` so the body rewrite can locate
+ * the right binder depth.
+ */
 function wrapParamsWithBinders(params, bodyExpr, context = []) {
   if (!params.length) {
     return convertExprToDeBruijn(bodyExpr, context);
@@ -82,6 +95,10 @@ function wrapParamsWithBinders(params, bodyExpr, context = []) {
   return [[], inner];
 }
 
+/**
+ * Transform `(defn name (params) body)` into the plain `(def name body)` form
+ * using the De Bruijn conversion helpers above.
+ */
 function desugarDefnForm(form) {
   if (form.length !== 4) {
     throw new Error('(defn name (params) body) requires exactly 4 elements');
@@ -95,6 +112,7 @@ function desugarDefnForm(form) {
 }
 
 /** Count the number of internal pairs (structural potential / U) in a tree. */
+/** Measure how much “tension” lives inside a tree by counting internal pairs. */
 function structuralPotential(node) {
   if (!node || isEmpty(node) || node.kind === NODE_TYPES.SYMBOL) return 0;
   if (node.kind === NODE_TYPES.PAIR) {
@@ -104,6 +122,7 @@ function structuralPotential(node) {
 }
 
 /** Deep-clone a tree so named definitions can be reused safely. */
+/** Deep copy a tree while preserving binder identity for every slot. */
 function cloneTree(node, binderMap = new Map()) {
   if (!node || isEmpty(node)) return EMPTY;
   if (node.kind === NODE_TYPES.SYMBOL) return makeSymbol(node.name);
@@ -130,6 +149,10 @@ function cloneTree(node, binderMap = new Map()) {
 /**
  * Apply the Catalan rule recursively: drop neutral wrappers `(() x) → x`.
  * Any remaining structure is rebuilt as a pair of collapsed children.
+ */
+/**
+ * Apply the single Catalan rewrite `(() x) → x`. The rest of the interpreter is
+ * just scaffolding for building the trees this rule acts upon.
  */
 function collapse(node, options = {}) {
   if (!node || isEmpty(node)) return EMPTY;
@@ -161,6 +184,7 @@ function collapse(node, options = {}) {
 }
 
 /** Repeatedly take `car` (left child) until a symbol/empty node is found. */
+/** Keep following the left spine until the surviving focus is found. */
 function focus(node) {
   if (!node || isEmpty(node)) return EMPTY;
   if (node.kind === 'pair') return focus(node.left);
@@ -168,6 +192,7 @@ function focus(node) {
 }
 
 /** Serialize a collapsed tree back into S-expression form. */
+/** Convert an internal tree back into printable S-expression form. */
 function treeToString(node) {
   if (!node || isEmpty(node)) return '()';
   if (node.kind === NODE_TYPES.SLOT) return '()';
@@ -177,12 +202,14 @@ function treeToString(node) {
 }
 
 /** Tokenize a definition file, stripping comments and splitting on parens. */
+/** Strip comments and break a definition file into the tokens we need. */
 function tokenize(source) {
   const stripped = source.replace(/;.*$/gm, '');
   return stripped.match(/[()]|[^\s()]+/g) ?? [];
 }
 
 /** Recursively parse tokens into an S-expression list. */
+/** Standard recursive-descent parser for balanced parentheses. */
 function parseTokens(tokens) {
   if (tokens.length === 0) {
     throw new Error('Unexpected EOF while parsing');
@@ -205,6 +232,7 @@ function parseTokens(tokens) {
 }
 
 /** Parse a single S-expression from a source string. */
+/** Parse a whole source string into one S-expression. */
 function parseSexpr(source) {
   const tokens = tokenize(source);
   if (tokens.length === 0) return null;
@@ -216,6 +244,7 @@ function parseSexpr(source) {
 }
 
 /** Convert an S-expression into a plain binary tree (used for utilities). */
+/** Utility for tests: turn a parsed S-expression into a plain tree. */
 function sexprToTree(expr) {
   if (expr === null || expr === undefined) return EMPTY;
   if (Array.isArray(expr)) {
@@ -228,12 +257,17 @@ function sexprToTree(expr) {
   return makeSymbol(expr);
 }
 
+/** Track the binder stack while translating parsed expressions into trees. */
 function createTemplateState() {
   return {
     stack: [],
   };
 }
 
+/**
+ * Translate an S-expression into binder/slot aware nodes. This is where `#n`
+ * markers get converted into real pointers.
+ */
 function buildTemplate(expr, state = createTemplateState()) {
   if (expr === null || expr === undefined) return EMPTY;
   if (Array.isArray(expr)) {
@@ -268,6 +302,7 @@ function buildTemplate(expr, state = createTemplateState()) {
 
 /** Replace named symbols with their definitions by cloning from env. */
 /** Load `(def name body)` forms and build the environment of trees. */
+/** Read every `(def …)` (or `(defn …)`) form and materialize binder graphs. */
 function loadDefinitions(path) {
   const source = readFileSync(path, 'utf8');
   const tokens = tokenize(source);
@@ -290,6 +325,7 @@ function loadDefinitions(path) {
 }
 
 /** Parse, substitute, collapse, and return both the collapsed tree and focus. */
+/** Evaluate a user expression against the environment, returning collapse+focus. */
 function evaluateExpression(exprSource, env, options = {}) {
   const parsed = parseSexpr(exprSource);
   const tree = buildTemplate(parsed, createTemplateState());
@@ -298,6 +334,7 @@ function evaluateExpression(exprSource, env, options = {}) {
   return { collapsed, focus: resultFocus };
 }
 
+/** Normal-order evaluation that substitutes named trees and applies collapse. */
 function evaluateNode(node, env, options) {
   if (!node || isEmpty(node)) return EMPTY;
   if (node.kind === NODE_TYPES.SYMBOL) {
@@ -319,6 +356,10 @@ function evaluateNode(node, env, options) {
   return node;
 }
 
+/**
+ * Apply an argument: find the next binder along the evaluation spine, replace
+ * all matching slots with the cloned argument, then recur on the remainder.
+ */
 function bindArgument(tree, argument, options) {
   const binder = findNextBinder(tree);
   if (!binder) {
@@ -334,6 +375,7 @@ function bindArgument(tree, argument, options) {
   return result;
 }
 
+/** Locate the next binder awaiting an argument along the application spine. */
 function findNextBinder(node) {
   if (!node || isEmpty(node)) return null;
   if (node.kind === NODE_TYPES.PAIR) {
@@ -347,6 +389,7 @@ function findNextBinder(node) {
   return null;
 }
 
+/** Replace every slot tied to `binder` with the provided argument tree. */
 function substituteBinder(node, binder, argument, options) {
   if (!node) return node;
   if (node.kind === NODE_TYPES.SLOT) {
@@ -373,6 +416,7 @@ function substituteBinder(node, binder, argument, options) {
 }
 
 /** Demo runner: load definitions, evaluate sample expressions, show collapse. */
+/** CLI helper: read the default basis file and evaluate supplied expressions. */
 function runCli() {
   const args = process.argv.slice(2);
   const defsArg = args.find(arg => arg.startsWith('--defs='));

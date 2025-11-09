@@ -12,6 +12,8 @@ import {
 } from '../src/sk.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+// Load a single shared environment so every test exercises the same pointer
+// graphs produced from `programs/sk-basis.lisp`.
 const env = loadDefinitions(join(__dirname, '../programs/sk-basis.lisp'));
 
 function evaluateCollapsed(expr) {
@@ -41,6 +43,8 @@ test('TRUE and FALSE select the expected branch', () => {
   assert.equal(evaluateFocus('((FALSE a) b)'), 'b');
 });
 
+// `defn` is just syntactic sugar; these assertions prove parameter naming and
+// repeated argument references survive the desugaring step.
 test('defn sugar handles positional and repeated arguments', () => {
   assert.equal(evaluateFocus('((LEFT a) b)'), 'a');
   assert.equal(evaluateFocus('((RIGHT a) b)'), 'b');
