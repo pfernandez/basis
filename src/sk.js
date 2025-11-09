@@ -53,6 +53,47 @@ function makeSymbol(name) {
   return { kind: 'symbol', name };
 }
 
+function convertExprToDeBruijn(expr, context) {
+  if (expr === null || expr === undefined) return expr;
+  if (Array.isArray(expr)) {
+    return expr.map(part => convertExprToDeBruijn(part, context));
+  }
+  if (typeof expr === 'string') {
+    if (expr.startsWith('#')) return expr;
+    const index = context.lastIndexOf(expr);
+    if (index !== -1) {
+      const depth = context.length - 1 - index;
+      return `#${depth}`;
+    }
+  }
+  return expr;
+}
+
+function wrapParamsWithBinders(params, bodyExpr, context = []) {
+  if (!params.length) {
+    return convertExprToDeBruijn(bodyExpr, context);
+  }
+  const [first, ...rest] = params;
+  if (typeof first !== 'string') {
+    throw new Error('Parameter names must be symbols');
+  }
+  const nextContext = [...context, first];
+  const inner = wrapParamsWithBinders(rest, bodyExpr, nextContext);
+  return [[], inner];
+}
+
+function desugarDefnForm(form) {
+  if (form.length !== 4) {
+    throw new Error('(defn name (params) body) requires exactly 4 elements');
+  }
+  const [, name, paramsExpr, bodyExpr] = form;
+  if (!Array.isArray(paramsExpr)) {
+    throw new Error('Function parameters must be a list');
+  }
+  const lambdaExpr = wrapParamsWithBinders(paramsExpr, bodyExpr, []);
+  return ['def', name, lambdaExpr];
+}
+
 /** Count the number of internal pairs (structural potential / U) in a tree. */
 function structuralPotential(node) {
   if (!node || isEmpty(node) || node.kind === NODE_TYPES.SYMBOL) return 0;
@@ -233,7 +274,10 @@ function loadDefinitions(path) {
   const env = new Map();
 
   while (tokens.length) {
-    const form = parseTokens(tokens);
+    let form = parseTokens(tokens);
+    if (Array.isArray(form) && form[0] === 'defn') {
+      form = desugarDefnForm(form);
+    }
     if (!Array.isArray(form) || form[0] !== 'def' || form.length !== 3) {
       throw new Error('Each form must be (def name body)');
     }

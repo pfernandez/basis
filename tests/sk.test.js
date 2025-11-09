@@ -41,6 +41,12 @@ test('TRUE and FALSE select the expected branch', () => {
   assert.equal(evaluateFocus('((FALSE a) b)'), 'b');
 });
 
+test('defn sugar handles positional and repeated arguments', () => {
+  assert.equal(evaluateFocus('((LEFT a) b)'), 'a');
+  assert.equal(evaluateFocus('((RIGHT a) b)'), 'b');
+  assert.equal(evaluateFocus('(SELF a)'), 'a');
+});
+
 test('structural potential counts internal pairs (gravitational U)', () => {
   const expr = '(() (() ()))';
   const tree = sexprToTree(parseSexpr(expr));
