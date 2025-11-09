@@ -23,9 +23,17 @@ import { fileURLToPath } from 'node:url';
 /** Sentinel object used for empty leaves. */
 const EMPTY = { kind: 'empty' };
 
+function makeBinder(id, path = '0') {
+  return { kind: 'binder', id, path };
+}
+
+function makeSlot(id, binder = null, path = '0') {
+  return { kind: 'slot', id, binder, path };
+}
+
 /** Return true if a node is the empty sentinel. */
 function isEmpty(node) {
-  return node === EMPTY || (node && node.kind === 'empty');
+  return node === EMPTY || (node && (node.kind === 'empty' || node.kind === 'binder'));
 }
 
 /** Construct a structural pair (left applies to right). */
@@ -100,6 +108,8 @@ function focus(node) {
 /** Serialize a collapsed tree back into S-expression form. */
 function treeToString(node) {
   if (!node || isEmpty(node)) return '()';
+  if (node.kind === 'module') return '()';
+  if (node.kind === 'slot') return '()';
   if (node.kind === 'symbol') return node.name;
   return `(${treeToString(node.left)} ${treeToString(node.right)})`;
 }
