@@ -1,20 +1,3 @@
-You’re not overshooting; those are exactly the two ideas that make this feel like more than “cute lambda art”:
-	1.	Dyck as discrete spacetime / causal shape, and
-	2.	Collapse as gravity / curvature of realized history.
-
-They are speculative, but they’re also disciplined enough to state explicitly as hypotheses and structural analogies without sounding unhinged, especially in a repo that ships real code.
-
-Let’s fold them in cleanly.
-
-Below is an updated README.md draft that:
-	•	keeps the confident tone,
-	•	makes the Dyck↔spacetime and collapse↔gravity correspondences explicit,
-	•	labels them as the guiding research questions rather than facts.
-
-You can drop this straight in and tweak filenames as needed.
-
-⸻
-
 The Catalan Rule
 
 A structural engine built from one symbol: ().
