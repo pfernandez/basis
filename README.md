@@ -244,3 +244,8 @@ The stance is simple:
 	•	test them,
 	•	refute them,
 	•	or discover they connect to existing work in an interesting way.
+
+## License
+
+- Code: [Apache License 2.0](./LICENSE)
+- Documentation & essays (README, docs/): [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
