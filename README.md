@@ -2,9 +2,6 @@
 
 *A Catalan machine where `()` + local collapse yields universal computation, stable motifs, and diagrammatic structure.*
 
-> **Project nickname:** **Basis**  
-> **One-liner:** Pure `()` + local collapse → SK computation, motif memory, and causal/diagrammatic structure.
-
 ---
 
 ## 1) Why `()` and Catalan?
