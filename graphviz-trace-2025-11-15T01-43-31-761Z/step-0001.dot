@@ -1,0 +1,26 @@
+digraph Evaluation {
+  rankdir=LR;
+  splines=true;
+  node [fontname="monospace"];
+  edge [fontname="monospace"];
+  labelloc="t";
+  label="step 0001 :: •RRL skipped";
+  n1 [label="pair", shape="ellipse", style="filled", fillcolor="#eeeeff"];
+  n2 [label="binder#2", shape="circle", style="filled", fillcolor="#ddffee"];
+  n3 [label="pair", shape="ellipse", style="filled", fillcolor="#eeeeff"];
+  n4 [label="binder#3", shape="circle", style="filled", fillcolor="#ddffee"];
+  n5 [label="pair", shape="ellipse", style="filled", fillcolor="#eeeeff"];
+  n6 [label="pair", shape="ellipse", style="filled", fillcolor="#eeeeff", color="#dd3333", penwidth=2];
+  n7 [label="a", shape="plaintext"];
+  n8 [label="pair", shape="ellipse", style="filled", fillcolor="#eeeeff"];
+  n1 -> n2 [label="L"];
+  n1 -> n3 [label="R"];
+  n3 -> n4 [label="L"];
+  n3 -> n5 [label="R"];
+  n5 -> n6 [label="L"];
+  n6 -> n7 [label="L"];
+  n6 -> n4 [label="R slot"];
+  n5 -> n8 [label="R"];
+  n8 -> n2 [label="L slot"];
+  n8 -> n4 [label="R slot"];
+}
