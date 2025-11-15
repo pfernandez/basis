@@ -21,17 +21,12 @@ function evaluateCollapsed(expr) {
   return treeToString(collapsed);
 }
 
-function evaluateFocus(expr) {
-  const { focus } = evaluateExpression(expr, env);
-  return treeToString(focus);
-}
-
 test('I returns its argument', () => {
-  assert.equal(evaluateFocus('(I a)'), 'a');
+  assert.equal(evaluateCollapsed('(I a)'), 'a');
 });
 
 test('K exposes its first argument at the focus', () => {
-  assert.equal(evaluateFocus('((K a) b)'), 'a');
+  assert.equal(evaluateCollapsed('((K a) b)'), 'a');
 });
 
 test('S duplicates the context structure', () => {
@@ -39,16 +34,16 @@ test('S duplicates the context structure', () => {
 });
 
 test('TRUE and FALSE select the expected branch', () => {
-  assert.equal(evaluateFocus('((TRUE a) b)'), 'a');
-  assert.equal(evaluateFocus('((FALSE a) b)'), 'b');
+  assert.equal(evaluateCollapsed('((TRUE a) b)'), 'a');
+  assert.equal(evaluateCollapsed('((FALSE a) b)'), 'b');
 });
 
 // `defn` is just syntactic sugar; these assertions prove parameter naming and
 // repeated argument references survive the desugaring step.
 test('defn sugar handles positional and repeated arguments', () => {
-  assert.equal(evaluateFocus('((LEFT a) b)'), 'a');
-  assert.equal(evaluateFocus('((RIGHT a) b)'), 'b');
-  assert.equal(evaluateFocus('(SELF a)'), 'a');
+  assert.equal(evaluateCollapsed('((LEFT a) b)'), 'a');
+  assert.equal(evaluateCollapsed('((RIGHT a) b)'), 'b');
+  assert.equal(evaluateCollapsed('(SELF a)'), 'a');
 });
 
 test('structural potential counts internal pairs (gravitational U)', () => {
