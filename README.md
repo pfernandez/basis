@@ -152,6 +152,16 @@ npm run sk
 node src/sk.js --defs=programs/sk-basis.lisp "((I x) y)" "(((S K K) z))"
 ```
 
+### Inspect collapse traces in 3D
+An experimental viewer lives under `viz/`. It renders per-step collapse snapshots with either explicit loop arrows (binder re-entry) or true structural sharing (motifs literally fold onto themselves):
+
+```bash
+# serve the /viz directory with your favourite static server, e.g.
+npx http-server viz
+```
+
+Then open [http://localhost:8080](http://localhost:8080) and scrub through the sample trace. Use the toggles to switch between loop arrows vs. sharing mode, and adjust the camera rotation to see how the structure evolves. The viewer consumes simple JSON traces (`viz/sample-trace.js`) so you can swap in traces exported from future collapse runs.
+
 ---
 
 ## 7) Repository layout
