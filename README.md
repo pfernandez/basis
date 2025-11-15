@@ -107,7 +107,7 @@ Dyck words ↔ paths (`(`=+1, `)`=−1, stay ≥ 0, return to 0). Known scaling 
 
 ## 5) Collapse as dynamics (and a gravity analogy)
 
-Given a partial history $begin:math:text$H$end:math:text$, the number/weight of **consistent continuations** defines a local “potential.” Then:
+Given a partial history `H`, the number/weight of **consistent continuations** defines a local “potential.” Then:
 
 - **motif density** (histories concentrate) behaves like a well,
 - **gradients** in that density act like forces,
@@ -145,12 +145,26 @@ npm run motifs:left
 npm run motifs:right
 ```
 
-### Run the SK interpreter
+### Collapse-based SK interpreter
+
+The `src/sk.js` interpreter evaluates ordinary SK combinator expressions using
+only the structural collapse rule `(() x) ⇒ x`. Definitions in
+`programs/sk-basis.lisp` use `defn` sugar and desugar into De Bruijn indices
+during load.
+
+Run sample expressions:
+
 ```bash
-npm run sk
-# or with custom expressions / defs:
-node src/sk.js --defs=programs/sk-basis.lisp "((I x) y)" "(((S K K) z))"
+npm run sk -- '((K a) b)'
 ```
+
+Lookup-table view (with optional collapse trace / Graphviz snapshots):
+
+```bash
+npm run sk:lookup -- --trace-collapse '(((S a) b) c)'
+```
+
+`npm test` exercises the SK interpreter along with the Catalan tooling.
 
 ---
 
