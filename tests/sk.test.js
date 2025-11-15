@@ -52,14 +52,14 @@ test('structural potential counts internal pairs (gravitational U)', () => {
   assert.equal(structuralPotential(tree), 2);
 });
 
-test('gravity trace describes why (() x) collapses to x', () => {
+test('collapse trace describes why (() x) collapses to x', () => {
   const logs = [];
   evaluateExpression('(I x)', env, {
-    traceGravity: true,
+    traceCollapseLog: true,
     logger: message => logs.push(message),
   });
   assert.ok(
     logs.some(line => line.includes('-> bound argument')),
-    `expected gravity trace to mention collapse event, saw: ${logs.join('\n')}`,
+    `expected collapse trace to mention collapse event, saw: ${logs.join('\n')}`,
   );
 });

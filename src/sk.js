@@ -5,19 +5,11 @@ import { fileURLToPath } from 'node:url';
 /*
  * SK collapse interpreter
  * -----------------------
- * This implementation mirrors the “pure” Catalan rule described in the docs:
- *   - The only syntax is the binary pairing operation `(left right)` plus
- *     top-level `def` forms for naming trees.
- *   - Evaluation consists solely of recursively applying the blind rewrite
- *     `(() x) → x`. No symbol ever inspects what lives inside an argument; the
- *     result is whatever remains in the focus (left spine) after collapse.
- *   - A combinator such as `K` or `S` is therefore nothing more than a Dyck
- *     tree. When we “apply” it, we substitute its definition into the larger
- *     tree, collapse, and read the focus. Direction of causality (which branch
- *     survives) is encoded entirely by the tree’s geometry.
- *
- * The code exposes this structure explicitly so the reader can see where the
- * single rule fires and how the `car` (focus) is extracted afterward.
+ * Syntax: only binary pairing plus `(def name body)` definitions.
+ * Evaluation: repeatedly apply the structural rewrite `(() x) → x`.
+ * A combinator such as `K` or `S` is just a tree. Application means
+ * substituting the tree, collapsing, and reading the left spine (“focus”).
+ * This file exposes the machinery so it is clear where the lone rule fires.
  */
 
 /** Sentinel node used everywhere the theory refers to the raw void `()`. */
@@ -163,7 +155,7 @@ function collapse(node, options = {}) {
     const left = collapse(leftOriginal, options);
     const right = collapse(rightOriginal, options);
 
-    if (options.traceGravity && isEmpty(left)) {
+    if (options.traceCollapseLog && isEmpty(left)) {
       const logger = options.logger ?? console.log;
       const leftOriginalPotential = structuralPotential(leftOriginal);
       const rightOriginalPotential = structuralPotential(rightOriginal);
@@ -171,7 +163,7 @@ function collapse(node, options = {}) {
       const rightCollapsedPotential = structuralPotential(right);
       const snapshot = `(${treeToString(leftOriginal)} ${treeToString(rightOriginal)})`;
       logger(
-        `[gravity] ${snapshot} -> left collapsed (U_after=${leftCollapsedPotential}) so right survives (before: L=${leftOriginalPotential}, R=${rightOriginalPotential}; after: L=${leftCollapsedPotential}, R=${rightCollapsedPotential})`,
+        `[collapse-log] ${snapshot} -> left collapsed (U_after=${leftCollapsedPotential}) so right survives (before: L=${leftOriginalPotential}, R=${rightOriginalPotential}; after: L=${leftCollapsedPotential}, R=${rightCollapsedPotential})`,
       );
     }
 
@@ -400,10 +392,10 @@ function substituteBinder(node, binder, argument, options) {
   }
   if (node.kind === NODE_TYPES.PAIR) {
     if (node.left === binder) {
-      if (options?.traceGravity) {
+      if (options?.traceCollapseLog) {
         const logger = options.logger ?? console.log;
         const snapshot = `(${treeToString(node.left)} ${treeToString(node.right)})`;
-        logger(`[gravity] ${snapshot} -> bound argument`);
+        logger(`[collapse-log] ${snapshot} -> bound argument`);
       }
       return substituteBinder(node.right, binder, argument, options);
     }
@@ -420,13 +412,13 @@ function substituteBinder(node, binder, argument, options) {
 function runCli() {
   const args = process.argv.slice(2);
   const defsArg = args.find(arg => arg.startsWith('--defs='));
-  const traceGravity = args.includes('--trace-gravity');
+  const traceCollapseLog = args.includes('--trace-collapse');
   const defsPath = defsArg
     ? defsArg.slice('--defs='.length)
     : fileURLToPath(new URL('../programs/sk-basis.lisp', import.meta.url));
 
   const env = loadDefinitions(defsPath);
-  const inputs = args.filter(arg => !arg.startsWith('--defs=') && arg !== '--trace-gravity');
+  const inputs = args.filter(arg => !arg.startsWith('--defs=') && arg !== '--trace-collapse');
 
   const samples = inputs.length ? inputs : [
     '(I x)',
@@ -436,7 +428,7 @@ function runCli() {
 
   samples.forEach((expr) => {
     try {
-      const { collapsed, focus: value } = evaluateExpression(expr, env, { traceGravity });
+      const { collapsed, focus: value } = evaluateExpression(expr, env, { traceCollapseLog });
       console.log(`Input: ${expr}`);
       console.log(`  Collapsed: ${treeToString(collapsed)}`);
       console.log(`  Focus: ${treeToString(value)}`);
