@@ -5,6 +5,12 @@ import { invariant } from '../utils.js';
 
 const EMPTY_LABEL = '()';
 
+/**
+ * Load all `(def …)` / `(defn …)` forms from a file path.
+ *
+ * @param {string} path
+ * @returns {Map<string, any>} Map of name → S-expression template
+ */
 export function loadDefinitions(path) {
   const source = readFileSync(path, 'utf8');
   const forms = parseMany(source);
@@ -16,6 +22,11 @@ export function loadDefinitions(path) {
   return env;
 }
 
+/**
+ * Normalize a `(def …)` or `(defn …)` form into `{ name, body }`.
+ * @param {any[]} form
+ * @returns {{ name: string, body: any }}
+ */
 function normalizeForm(form) {
   if (!Array.isArray(form) || form.length < 3) {
     throw new Error('Each form must be (def name body)');
@@ -31,6 +42,14 @@ function normalizeForm(form) {
   throw new Error(`Unsupported form ${form[0]}`);
 }
 
+/**
+ * Wrap function parameters with empty binder pairs.
+ *
+ * @param {any[]} params
+ * @param {any} body
+ * @param {string[]} context
+ * @returns {any}
+ */
 function wrapParamsWithBinders(params, body, context = []) {
   invariant(Array.isArray(params), 'defn params must be a list');
   if (!params.length) {
@@ -41,6 +60,13 @@ function wrapParamsWithBinders(params, body, context = []) {
   return [[], wrapParamsWithBinders(rest, body, extended)];
 }
 
+/**
+ * Replace named parameters with De Bruijn-style slot references.
+ *
+ * @param {any} expr
+ * @param {string[]} context
+ * @returns {any}
+ */
 function convertNamesToSlots(expr, context) {
   if (Array.isArray(expr)) {
     return expr.map(part => convertNamesToSlots(part, context));
@@ -63,6 +89,14 @@ export function evaluateExpressions(expressions, env) {
   return results;
 }
 
+/**
+ * Evaluate an expression against the provided environment.
+ *
+ * @param {string | any[]} expr
+ * @param {Map<string, any>} env
+ * @param {{ tracer?: (snapshot: object) => void }} [options]
+ * @returns {{ graph: Graph, rootId: string }}
+ */
 export function evaluateExpression(expr, env, options = {}) {
   const tracer = options.tracer ?? null;
   const ast = typeof expr === 'string' ? parseSexpr(expr) : expr;
@@ -74,6 +108,14 @@ export function evaluateExpression(expr, env, options = {}) {
   return evaluated;
 }
 
+/**
+ * Build the graph representation for an expression.
+ *
+ * @param {Graph} graph
+ * @param {any} expr
+ * @param {{ id: string, anchorKey: string }[]} stack
+ * @returns {{ graph: Graph, nodeId: string }}
+ */
 function buildTemplate(graph, expr, stack) {
   if (expr === null || (Array.isArray(expr) && expr.length === 0)) {
     const { graph: nextGraph, id } = addNode(graph, { kind: 'empty', label: EMPTY_LABEL });
@@ -133,6 +175,15 @@ function buildTemplate(graph, expr, stack) {
   return { graph: nextGraph, nodeId: id };
 }
 
+/**
+ * Reduce a node by recursively evaluating its children.
+ *
+ * @param {Graph} graph
+ * @param {string} nodeId
+ * @param {Map<string, any>} env
+ * @param {(snapshot: object) => void} tracer
+ * @returns {{ graph: Graph, rootId: string }}
+ */
 function reduceGraph(graph, nodeId, env, tracer) {
   snapshotState(tracer, graph, nodeId, 'reduce');
   const node = getNode(graph, nodeId);
@@ -152,6 +203,16 @@ function reduceGraph(graph, nodeId, env, tracer) {
   return collapsePair(application.graph, application.rootId, tracer);
 }
 
+/**
+ * Apply an argument to a binder if the candidate is a lambda.
+ *
+ * @param {Graph} graph
+ * @param {string} parentPairId
+ * @param {string} candidateId
+ * @param {string} argumentId
+ * @param {(snapshot: object) => void} tracer
+ * @returns {{ graph: Graph, rootId: string }}
+ */
 function applyIfLambda(graph, parentPairId, candidateId, argumentId, tracer) {
   const candidate = getNode(graph, candidateId);
   if (candidate.kind !== 'pair') {
@@ -178,6 +239,14 @@ function applyIfLambda(graph, parentPairId, candidateId, argumentId, tracer) {
   return { graph: nextGraph, rootId: bodyId };
 }
 
+/**
+ * Collapse a pair according to the (() x) → x rule.
+ *
+ * @param {Graph} graph
+ * @param {string} nodeId
+ * @param {(snapshot: object) => void} tracer
+ * @returns {{ graph: Graph, rootId: string }}
+ */
 function collapsePair(graph, nodeId, tracer) {
   const node = getNode(graph, nodeId);
   if (node.kind !== 'pair') {
@@ -198,6 +267,15 @@ function collapsePair(graph, nodeId, tracer) {
   return { graph: updated, rootId: nodeId };
 }
 
+/**
+ * Emit a snapshot for visualization/debugging.
+ *
+ * @param {(snapshot: object) => void} tracer
+ * @param {Graph} graph
+ * @param {string} rootId
+ * @param {string} note
+ * @returns {void}
+ */
 function snapshotState(tracer, graph, rootId, note) {
   if (typeof tracer !== 'function') return;
   const snapshot = {
