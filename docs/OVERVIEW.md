@@ -1,21 +1,77 @@
-# Basis — Overview
+# Basis — Conceptual Overview
 
-This document is the conceptual front door: **why** the pieces exist and **how** they relate, without assuming any physics commitments beyond the code.
+This document is the **big-picture tour** of Basis.
 
----
-
-## 1. Starting point: `()` as Vacuum + Structure
-
-- `()` = vacuum symbol & potential.
-- Pairing generates **Catalan** objects:
-  - Dyck words, binary trees, noncrossing diagrams.
-- We treat this as the **possibility space** of well-formed, nested causal histories.
+The README tells you how to run things.  
+Here we focus on **what the project is about** and **how the pieces fit together**, without assuming any background in physics or category theory.
 
 ---
 
-## 2. Dyck paths as discrete spacetime sketches
+## 1. The whole idea in one paragraph
 
-Each Dyck word is a path with `(`=up, `)`=down, never below 0, end at 0.
+Basis starts from the simplest thing we can write:
+
+```text
+()
+```
+
+and the rule “you can always put one pair of parentheses inside another, or next to another.” From that alone you get:
+
+* a huge family of **well-formed bracket strings**,
+* simple **up–down paths** you can draw on a grid,
+* and **binary trees** made of pairs.
+
+We treat this shared family as a **toy universe of possibilities**:
+
+* each structure is a tiny “history” of how something could unfold,
+* we let local rules make those histories grow or collapse,
+* and we watch what kinds of patterns, computations, and “forces” emerge.
+
+That’s all Basis is: a place to experiment with **structure + local rules** and see how far it gets you.
+
+---
+
+## 2. A universe made of `()`
+
+The starting symbol is:
+
+* `()` = “a unit of structure” and “a bit of empty space” at the same time.
+
+If you nest and line up these pairs, you get things like:
+
+```text
+()
+(())
+()()
+(()())
+((()))
+```
+
+These belong to a famous combinatorial family called the **Catalan numbers**. You don’t need the formula; what matters is:
+
+* they count **all** ways of making properly nested structures,
+* the same family shows up as:
+
+  * balanced parentheses (strings),
+  * paths that go up and down,
+  * binary trees,
+  * non-crossing diagrams.
+
+Basis uses this family as its **possibility space**:
+every object you see is one of these well-nested shapes.
+
+---
+
+## 3. Dyck paths as simple spacetime sketches
+
+Take a balanced string and read it as a little walk:
+
+* `(` means “go up by 1”,
+* `)` means “go down by 1”,
+* you’re not allowed to go below 0,
+* you must end back at 0.
+
+Example:
 
 ```text
 word:   ( ( ) ( ) )
@@ -25,119 +81,218 @@ height: 0 1 2 1 2 1 0
     2 |      /\
     1 |   /\/  \
     0 |__/      \__
-       0 1 2 3 4 5 6
+       0 1 2 3 4 5 6   (horizontal = steps)
 ```
 
-- **height** ≈ causal depth (“time”)
-- **breadth** ≈ branching (“space”)
-- Scaling limits (→ Brownian-like excursions) give a bridge to continuous analysis.
+You can read this picture as a **toy spacetime diagram**:
 
-We use this as a **design constraint** for dynamics.
+* vertical axis (height) ≈ how many things are “open” → a notion of **depth** or “time”;
+* horizontal axis (steps) ≈ where in the sequence you are → a notion of **breadth** or “space”.
 
----
+If you take many such paths and scale them up, they start to look like smooth, random curves. That gives a bridge from this discrete world to ordinary continuous math, but you don’t need that to play with the code.
 
-## 3. Collapse as dynamics (and a gravity analogy)
+For Basis, this picture is a **design constraint**:
 
-Local rules (at minimum `(() x) ⇒ x`) rewrite structures; more policies prefer leftmost/heaviest/balanced, etc.
-
-We measure:
-
-- motif recurrence & survival,
-- distribution of consistent extensions for partial histories.
-
-Cautious analogy:
-
-- **motif density** → potential,
-- **gradients** → force-like behavior,
-- **collapse of computed history** → curvature-like effects.
-
-This is a **statistical, structural program** we can compute on.
+> Whatever rules we use, they should respect this “cone” shape:
+> you can only go one step deeper or shallower at a time.
 
 ---
 
-## 4. Pure structural SK / λ from `()`
+## 4. Collapse: how change happens
 
-Encoding:
+So far we only have shapes. Dynamics comes from **local rewrite rules**.
 
-- Binders: `(() body)` (introduce argument),
-- References: `#n` (De Bruijn),
-- Application: pairing,
-- Evaluation: repeated `(() x) ⇒ x` + substitution.
-
-We define `I`, `K`, `S`, booleans, composition in `programs/sk-basis.lisp`.  
-**Result:** The substrate is **Turing-complete**.
-
----
-
-## 5. Motifs, cycles, and structural sharing
-
-We quotient repeated shapes to build a **pattern graph**:
+The most basic one is:
 
 ```text
-Causal tree → quotient by isomorphic subtrees → Pattern graph (may cycle)
+(() x)  ⇒  x
 ```
 
-- **Fixed motifs** = persistent identities,
-- **Cycles** = reentry (same form reappears),
-- **Indistinguishability** = many embeddings of one motif-class.
+You can think of this as:
 
-This reconciles “loop diagrams” and Wheeler-style ideas with strict forward causality.
+* “a neutral wrapper around `x` disappears”, or
+* “an identity function applied to `x` returns `x`”.
 
----
+More generally, the repo experiments with **policies** for deciding what to do at a given pair:
 
-## 6. Diagrams, gauge, and fields (work in progress)
+* sometimes prefer the **left** side,
+* sometimes pick the **heavier / more structured** side,
+* sometimes treat perfectly balanced situations as “entangled” and don’t collapse them at all.
 
-- **Feynman-like diagrams:** vertices = collapse events, propagators = persistent links, histories = diagram sums.
-- **Gauge-like freedom:** once internal labels (phase/color) are attached, local representation changes that preserve observables act like gauge transformations.
-- **Wilson-loop-style invariants:** closed structural loops over internal labels.
+What we measure is:
 
-Open questions we test here:
+* which small shapes (motifs) show up over and over,
+* how often certain patterns survive,
+* how many ways a partial history can be extended consistently.
 
-- Can standard diagrammatics be reconstructed from Catalan histories + weights?
-- Can gauge redundancies and effective couplings emerge from statistics of realized vs unrealized possibilities?
+There is a **gentle analogy with physics**:
 
----
+* places where motifs cluster look like **potential wells**,
+* differences in motif “density” look like **forces**,
+* the sequence of collapses bends the underlying tree in a way that can be read as **curvature**.
 
-## 7. Attention & memory (Scheme lineage)
-
-An early Scheme fragment models:
-
-- frames as `(focus . rest)`,
-- a program as a list of navigation ops,
-- an agent as an id + procedure.
-
-It was a **Turing-style read-head** over cons-based memory—an attention mechanism. The modern SK/Catalan kernel is a tighter base for the same idea: **computation, memory, and observation on one substrate**.
+You don’t have to buy the physics analogy to use any of this—everything is just tree rewriting and statistics.
 
 ---
 
-## 8. Concept stack (at a glance)
+## 5. Yes, this can run real programs
+
+Under the hood, Basis also treats these trees as a tiny **programming language**.
+
+Very roughly:
+
+* A **function** is a tree with a “hole” for an argument.
+* An **application** is just a pair `(f x)`.
+* The rule `(() x) ⇒ x` acts like an **identity function**.
+* With a bit more encoding (explained in the repo), you can:
+
+  * define the classic SK combinators,
+  * represent functions without variable names,
+  * build booleans, conditionals, and simple programs.
+
+All of this lives in plain text files (e.g. a small Lisp-style basis and a simple interpreter).
+
+The important takeaway for a non-specialist:
+
+> This substrate isn’t just pretty pictures.
+> It’s powerful enough to express general computation.
+
+So the same objects can be read as:
+
+* **histories** (how structure evolves),
+* **programs** (what to compute),
+* **configurations** (what “field” is present).
+
+---
+
+## 6. Patterns, loops, and structural sharing
+
+When you run the dynamics, the same shapes appear again and again.
+
+One useful view is:
+
+```text
+Causal tree
+   ↓  (identify identical subtrees)
+Pattern graph    (nodes = motifs, edges = "can flow into")
+```
+
+In that pattern graph:
+
+* **fixed motifs** behave like persistent “identities” or particles,
+* **cycles** correspond to re-entry: the same form keeps coming back,
+* one motif can appear in **many places at once**, so we track the shape, not just a single location.
+
+This gives you a way to talk about:
+
+* “this structure is conserved”,
+* “this cluster of forms keeps feeding into itself”,
+* “many different concrete histories share the same abstract pattern”.
+
+If you know physics, you can see how this smells like:
+
+* Feynman diagrams (paths of interaction),
+* loop diagrams (feedback),
+* Wheeler-style “law without law” ideas.
+
+If you don’t know physics, it’s just:
+**a graph of repeating shapes and how they connect.**
+
+---
+
+## 7. Where the physics language comes in (optional)
+
+Some folders and notes in the repo use physics-flavored words:
+“fields”, “gauge”, “diagrams”, “collapse force”, etc.
+
+You can read those as:
+
+* **Feynman-like diagrams**:
+  nodes = collapse events, lines = persistent links between motifs.
+* **Gauge-like freedom**:
+  if we color or phase-label parts of the tree, there are many ways to describe the same observable behavior. Changing those labels without changing anything measurable acts like a “gauge transformation”.
+* **Loop invariants**:
+  going around a closed loop and multiplying contributions can give quantities that stay the same under local changes.
+
+These ideas are **work in progress** and meant as hypotheses to test:
+
+* Can we rebuild familiar physics diagrams from nothing but:
+
+  * Catalan histories,
+  * local collapse rules,
+  * and weights/phases on motifs?
+* Can some “symmetries” and “effective couplings” appear statistically from which histories actually get realized?
+
+If this isn’t your interest, you can safely ignore this layer and stay with the combinatorics / interpreter parts.
+
+---
+
+## 8. Attention, memory, and agents (where this can go)
+
+Earlier prototypes in this line of work used a tiny Scheme:
+
+* a **frame** as `(focus . rest)`,
+* a **program** as a list of “move the focus” operations,
+* an **agent** as “an id + a procedure” walking over memory.
+
+Basis reuses that spirit on the new substrate:
+
+> One kind of structure for everything:
+> computation, memory, and “what is being observed”.
+
+The long-term goal is to have:
+
+* agents that move through the tree,
+* memory that is just more of the same structure,
+* no sharp line between “data”, “program”, and “state”.
+
+Right now this is mostly hinted at in essays and early code; it’s here to show where the project is pointed.
+
+---
+
+## 9. Concept stack (at a glance)
+
+Here is the full stack on one page:
 
 ```text
    [ Physical / Semantic Interpretations ]
-      QFT-like diagrams, gauge-like symmetry, gravity analogies
+      Diagrams, symmetry ideas, gravity-like analogies
                                |
-   [ Pattern Graph ]  motifs, cycles, reentry, conserved forms
+   [ Pattern Graph ]
+      motifs, cycles, reentry, conserved forms
                                |
-   [ Dynamics / Collapse ]  local rules, evaluation, motif statistics
+   [ Dynamics / Collapse ]
+      local rules, evaluation, motif statistics
                                |
-   [ Catalan Structures ]  Dyck words, trees, noncrossing diagrams
+   [ Catalan Structures ]
+      Dyck words, trees, noncrossing diagrams
                                |
-   [ `()` ]  vacuum symbol, pure pairing
+   [ `()` ]
+      vacuum symbol, pure pairing
 ```
 
-Layers 0–2 are concrete; layers 3–4 are exploratory.
+* The **bottom layers** (`()`, Catalan structures, local rules) are concrete and fully implemented.
+* The **upper layers** (diagrams, gauge, gravity analogies) are exploratory and can be read as open questions.
 
 ---
 
-## 9. How to navigate
+## 10. How to explore the repo
 
-- **Kernel & compute:** `src/sk.js`, `programs/sk-basis.lisp`
-- **Motifs:** `src/motif-discover.js`, `src/collapse-policy.js`
-- **Background essays:** `docs/` (clearly marked as exploratory)
+See the main `README.md` for up-to-date commands and file paths.
+Conceptually, you can approach Basis as:
 
-Engage as:
-1) a combinatorics/interpreter playground,  
-2) a structural approach to agents/memory, or  
-3) a hypothesis lab for diagrammatics/geometry.
+1. **A combinatorics playground**
+
+   * Generate and visualize Catalan objects and Dyck paths.
+2. **A tiny interpreter / computation lab**
+
+   * Play with SK-style programs and the `(() x) ⇒ x` collapse rule.
+3. **A pattern and motif explorer**
+
+   * Run motif discovery, see which shapes recur, and how collapse rules affect them.
+4. **A hypothesis lab for “geometry from structure”**
+
+   * If you’re curious about physics links, connect this to ideas from quantum field theory, gravity, or information theory.
 
 Each layer stands on its own.
+You can ignore the speculative parts and still get a lot of value from the core combinatorics and interpreter pieces.
