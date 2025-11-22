@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { dyck, pairs, motzkin } from '../src/catalan.js';
+import { dyck, pairs, motzkin } from '../src/catalan/catalan.js';
 
 const catalanNumbers = [1, 1, 2, 5, 14, 42];
 const motzkinNumbers = [1, 1, 2, 4, 9, 21];

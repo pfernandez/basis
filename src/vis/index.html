@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Basis Graph Viewer</title>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <main>
+      <section class="controls">
+        <div class="toolbar">
+          <button id="fetch-button">Load trace.json</button>
+          <label class="slider-label">
+            Step
+            <input id="step-slider" type="range" min="0" max="0" value="0">
+            <span id="step-label">0 / 0</span>
+          </label>
+        </div>
+        <textarea id="graph-input" rows="8" placeholder="Paste a graph JSON (nodes + links or an array of snapshots)..."></textarea>
+        <button id="render-button">Render Pasted JSON</button>
+      </section>
+      <section class="canvas" id="graph-canvas"></section>
+    </main>
+    <script type="module" src="./viewer.js"></script>
+  </body>
+</html>

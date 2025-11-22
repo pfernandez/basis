@@ -1,6 +1,6 @@
 # Basis
 
-*An experimental Catalan machine where `()` + local collapse yields universal computation, stable motifs, and diagrammatic structure.*
+*A Catalan machine where `()` + local collapse yields universal computation, stable motifs, and diagrammatic structure.*
 
 ---
 
@@ -107,7 +107,7 @@ Dyck words ↔ paths (`(`=+1, `)`=−1, stay ≥ 0, return to 0). Known scaling 
 
 ## 5) Collapse as dynamics (and a gravity analogy)
 
-Given a partial history `H`, the number/weight of **consistent continuations** defines a local “potential.” Then:
+Given a partial history $begin:math:text$H$end:math:text$, the number/weight of **consistent continuations** defines a local “potential.” Then:
 
 - **motif density** (histories concentrate) behaves like a well,
 - **gradients** in that density act like forces,
@@ -145,37 +145,34 @@ npm run motifs:left
 npm run motifs:right
 ```
 
-### Collapse-based SK interpreter
-
-The `src/sk.js` interpreter evaluates ordinary SK combinator expressions using
-only the structural collapse rule `(() x) ⇒ x`. Definitions in
-`programs/sk-basis.lisp` use `defn` sugar and desugar into De Bruijn indices
-during load.
-
-Run sample expressions:
-
+### Run the SK interpreter
 ```bash
-npm run sk -- '((K a) b)'
+npm run sk
+# or with custom expressions / defs:
+node src/cli/sk.js --defs=programs/sk-basis.lisp "((I x) y)" "(((S K K) z))"
 ```
 
-Lookup-table view (with optional collapse trace / Graphviz snapshots):
+### Inspect collapse traces in 3D
+An experimental viewer lives under `src/vis/`. It renders per-step collapse snapshots with either explicit loop arrows (binder re-entry) or true structural sharing (motifs literally fold onto themselves):
 
 ```bash
-npm run sk:lookup -- --trace-collapse '(((S a) b) c)'
+# export one or more traces into the viewer folder
+npm run sk -- --trace=src/vis/trace.json "(I z)"
+# serve src/vis/
+npx http-server src/vis
 ```
 
-`npm test` exercises the SK interpreter along with the Catalan tooling.
+Then open [http://localhost:8080](http://localhost:8080) and click “Load trace.json.” The viewer consumes the exported nodes/links trace (an array when multiple expressions are evaluated) and lets you scrub through the steps. You can still paste arbitrary graph JSON if you want to inspect a snapshot manually.
 
 ---
 
 ## 7) Repository layout
 
 - `src/`
-  - `catalan.js` — generate Dyck/Motzkin/pair families
-  - `dyck-tools.js` — parsing, normalization, catalogs
-  - `collapse-policy.js` — pluggable local rules
-  - `motif-discover.js` — motif search under collapse
-  - `sk.js` — pure structural SK/λ engine
+  - `catalan/` — Dyck/Motzkin generators, bijections, motif tools
+  - `graph/` — node/link graph core plus the new evaluator
+  - `cli/` — command-line entry points (e.g. `sk.js`)
+  - `vis/` — lightweight HTML/CSS/JS viewers for graph snapshots
 - `programs/`
   - `sk-basis.lisp` — SK, booleans, helpers in pure binder syntax
 - `scheme/`

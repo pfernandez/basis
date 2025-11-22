@@ -12,7 +12,7 @@ import {
   generateDyck,
   stripEtaText,
   countPairs,
-} from '../src/dyck-tools.js';
+} from '../src/catalan/dyck-tools.js';
 
 const sampleTrees = [
   Leaf,

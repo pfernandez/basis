@@ -9,7 +9,7 @@ import {
   motzkinToTree,
   renderMotzkinTree,
   motzkinTreeToCatalanTree,
-} from '../src/bijection.js';
+} from '../src/catalan/bijection.js';
 
 const sortStrings = (list) => [...list].sort();
 

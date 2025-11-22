@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { explorePolicies, buildPolicies, SAMPLE_TREES } from '../src/policy-explorer.js';
+import { explorePolicies, buildPolicies, SAMPLE_TREES } from '../src/catalan/policy-explorer.js';
 
 function deterministicPolicies() {
   const policies = buildPolicies();
