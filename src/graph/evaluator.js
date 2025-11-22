@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { addLink, addNode, cloneSubgraph, createGraph, getNode, removeNode, replaceSlotsWith, updateNode } from './graph.js';
+import { addLink, addNode, cloneSubgraph, createGraph, getNode, replaceSlotsWith, updateNode } from './graph.js';
 import { parseMany, parseSexpr } from './parser.js';
 import { invariant } from '../utils.js';
 
@@ -63,11 +63,14 @@ export function evaluateExpressions(expressions, env) {
   return results;
 }
 
-export function evaluateExpression(expr, env) {
+export function evaluateExpression(expr, env, options = {}) {
+  const tracer = options.tracer ?? null;
   const ast = typeof expr === 'string' ? parseSexpr(expr) : expr;
   const graph = createGraph();
   const { graph: withTree, nodeId } = buildTemplate(graph, ast, []);
-  const evaluated = reduceGraph(withTree, nodeId, env);
+  snapshotState(tracer, withTree, nodeId, 'init');
+  const evaluated = reduceGraph(withTree, nodeId, env, tracer);
+  snapshotState(tracer, evaluated.graph, evaluated.rootId, 'final');
   return evaluated;
 }
 
@@ -130,25 +133,26 @@ function buildTemplate(graph, expr, stack) {
   return { graph: nextGraph, nodeId: id };
 }
 
-function reduceGraph(graph, nodeId, env) {
+function reduceGraph(graph, nodeId, env, tracer) {
+  snapshotState(tracer, graph, nodeId, 'reduce');
   const node = getNode(graph, nodeId);
   if (node.kind === 'symbol' && env.has(node.label)) {
     const template = buildTemplate(graph, env.get(node.label), []);
-    return reduceGraph(template.graph, template.nodeId, env);
+    return reduceGraph(template.graph, template.nodeId, env, tracer);
   }
   if (node.kind !== 'pair') {
     return { graph, rootId: nodeId };
   }
   let currentGraph = graph;
-  const leftEval = reduceGraph(currentGraph, node.children[0], env);
+  const leftEval = reduceGraph(currentGraph, node.children[0], env, tracer);
   currentGraph = leftEval.graph;
-  const rightEval = reduceGraph(currentGraph, node.children[1], env);
+  const rightEval = reduceGraph(currentGraph, node.children[1], env, tracer);
   currentGraph = rightEval.graph;
-  const application = applyIfLambda(currentGraph, node.id, leftEval.rootId, rightEval.rootId, env);
-  return collapsePair(application.graph, application.rootId);
+  const application = applyIfLambda(currentGraph, node.id, leftEval.rootId, rightEval.rootId, env, tracer);
+  return collapsePair(application.graph, application.rootId, tracer);
 }
 
-function applyIfLambda(graph, parentPairId, candidateId, argumentId) {
+function applyIfLambda(graph, parentPairId, candidateId, argumentId, tracer) {
   const candidate = getNode(graph, candidateId);
   if (candidate.kind !== 'pair') {
     return { graph, rootId: parentPairId };
@@ -166,26 +170,43 @@ function applyIfLambda(graph, parentPairId, candidateId, argumentId) {
   const cloned = cloneSubgraph(graph, argumentId);
   const bodyNode = getNode(graph, bodyId);
   if (bodyNode.kind === 'slot' && bodyNode.aliasKey === binder.anchorKey) {
+    snapshotState(tracer, cloned.graph, cloned.rootId, 'apply');
     return { graph: cloned.graph, rootId: cloned.rootId };
   }
   const nextGraph = replaceSlotsWith(cloned.graph, binder.anchorKey, cloned.rootId);
+  snapshotState(tracer, nextGraph, bodyId, 'apply');
   return { graph: nextGraph, rootId: bodyId };
 }
 
-function collapsePair(graph, nodeId) {
+function collapsePair(graph, nodeId, tracer) {
   const node = getNode(graph, nodeId);
   if (node.kind !== 'pair') {
     return { graph, rootId: nodeId };
   }
-  const leftCollapse = collapsePair(graph, node.children[0]);
-  const rightCollapse = collapsePair(leftCollapse.graph, node.children[1]);
+  const leftCollapse = collapsePair(graph, node.children[0], tracer);
+  const rightCollapse = collapsePair(leftCollapse.graph, node.children[1], tracer);
   const leftNode = getNode(rightCollapse.graph, leftCollapse.rootId);
   if (leftNode.kind === 'empty') {
+    snapshotState(tracer, rightCollapse.graph, rightCollapse.rootId, 'collapse');
     return { graph: rightCollapse.graph, rootId: rightCollapse.rootId };
   }
   const updated = updateNode(rightCollapse.graph, nodeId, current => ({
     ...current,
     children: [leftCollapse.rootId, rightCollapse.rootId],
   }));
+  snapshotState(tracer, updated, nodeId, 'collapse');
   return { graph: updated, rootId: nodeId };
+}
+
+function snapshotState(tracer, graph, rootId, note) {
+  if (typeof tracer !== 'function') return;
+  const snapshot = {
+    graph: {
+      nodes: graph.nodes.map(node => ({ ...node, children: node.children ? [...node.children] : undefined })),
+      links: graph.links.map(link => ({ ...link })),
+    },
+    rootId,
+    note,
+  };
+  tracer(snapshot);
 }

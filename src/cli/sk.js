@@ -21,11 +21,7 @@ function parseArgs(argv) {
 function exportTrace(results, tracePath) {
   const payload = results.map(result => ({
     expression: result.expression,
-    graph: {
-      nodes: result.graph.nodes,
-      links: result.graph.links,
-    },
-    rootId: result.rootId,
+    snapshots: result.snapshots,
   }));
   writeFileSync(tracePath, JSON.stringify(payload, null, 2));
   console.log(`Trace written to ${tracePath}`);
@@ -39,9 +35,12 @@ function main() {
 
   samples.forEach(exprSource => {
     try {
-      const result = evaluateExpression(exprSource, env);
+      const snapshots = [];
+      const result = evaluateExpression(exprSource, env, {
+        tracer: snapshot => snapshots.push(snapshot),
+      });
       const focus = getNode(result.graph, result.rootId);
-      evaluations.push({ expression: exprSource, ...result });
+      evaluations.push({ expression: exprSource, snapshots });
       console.log(`Expression: ${exprSource}`);
       console.log(`  Focus: ${focus.label}`);
       console.log(`  Nodes: ${result.graph.nodes.length}, Links: ${result.graph.links.length}`);

@@ -39,3 +39,14 @@ test('S duplicates the context structure', () => {
   const { graph, rootId } = evaluateExpression('(((S a) b) c)', env);
   assert.equal(serialize(graph, rootId), '((a c) (b c))');
 });
+
+test('trace snapshots capture re-entry links', () => {
+  const snapshots = [];
+  evaluateExpression('(I a)', env, {
+    tracer: snapshot => snapshots.push(snapshot),
+  });
+  assert.ok(
+    snapshots.some(snap => Array.isArray(snap.graph.links) && snap.graph.links.length > 0),
+    'expected at least one snapshot with re-entry links',
+  );
+});
