@@ -149,29 +149,28 @@ npm run motifs:right
 ```bash
 npm run sk
 # or with custom expressions / defs:
-node src/sk.js --defs=programs/sk-basis.lisp "((I x) y)" "(((S K K) z))"
+node src/cli/sk.js --defs=programs/sk-basis.lisp "((I x) y)" "(((S K K) z))"
 ```
 
 ### Inspect collapse traces in 3D
-An experimental viewer lives under `viz/`. It renders per-step collapse snapshots with either explicit loop arrows (binder re-entry) or true structural sharing (motifs literally fold onto themselves):
+An experimental viewer lives under `src/vis/`. It renders per-step collapse snapshots with either explicit loop arrows (binder re-entry) or true structural sharing (motifs literally fold onto themselves):
 
 ```bash
-# serve the /viz directory with your favourite static server, e.g.
-npx http-server viz
+# serve the /src/vis directory with your favourite static server, e.g.
+npx http-server src/vis
 ```
 
-Then open [http://localhost:8080](http://localhost:8080) and scrub through the sample trace. Use the toggles to switch between loop arrows vs. sharing mode, and adjust the camera rotation to see how the structure evolves. The viewer consumes simple JSON traces (`viz/sample-trace.js`) so you can swap in traces exported from future collapse runs.
+Then open [http://localhost:8080](http://localhost:8080) and paste a graph JSON into the textarea. The viewer consumes simple nodes/links traces (`src/vis/viewer.js` ships with an example) so you can swap in traces exported from future collapse runs.
 
 ---
 
 ## 7) Repository layout
 
 - `src/`
-  - `catalan.js` — generate Dyck/Motzkin/pair families
-  - `dyck-tools.js` — parsing, normalization, catalogs
-  - `collapse-policy.js` — pluggable local rules
-  - `motif-discover.js` — motif search under collapse
-  - `sk.js` — pure structural SK/λ engine
+  - `catalan/` — Dyck/Motzkin generators, bijections, motif tools
+  - `graph/` — node/link graph core plus the new evaluator
+  - `cli/` — command-line entry points (e.g. `sk.js`)
+  - `vis/` — lightweight HTML/CSS/JS viewers for graph snapshots
 - `programs/`
   - `sk-basis.lisp` — SK, booleans, helpers in pure binder syntax
 - `scheme/`

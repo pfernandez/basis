@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createCollapsePolicy, COLLAPSE_MODES } from '../src/collapse-policy.js';
+import { createCollapsePolicy, COLLAPSE_MODES } from '../src/catalan/collapse-policy.js';
 
 const Leaf = null;
 const Node = (L, R) => ({ L, R });

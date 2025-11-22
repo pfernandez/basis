@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Basis Graph Viewer</title>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <main>
+      <section class="controls">
+        <textarea id="graph-input" rows="8" placeholder="Paste a graph JSON (nodes + links)..."></textarea>
+        <button id="render-button">Render Graph</button>
+      </section>
+      <section class="canvas" id="graph-canvas"></section>
+    </main>
+    <script type="module" src="./viewer.js"></script>
+  </body>
+</html>

@@ -1,0 +1,74 @@
+* {
+  box-sizing: border-box;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #05070f;
+  color: #e4ebff;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem;
+}
+
+main {
+  width: min(960px, 90vw);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+}
+
+button {
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  background: linear-gradient(135deg, #9bb8ff, #7366ff);
+  color: #05070f;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.canvas {
+  position: relative;
+  min-height: 360px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: radial-gradient(circle at top, #10152b, #05070f);
+  overflow: hidden;
+}
+
+.node {
+  position: absolute;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.9);
+  color: #05070f;
+}
+
+.link {
+  position: absolute;
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 1.5;
+}
