@@ -8,49 +8,82 @@ import { serializeGraph } from '../src/graph/serializer.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const env = loadDefinitions(join(__dirname, '../programs/sk-basis.lisp'));
 
+function render(expr) {
+  const { graph, rootId } = evaluateExpression(expr, env);
+  return serializeGraph(graph, rootId);
+}
+
 test('identity returns its argument', () => {
-  const { graph, rootId } = evaluateExpression('(I z)', env);
-  assert.equal(serializeGraph(graph, rootId), 'z');
+  assert.equal(render('(I z)'), 'z');
 });
 
 test('K discards the second argument', () => {
-  const { graph, rootId } = evaluateExpression('((K a) b)', env);
-  assert.equal(serializeGraph(graph, rootId), 'a');
+  assert.equal(render('((K a) b)'), 'a');
 });
 
 test('TRUE selects the first argument', () => {
-  const { graph, rootId } = evaluateExpression('((TRUE a) b)', env);
-  assert.equal(serializeGraph(graph, rootId), 'a');
+  assert.equal(render('((TRUE a) b)'), 'a');
 });
 
 test('FALSE selects the second argument', () => {
-  const { graph, rootId } = evaluateExpression('((FALSE a) b)', env);
-  assert.equal(serializeGraph(graph, rootId), 'b');
+  assert.equal(render('((FALSE a) b)'), 'b');
+});
+
+test('NOT flips booleans', () => {
+  assert.equal(render('(((NOT TRUE) a) b)'), 'b');
+  assert.equal(render('(((NOT FALSE) a) b)'), 'a');
+});
+
+test('AND and OR behave like boolean algebra', () => {
+  assert.equal(render('((((AND TRUE) FALSE) a) b)'), 'b');
+  assert.equal(render('((((OR FALSE) TRUE) a) b)'), 'a');
 });
 
 test('LEFT returns its left operand', () => {
-  const { graph, rootId } = evaluateExpression('((LEFT foo) bar)', env);
-  assert.equal(serializeGraph(graph, rootId), 'foo');
+  assert.equal(render('((LEFT foo) bar)'), 'foo');
 });
 
 test('RIGHT returns its right operand', () => {
-  const { graph, rootId } = evaluateExpression('((RIGHT foo) bar)', env);
-  assert.equal(serializeGraph(graph, rootId), 'bar');
+  assert.equal(render('((RIGHT foo) bar)'), 'bar');
 });
 
 test('SELF returns its argument', () => {
-  const { graph, rootId } = evaluateExpression('(SELF z)', env);
-  assert.equal(serializeGraph(graph, rootId), 'z');
+  assert.equal(render('(SELF z)'), 'z');
+});
+
+test('C flips argument order and W duplicates arguments', () => {
+  assert.equal(render('(((C K) a) b)'), 'b');
+  assert.equal(render('((W K) a)'), 'a');
+});
+
+test('ADD composes numerals (1 + 2 = 3)', () => {
+  assert.equal(render('((((ADD ONE) TWO) f) x)'), '(f (f (f x)))');
+});
+
+test('SUCC and MUL terminate under full reduction', () => {
+  assert.doesNotThrow(() => render('(((SUCC ZERO) f) x)'));
+  assert.doesNotThrow(() => render('((((MUL TWO) TWO) f) x)'));
 });
 
 test('S duplicates the context structure', () => {
-  const { graph, rootId } = evaluateExpression('(((S a) b) c)', env);
-  assert.equal(serializeGraph(graph, rootId), '((a c) (b c))');
+  assert.equal(render('(((S a) b) c)'), '((a c) (b c))');
 });
 
 test('B threads arguments (B K SELF a -> K (SELF a))', () => {
-  const { graph, rootId } = evaluateExpression('(((B K) SELF) a)', env);
-  assert.equal(serializeGraph(graph, rootId), '((() (() #1)) ((() #0) a))');
+  assert.equal(render('(((B K) SELF) a)'), '(() a)');
+});
+
+test('PAIR, FIRST, and SECOND encode and decode data', () => {
+  assert.equal(render('(((PAIR a) b) LEFT)'), 'a');
+  assert.equal(render('(((PAIR a) b) RIGHT)'), 'b');
+  assert.equal(render('(FIRST ((PAIR a) b))'), 'a');
+  assert.equal(render('(SECOND ((PAIR a) b))'), 'b');
+});
+
+test('Church numerals evaluate to expected action counts', () => {
+  assert.equal(render('((ZERO f) x)'), 'x');
+  assert.equal(render('((ONE f) x)'), '(f x)');
+  assert.equal(render('((TWO f) x)'), '(f (f x))');
 });
 
 test('trace snapshots capture re-entry links', () => {

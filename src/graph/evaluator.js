@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { addLink, addNode, cloneSubgraph, createGraph, getNode, replaceSlotsWith, updateNode } from './graph.js';
 import { parseMany, parseSexpr } from './parser.js';
 import { invariant } from '../utils.js';
+import { serializeGraph } from './serializer.js';
 
 const EMPTY_LABEL = '()';
 
@@ -99,13 +100,30 @@ export function evaluateExpressions(expressions, env) {
  */
 export function evaluateExpression(expr, env, options = {}) {
   const tracer = options.tracer ?? null;
+  const maxSteps = options.maxSteps ?? 256;
   const ast = typeof expr === 'string' ? parseSexpr(expr) : expr;
   const graph = createGraph();
   const { graph: withTree, nodeId } = buildTemplate(graph, ast, []);
   snapshotState(tracer, withTree, nodeId, 'init');
-  const evaluated = reduceGraph(withTree, nodeId, env, tracer);
-  snapshotState(tracer, evaluated.graph, evaluated.rootId, 'final');
-  return evaluated;
+
+  let currentGraph = withTree;
+  let currentRoot = nodeId;
+  let previousSig = serializeGraph(currentGraph, currentRoot);
+
+  for (let i = 0; i < maxSteps; i += 1) {
+    const reduced = reduceGraph(currentGraph, currentRoot, env, tracer);
+    const signature = serializeGraph(reduced.graph, reduced.rootId);
+    if (signature === previousSig) {
+      snapshotState(tracer, reduced.graph, reduced.rootId, 'final');
+      return reduced;
+    }
+    // Consider caching signatures or a structural hash if this ever shows up hot.
+    previousSig = signature;
+    currentGraph = reduced.graph;
+    currentRoot = reduced.rootId;
+  }
+
+  throw new Error(`Reduction exceeded maxSteps=${maxSteps}; expression may be non-terminating`);
 }
 
 /**
