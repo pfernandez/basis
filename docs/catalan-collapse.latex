@@ -398,42 +398,87 @@ In short:
   \text{local} = \text{actualization mechanism}.
 \]
 
-\section{Zero-D Substrate, Gauge Coordinates, and Emergent $1{+}3$}
-\label{sec:zeroD-gauge-1p3}
+\section{Minimal Embedding Dimension for Reentrant Structure}
+\label{sec:embedding}
 
 \paragraph{Primitive stance.}
 The substrate has no intrinsic geometry. $()$ is void; $(())$ is the first self-oscillation. All content is combinatorial. Updates are only \emph{legal} local moves (one wrap or branch per chronon) with actualization-weighted collapse. There are no wires and no metric.
 
-\paragraph{Time from causality.}
-Chronon count is the only primitive ordering; ``time'' is the partial order induced by legal updates and collapses. At a fixed chronon $t$ we may index the current Catalan layer by a \emph{breadth} coordinate (the Dyck-tier boundary), but this is merely an indexing of histories, not a geometric axis.
+\paragraph{Time and breadth from causality.}
+Chronon count provides temporal ordering. At fixed chronon $t$, the Dyck-tier boundary provides a natural breadth coordinate indexing simultaneous histories. Together these give a $(1+1)$-dimensional causal substrate: one timelike direction (chronon sequence) and one spacelike direction (breadth across the cone).
 
-\paragraph{Reentry as labels, not wires.}
-Actualization introduces \emph{structural sharing} (reusable $K$), distributor-like reuse ($S$), and self-reentry (Y-like). Formally, these are reference relations added to the tree. To prevent serialized crossings from masquerading as interactions, we attach to each reference two independent \emph{routing labels} drawn from a discrete label-set $\Lambda\cong\mathbb{Z}^2$:
+\paragraph{The reentry problem.}
+Actualization introduces \emph{structural sharing}: reusable $K$ (choice), $S$ (distribution), and Y-like (self-reentry) patterns. These create reference relations from later structures back to earlier ones. When we serialize or traverse the Catalan tree, distinct references will generically cross in the $(t,x)$ plane.
+
+\emph{Critical distinction}: Some crossings represent genuine interactions (references that meet); others are merely accidental (references passing nearby in the substrate without touching). To preserve the topological identity of reentrant patterns, we must distinguish these cases.
+
+\paragraph{Graph embedding and non-planarity.}
+The reentrant Catalan tree with actualization-weighted references forms a directed graph $G = (V,E)$ where vertices are tree nodes and edges include both parent-child links and backward references. The question becomes: \emph{What is the minimal dimension needed to embed $G$ without false crossings?}
+
+For generic reentrant patterns:
+\begin{itemize}
+  \item \textbf{2D is insufficient.} Consider three early actualized structures $A_1, A_2, A_3$ at distinct breadth positions, and three later structures $B_1, B_2, B_3$ where:
+  \begin{itemize}
+    \item $B_1$ references $A_2$ and $A_3$
+    \item $B_2$ references $A_1$ and $A_3$
+    \item $B_3$ references $A_1$ and $A_2$
+  \end{itemize}
+  These six reference edges form $K_{3,3}$ (complete bipartite graph), which is non-planar by Kuratovsky's theorem. Any 2D embedding must have false crossings.
+  
+  \item \textbf{3D is sufficient.} Most finite graphs embed in $\mathbb{R}^3$ without crossings. The additional dimension provides ``room'' for references to route around each other.
+  
+  \item \textbf{3D is necessary.} Self-referential patterns like the Y combinator create loops that thread through themselves. In 2D, such loops cannot avoid self-intersection. In 3D, they form stable knot topology.
+\end{itemize}
+
+\paragraph{Topological stability and knot theory.}
+The dimensionality requirement is sharpened by considering topological invariants:
+\begin{itemize}
+  \item In $D=2$: All knots are trivial (can be unknotted by moving over/under).
+  \item In $D=3$: Rich knot theory exists. Reentrant structures have non-trivial linking and can maintain topological identity.
+  \item In $D \ge 4$: Knots become trivial again (too much room to slip through); topological structure cannot be stably maintained.
+\end{itemize}
+
+If actualized patterns derive their identity from topological linking—from \emph{how} earlier structure is referenced by later structure—then $D=3$ is both necessary and sufficient.
+
+\paragraph{Routing labels as embedding coordinates.}
+To implement this embedding, we attach to each backward reference two independent \emph{routing labels} $(\ell_y, \ell_z) \in \mathbb{Z}^2$. These specify which transverse path the reference takes through the embedding space. The labels are pure bookkeeping: physics is invariant under any relabeling (coordinate gauge symmetry).
+
+The state at chronon $t$ is:
 \[
-\text{state at chronon }t = \text{Catalan tree} \;\;+\;\; \text{finite set of references labeled } (\ell_y,\ell_z)\in\Lambda.
+\text{Catalan tree} \;\;+\;\; \text{finite set of references labeled } (\ell_y,\ell_z)\in\mathbb{Z}^2.
 \]
-These labels are \emph{bookkeeping only}. Physics is invariant under any relabeling (gauge symmetry): permutations of $\Lambda$ do not change observables. There is still no metric and no wires.
 
-\paragraph{From labels to effective space.}
-Consider the legal-move adjacency $L$ on the finite set of states at fixed $t$ (wrap/branch/rotation subject to actualization/locality). Coarse-graining the Markov semigroup generated by $L$ yields a diffusion operator on the low-frequency sector. Because the label fiber contributes two independent, gauge-equivalent classes, the coarse-grained generator factorizes into one breadth and two transverse directions,
+\paragraph{From discrete labels to effective geometry.}
+Consider the legal-move adjacency operator $L$ on states (wrap/branch/rotation subject to actualization/locality). The low-frequency spectrum of the Markov semigroup generated by $L$ determines effective diffusion behavior. Because:
+\begin{enumerate}
+  \item The breadth coordinate $x$ contributes $\partial_x^2$,
+  \item The label fiber $\mathbb{Z}^2$ contributes two gauge-equivalent directions,
+  \item The low-frequency spectrum of the discrete Laplacian on $\mathbb{Z}^2$ is rotationally invariant,
+\end{enumerate}
+the coarse-grained diffusion operator factorizes as:
 \[
 \mathcal{D}_{\text{eff}} \;\sim\; \partial_{x}^2 \;+\; \partial_{y}^2 \;+\; \partial_{z}^2,
 \]
-where $(y,z)$ are the continuum limits of $(\ell_y,\ell_z)\in\mathbb{Z}^2$. Thus the long-wavelength spectrum behaves \emph{as if} there were two additional spatial axes. The minimal effective spacetime consistent with reentry is therefore $1{+}3$:
+where $(y,z)$ are continuum limits of the discrete labels. Thus:
 \[
-\text{chronon order (time)} \;+\; \text{breadth index} \;+\; \text{two gauge labels} \;\Longrightarrow\; 1{+}3\ \text{effective geometry}.
+\boxed{
+\text{chronon order (time)} \;+\; \text{breadth} \;+\; \text{two embedding labels} \;\Longrightarrow\; 1{+}3\ \text{effective spacetime}
+}
 \]
 
-\paragraph{Gauge principle of coordinates.}
-Coordinates are not primitive objects but \emph{gauges} for the serialized representation of references. Observables depend only on gauge-invariant functionals (counts, actualization spectra, motif statistics, causal distances by collapse work, and spectral data of $L$). Euclidean-looking axes emerge because the low-frequency spectrum of $L$ on the label fiber $\mathbb{Z}^2$ is rotation-invariant.
+\paragraph{Physical interpretation.}
+The two transverse dimensions are not ad hoc: they are the \emph{minimal geometric space required for reentrant Catalan topology to be well-defined}. Coordinates are gauges for routing serialized references, not primitive geometric objects. Observable physics depends only on gauge-invariant functionals: actualization spectra, motif statistics, causal distances, and spectral properties of $L$.
+
+\paragraph{Consistency checks.}
+Several independent arguments support $D=3$ spatial dimensions:
+\begin{enumerate}[label=(\roman*)]
+  \item \textbf{Huygens principle.} Exact light-cone propagation (sharp wavefronts) holds for the wave equation only in odd spatial $D \ge 3$; minimal case is $D=3$.
+  \item \textbf{Knot stability.} Non-trivial, stable link invariants exist minimally in $D=3$ (trivial in $D=2$, unstable in $D\ge 4$).
+  \item \textbf{Vector calculus.} An associative cross product (needed for circulation/angular momentum) exists only in $D=3$, consistent with our associahedral substrate.
+\end{enumerate}
 
 \paragraph{Consequence for calibration.}
-Catalan ``cavities'' correspond to boundary conditions along one effective axis with two transverse label-directions. The resulting regulated spectral difference produces the quartic law $P\propto \hbar c/a^4$ with a geometry-dependent, dimensionless coefficient. In Section~\ref{sec:calibration} we use the parallel-plate value as an SI anchor, without committing to electromagnetic fields or a fundamental metric.
-
-\paragraph{Cross-checks}
-(i) Exact light-cone propagation (Huygens) holds for the wave operator only in odd spatial $D\ge 3$; minimal $D=3$.
-(ii) Stable loop/link invariants exist minimally in $D=3$ (trivial in $D=2$, generically unstable in $D\ge 4$).
-(iii) An associative vector calculus for circulation (true cross product) exists in $D=3$, aligning with our associahedral substrate.
+Confined degrees of freedom (Section~\ref{sec:calibration}) correspond to boundary conditions along one spatial axis with two transverse label-directions. The regulated spectral difference produces the Casimir pressure law $P \propto \hbar c/a^4$ with geometric coefficient $\pi^2/240$, as expected for parallel plates in $3D$.
 
 \section{Physical calibration via Casimir}
 \label{sec:calibration}
@@ -535,6 +580,7 @@ This presentation is intended as an accessible but technically precise introduct
 \begin{itemize}
   \item The spectral/phase view of Catalan tiers and the detailed derivation of Schrödinger-like dynamics from discrete shifts are treated in outline only; a full account requires extending the companion global manuscript.
   \item The comparison with continuum quantum field theory, including renormalization and internal symmetries beyond the simple combinatorial ones of binary trees, has not been attempted.
+  \item The minimal embedding dimension argument (Section~\ref{sec:embedding}) provides a topological lower bound but does not yet constitute a rigorous proof. A complete characterization of graph classes arising from actualization-weighted collapse and their embedding properties remains open.
   \item Cosmological and black-hole applications, while suggested by the Casimir anchor and by depth--breadth duality, are not worked out and will require connecting this discrete model to observational scales.
   \item The implementation in the \texttt{basis} repository is a research tool, not a production simulator. Reproducibility depends on recording versions, configuration, and random seeds as documented there.
   \item A fuller survey of related discrete approaches (beyond the brief comparison to Wolfram-style multicomputation) remains to be written.
