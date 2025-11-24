@@ -165,12 +165,14 @@ export function cloneSubgraph(graph, rootId) {
  * @param {Graph} graph
  * @param {string} binderKey
  * @param {string} replacementRootId
+ * @param {Set<string>} [limitToNodeIds] Optional set of node IDs to restrict replacement to
  * @returns {Graph}
  */
-export function replaceSlotsWith(graph, binderKey, replacementRootId) {
+export function replaceSlotsWith(graph, binderKey, replacementRootId, limitToNodeIds = null) {
   const parentIndex = buildParentIndex(graph.nodes);
   const slotIds = graph.nodes
     .filter(node => node.kind === 'slot' && node.aliasKey === binderKey)
+    .filter(node => !limitToNodeIds || limitToNodeIds.has(node.id))
     .map(node => node.id);
 
   let nextGraph = graph;

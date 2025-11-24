@@ -65,6 +65,10 @@ test('SUCC and MUL terminate under full reduction', () => {
   assert.doesNotThrow(() => render('((((MUL TWO) TWO) f) x)'));
 });
 
+test('MUL multiplies numerals (2 * 2 = 4)', () => {
+  assert.equal(render('((((MUL TWO) TWO) f) x)'), '(f (f (f (f x))))');
+});
+
 test('S duplicates the context structure', () => {
   assert.equal(render('(((S a) b) c)'), '((a c) (b c))');
 });

@@ -246,15 +246,31 @@ function applyIfLambda(graph, parentPairId, candidateId, argumentId, tracer) {
     return { graph, rootId: parentPairId };
   }
 
-  const cloned = cloneSubgraph(graph, argumentId);
-  const bodyNode = getNode(graph, bodyId);
-  if (bodyNode.kind === 'slot' && bodyNode.aliasKey === binder.anchorKey) {
-    snapshotState(tracer, cloned.graph, cloned.rootId, 'apply');
-    return { graph: cloned.graph, rootId: cloned.rootId };
+  // Clone the lambda and argument so shared callees keep their original structure.
+  const clonedLambda = cloneSubgraph(graph, candidateId);
+  const clonedArg = cloneSubgraph(clonedLambda.graph, argumentId);
+  const lambdaRoot = getNode(clonedArg.graph, clonedLambda.rootId);
+  const lambdaBinderId = lambdaRoot.children?.[0];
+  const lambdaBodyId = lambdaRoot.children?.[1];
+  if (!lambdaBinderId || !lambdaBodyId) {
+    return { graph, rootId: parentPairId };
   }
-  const nextGraph = replaceSlotsWith(cloned.graph, binder.anchorKey, cloned.rootId);
-  snapshotState(tracer, nextGraph, bodyId, 'apply');
-  return { graph: nextGraph, rootId: bodyId };
+  const lambdaBinder = getNode(clonedArg.graph, lambdaBinderId);
+  const lambdaBody = getNode(clonedArg.graph, lambdaBodyId);
+  const lambdaNodeIds = collectSubgraphNodeIds(clonedArg.graph, clonedLambda.rootId);
+
+  if (lambdaBody.kind === 'slot' && lambdaBody.aliasKey === lambdaBinder.anchorKey) {
+    snapshotState(tracer, clonedArg.graph, clonedArg.rootId, 'apply');
+    return { graph: clonedArg.graph, rootId: clonedArg.rootId };
+  }
+  const nextGraph = replaceSlotsWith(
+    clonedArg.graph,
+    lambdaBinder.anchorKey,
+    clonedArg.rootId,
+    lambdaNodeIds,
+  );
+  snapshotState(tracer, nextGraph, lambdaBodyId, 'apply');
+  return { graph: nextGraph, rootId: lambdaBodyId };
 }
 
 /**
@@ -305,4 +321,24 @@ function snapshotState(tracer, graph, rootId, note) {
     note,
   };
   tracer(snapshot);
+}
+
+/**
+ * Collect the IDs of all nodes reachable from a root by following pair children.
+ *
+ * @param {Graph} graph
+ * @param {string} rootId
+ * @returns {Set<string>}
+ */
+function collectSubgraphNodeIds(graph, rootId) {
+  const seen = new Set();
+  const stack = [rootId];
+  while (stack.length) {
+    const next = stack.pop();
+    if (seen.has(next)) continue;
+    seen.add(next);
+    const node = getNode(graph, next);
+    (node.children ?? []).forEach(childId => stack.push(childId));
+  }
+  return seen;
 }
