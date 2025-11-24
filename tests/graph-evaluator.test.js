@@ -74,6 +74,16 @@ test('MUL multiplies numerals (2 * 2 = 4)', () => {
   assert.equal(render('((((MUL TWO) TWO) f) x)'), '(f (f (f (f x))))');
 });
 
+test('APPLY-SELF and THETA behave under applicative order', () => {
+  assert.equal(render('((APPLY-SELF K) a)'), '(() (() #1))'); // K
+  assert.equal(render('((THETA (K a)) b)'), 'a');
+});
+
+test('Z builds an applicative fixpoint for contractive functions', () => {
+  assert.equal(render('(Z (K a))'), 'a');
+  assert.equal(render('((Z (K a)) b)'), '(a b)');
+});
+
 test('S duplicates the context structure', () => {
   assert.equal(render('(((S a) b) c)'), '((a c) (b c))');
 });
