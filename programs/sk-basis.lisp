@@ -3,47 +3,59 @@
 ; collapse rule can run without any trusted overrides.
 ; Identity, constant, and S combinators defined with defn sugar.
 (defn I (x) x)
+(def id I)
+
 (defn K (x y) x)
+(def const K)
+
 (defn S (x y z) ((x z) (y z)))
-
-; TRUE selects the first argument; FALSE selects the second
-(defn TRUE (x y) x)
-(defn FALSE (x y) y)
-
-; Boolean algebra built from TRUE/FALSE, written without referencing globals so
-; reduction stays strictly structural
-(defn NOT (p x y) ((p y) x))
-(defn AND (p q x y) ((p ((q x) y)) y))
-(defn OR (p q x y) ((p x) ((q x) y)))
+(def spread S)
 
 ; Function composition `B f g x = f (g x)`
 (defn B (f g x) (f (g x)))
+(def compose B)
+
 (defn C (f x y) ((f y) x))   ; flip arguments
+(def flip C)
+
 (defn W (f x) ((f x) x))     ; duplicate argument
+(def split W)
+
+; Booleans
+(defn true (x y) x)
+(defn false (x y) y)
+
+; Boolean algebra built from true/false, written without referencing globals so
+; reduction stays strictly structural
+(defn not (p x y) ((p y) x))
+(defn and (p q x y) ((p ((q x) y)) y))
+(defn or (p q x y) ((p x) ((q x) y)))
 
 ; Church pairs and selectors
-(defn PAIR (a b f) ((f a) b))
-(defn FIRST (p) (p TRUE))
-(defn SECOND (p) (p FALSE))
+(defn pair (a b f) ((f a) b))
+(defn first (p) (p true))
+(defn second (p) (p false))
 
 ; Example combinators defined with defn sugar. The `defn` reader rewrites these
 ; into the same explicit structure above while loading the file, so this is
 ; purely syntactic sugar for human readers.
-(defn LEFT (x y) x)
-(defn RIGHT (x y) y)
-(defn SELF (x) x)
+(defn left (x y) x)
+(defn right (x y) y)
+(defn self (x) x)
 
 ; Church numerals and arithmetic
-(defn ZERO (f x) x)
-(defn ONE (f x) (f x))
-(defn TWO (f x) (f (f x)))
-(defn SUCC (n f x) (f ((n f) x)))
-(defn ADD (m n f x) ((m f) ((n f) x)))
-(defn MUL (m n f x) ((m (n f)) x))
+(defn zero (f x) x)
+(defn one (f x) (f x))
+(defn two (f x) (f (f x)))
+(defn succ (n f x) (f ((n f) x)))
+(defn add (m n f x) ((m f) ((n f) x)))
+(defn mul (m n f x) ((m (n f)) x))
 
 ; Applicative-order fixpoint combinator helpers
 (defn APPLY-SELF (x v) ((x x) v))
 (defn THETA (f x) (f (APPLY-SELF x)))
+(def apply-self APPLY-SELF)
+(def theta THETA)
 
 ; Applicative-order fixpoint combinator.
 ; The classic Y = λf.(λx.f(x x))(λx.f(x x)) diverges under strict (collapse-now)
@@ -51,3 +63,4 @@
 ; so self-application is only demanded once the body consumes its input.
 ; If you ever want the lazy variant, Y = (THETA THETA) is the unsafe form.
 (defn Z (f) ((THETA f) (THETA f)))
+(def fix Z)

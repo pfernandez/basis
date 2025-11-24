@@ -22,66 +22,56 @@ test('K discards the second argument', () => {
 });
 
 test('TRUE selects the first argument', () => {
-  assert.equal(render('((TRUE a) b)'), 'a');
+  assert.equal(render('((true a) b)'), 'a');
 });
 
 test('FALSE selects the second argument', () => {
-  assert.equal(render('((FALSE a) b)'), 'b');
+  assert.equal(render('((false a) b)'), 'b');
 });
 
 test('NOT flips booleans', () => {
-  assert.equal(render('(((NOT TRUE) a) b)'), 'b');
-  assert.equal(render('(((NOT FALSE) a) b)'), 'a');
+  assert.equal(render('(((not true) a) b)'), 'b');
+  assert.equal(render('(((not false) a) b)'), 'a');
 });
 
 test('AND and OR behave like boolean algebra', () => {
-  assert.equal(render('((((AND TRUE) FALSE) a) b)'), 'b');
-  assert.equal(render('((((OR FALSE) TRUE) a) b)'), 'a');
+  assert.equal(render('((((and true) false) a) b)'), 'b');
+  assert.equal(render('((((or false) true) a) b)'), 'a');
 });
 
 test('LEFT returns its left operand', () => {
-  assert.equal(render('((LEFT foo) bar)'), 'foo');
+  assert.equal(render('((left foo) bar)'), 'foo');
 });
 
 test('RIGHT returns its right operand', () => {
-  assert.equal(render('((RIGHT foo) bar)'), 'bar');
+  assert.equal(render('((right foo) bar)'), 'bar');
 });
 
 test('SELF returns its argument', () => {
-  assert.equal(render('(SELF z)'), 'z');
+  assert.equal(render('(self z)'), 'z');
 });
 
 test('C flips argument order and W duplicates arguments', () => {
-  assert.equal(render('(((C K) a) b)'), 'b');
-  assert.equal(render('((W K) a)'), 'a');
+  assert.equal(render('(((flip K) a) b)'), 'b');
+  assert.equal(render('((split K) a)'), 'a');
 });
 
 test('ADD composes numerals (1 + 2 = 3)', () => {
-  assert.equal(render('((((ADD ONE) TWO) f) x)'), '(f (f (f x)))');
+  assert.equal(render('((((add one) two) f) x)'), '(f (f (f x)))');
 });
 
 test('SUCC and MUL terminate under full reduction', () => {
-  assert.doesNotThrow(() => render('(((SUCC ZERO) f) x)'));
-  assert.doesNotThrow(() => render('((((MUL TWO) TWO) f) x)'));
+  assert.doesNotThrow(() => render('(((succ zero) f) x)'));
+  assert.doesNotThrow(() => render('((((mul two) two) f) x)'));
 });
 
 test('SUCC increments numerals', () => {
-  assert.equal(render('(((SUCC ONE) f) x)'), '(f (f x))');
-  assert.equal(render('(((SUCC ZERO) f) x)'), '(f x)');
+  assert.equal(render('(((succ one) f) x)'), '(f (f x))');
+  assert.equal(render('(((succ zero) f) x)'), '(f x)');
 });
 
 test('MUL multiplies numerals (2 * 2 = 4)', () => {
-  assert.equal(render('((((MUL TWO) TWO) f) x)'), '(f (f (f (f x))))');
-});
-
-test('APPLY-SELF and THETA behave under applicative order', () => {
-  assert.equal(render('((APPLY-SELF K) a)'), '(() (() #1))'); // K
-  assert.equal(render('((THETA (K a)) b)'), 'a');
-});
-
-test('Z builds an applicative fixpoint for contractive functions', () => {
-  assert.equal(render('(Z (K a))'), 'a');
-  assert.equal(render('((Z (K a)) b)'), '(a b)');
+  assert.equal(render('((((mul two) two) f) x)'), '(f (f (f (f x))))');
 });
 
 test('S duplicates the context structure', () => {
@@ -89,20 +79,30 @@ test('S duplicates the context structure', () => {
 });
 
 test('B threads arguments (B K SELF a -> K (SELF a))', () => {
-  assert.equal(render('(((B K) SELF) a)'), '(() a)');
+  assert.equal(render('(((B K) self) a)'), '(() a)');
 });
 
 test('PAIR, FIRST, and SECOND encode and decode data', () => {
-  assert.equal(render('(((PAIR a) b) LEFT)'), 'a');
-  assert.equal(render('(((PAIR a) b) RIGHT)'), 'b');
-  assert.equal(render('(FIRST ((PAIR a) b))'), 'a');
-  assert.equal(render('(SECOND ((PAIR a) b))'), 'b');
+  assert.equal(render('(((pair a) b) left)'), 'a');
+  assert.equal(render('(((pair a) b) right)'), 'b');
+  assert.equal(render('(first ((pair a) b))'), 'a');
+  assert.equal(render('(second ((pair a) b))'), 'b');
 });
 
 test('Church numerals evaluate to expected action counts', () => {
-  assert.equal(render('((ZERO f) x)'), 'x');
-  assert.equal(render('((ONE f) x)'), '(f x)');
-  assert.equal(render('((TWO f) x)'), '(f (f x))');
+  assert.equal(render('((zero f) x)'), 'x');
+  assert.equal(render('((one f) x)'), '(f x)');
+  assert.equal(render('((two f) x)'), '(f (f x))');
+});
+
+test('APPLY-SELF and THETA behave under applicative order', () => {
+  assert.equal(render('((apply-self K) a)'), '(() (() #1))'); // K
+  assert.equal(render('((theta (K a)) b)'), 'a');
+});
+
+test('Z builds an applicative fixpoint for contractive functions', () => {
+  assert.equal(render('(fix (K a))'), 'a');
+  assert.equal(render('((fix (K a)) b)'), '(a b)');
 });
 
 test('trace snapshots capture re-entry links', () => {
