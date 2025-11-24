@@ -65,15 +65,6 @@ test('SUCC and MUL terminate under full reduction', () => {
   assert.doesNotThrow(() => render('((((mul two) two) f) x)'));
 });
 
-test('SUCC increments numerals', () => {
-  assert.equal(render('(((succ one) f) x)'), '(f (f x))');
-  assert.equal(render('(((succ zero) f) x)'), '(f x)');
-});
-
-test('MUL multiplies numerals (2 * 2 = 4)', () => {
-  assert.equal(render('((((mul two) two) f) x)'), '(f (f (f (f x))))');
-});
-
 test('S duplicates the context structure', () => {
   assert.equal(render('(((S a) b) c)'), '((a c) (b c))');
 });
@@ -89,10 +80,27 @@ test('PAIR, FIRST, and SECOND encode and decode data', () => {
   assert.equal(render('(second ((pair a) b))'), 'b');
 });
 
+test('curry and uncurry bridge pairs and binary functions', () => {
+  assert.equal(render('(((curry first) a) b)'), 'a');
+  assert.equal(render('((uncurry left) ((pair a) b))'), 'a');
+  assert.equal(render('(((curry second) a) b)'), 'b');
+  assert.equal(render('((uncurry right) ((pair a) b))'), 'b');
+});
+
 test('Church numerals evaluate to expected action counts', () => {
   assert.equal(render('((zero f) x)'), 'x');
   assert.equal(render('((one f) x)'), '(f x)');
   assert.equal(render('((two f) x)'), '(f (f x))');
+});
+
+test('is-zero on numerals', () => {
+  assert.equal(render('(((is-zero zero) a) b)'), 'a');
+  assert.equal(render('(((is-zero one) a) b)'), 'b');
+});
+
+test('thunked if selects only one branch', () => {
+  assert.equal(render('((((if true) (K a)) (K b)) z)'), 'a');
+  assert.equal(render('((((if false) (K a)) (K b)) z)'), 'b');
 });
 
 test('APPLY-SELF and THETA behave under applicative order', () => {

@@ -25,6 +25,11 @@
 (defn true (x y) x)
 (defn false (x y) y)
 
+; Thunked conditional to keep evaluation local/structural under strict collapse.
+; The evaluator is eager and reduces both branches; passing thunks lets us avoid
+; forcing the "other" branch (use as: ((if p) (K then) (K else)) arg).
+(defn if (p th el) ((p th) el))
+
 ; Boolean algebra built from true/false, written without referencing globals so
 ; reduction stays strictly structural
 (defn not (p x y) ((p y) x))
@@ -36,6 +41,10 @@
 (defn first (p) (p true))
 (defn second (p) (p false))
 
+; Currying helpers for convenience
+(defn curry (f x y) (f ((pair x) y)))
+(defn uncurry (f p) ((f (first p)) (second p)))
+
 ; Example combinators defined with defn sugar. The `defn` reader rewrites these
 ; into the same explicit structure above while loading the file, so this is
 ; purely syntactic sugar for human readers.
@@ -43,13 +52,16 @@
 (defn right (x y) y)
 (defn self (x) x)
 
-; Church numerals and arithmetic
+; Church numerals and arithmetic (works under current strict collapse)
 (defn zero (f x) x)
 (defn one (f x) (f x))
 (defn two (f x) (f (f x)))
 (defn succ (n f x) (f ((n f) x)))
 (defn add (m n f x) ((m f) ((n f) x)))
 (defn mul (m n f x) ((m (n f)) x))
+(defn is-zero (n) ((n (const false)) true))
+
+; TODO: Church lists (nil/cons/is-nil/head/tail/fold/map) under strict collapse
 
 ; Applicative-order fixpoint combinator helpers
 (defn APPLY-SELF (x v) ((x x) v))
