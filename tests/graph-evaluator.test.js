@@ -65,6 +65,11 @@ test('SUCC and MUL terminate under full reduction', () => {
   assert.doesNotThrow(() => render('((((MUL TWO) TWO) f) x)'));
 });
 
+test('SUCC increments numerals', () => {
+  assert.equal(render('(((SUCC ONE) f) x)'), '(f (f x))');
+  assert.equal(render('(((SUCC ZERO) f) x)'), '(f x)');
+});
+
 test('MUL multiplies numerals (2 * 2 = 4)', () => {
   assert.equal(render('((((MUL TWO) TWO) f) x)'), '(f (f (f (f x))))');
 });

@@ -212,12 +212,13 @@ function reduceGraph(graph, nodeId, env, tracer) {
   if (node.kind !== 'pair') {
     return { graph, rootId: nodeId };
   }
-  let currentGraph = graph;
-  const leftEval = reduceGraph(currentGraph, node.children[0], env, tracer);
-  currentGraph = leftEval.graph;
-  const rightEval = reduceGraph(currentGraph, node.children[1], env, tracer);
-  currentGraph = rightEval.graph;
-  const application = applyIfLambda(currentGraph, node.id, leftEval.rootId, rightEval.rootId, env, tracer);
+  const leftEval = reduceGraph(graph, node.children[0], env, tracer);
+  const rightEval = reduceGraph(leftEval.graph, node.children[1], env, tracer);
+  const rewired = updateNode(rightEval.graph, node.id, current => ({
+    ...current,
+    children: [leftEval.rootId, rightEval.rootId],
+  }));
+  const application = applyIfLambda(rewired, node.id, leftEval.rootId, rightEval.rootId, env, tracer);
   return collapsePair(application.graph, application.rootId, tracer);
 }
 
