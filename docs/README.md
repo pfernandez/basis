@@ -27,7 +27,7 @@ This folder holds the narrative and research notes behind Basis—the idea that 
 - The PDF is prebuilt. To regenerate it locally:
 
   ```bash
-  pdflatex catalan-light-cone.latex
+  latexmk -pdf catalan-light-cone.latex
   ```
 
 No external assets are required beyond a standard LaTeX install.
