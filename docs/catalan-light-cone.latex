@@ -1,94 +1,104 @@
 \documentclass[11pt]{article}
-
-\usepackage{amsmath,amssymb,amsthm} \usepackage{mathtools}
-\usepackage{geometry} \usepackage{hyperref} \usepackage{enumitem}
-\usepackage{tikz} \usetikzlibrary{calc} \usetikzlibrary{positioning}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usetikzlibrary{positioning}
 \usetikzlibrary{decorations.pathreplacing}
 
 \geometry{margin=1in}
 
 \newtheorem{theorem}{Theorem}[section]
 
-\title{The Catalan Light Cone:\\ A Recursive Substrate for Causal Geometry,
-Quantum Amplitudes, and Computation}
+\title{The Catalan Light Cone:\\
+A Recursive Substrate for Causal Geometry, Quantum Amplitudes, and Computation}
 
-\author{Paul Fernandez} \date{}
+\author{}
+\date{}
 
 \begin{document}
 
 \maketitle
 
-\begin{abstract} We investigate the Catalan family of combinatorial
-  structures---Dyck paths, full binary trees, and balanced parenthesis
-  expressions---as a unified discrete substrate from which causal geometry,
-  quantum amplitude propagation, and universal computation jointly emerge.  A
-  central observation is that the Dyck constraint induces a natural causal
-  order. When organized by growth tier and lateral spread, the Catalan lattice
-  forms a discrete cone whose extremal configurations reproduce a
-  light-cone--like causal envelope. Classical invariance-principle results show
-  that constrained Dyck walks converge in the scaling limit to Brownian
-  excursions; the induced probability flow satisfies the heat equation and,
-  under Wick rotation, the free Schr\"odinger equation.  Via a uniform
-  structural mapping---the pairs expansion---Dyck trees are placed in bijection
-  with SKI and $\lambda$-calculus term graphs. Under this identification,
-  causal extension corresponds to functional application, while local collapse
-  corresponds to computational reduction. Structural equivalences of the
-  substrate induce gauge-like redundancies, and disjoint subtrees commute
-  analogously to spacelike-separated operators.  The paper distinguishes
-  rigorously established correspondences---scaling limits, diffusion dynamics,
-  prefix-causal structure, and computational universality in the sense of
-  standard SKI/$\lambda$ encodings---from conjectural extensions concerning
-  measurement, actualization, and interaction structure.  Taken together, these
-  correspondences show that a single recursive constraint can reproduce, at a
-  structural and kinematical level, large portions of the operational framework
-  of relativistic quantum theory and universal computation, without introducing
-  additional primitives. We do not attempt to derive interactions or physical
-  constants; the aim is to isolate the minimal recursive structure common to
-  these domains.  \end{abstract}
+\begin{abstract}
+We investigate the Catalan family of combinatorial structures---Dyck paths,
+full binary trees, and balanced parenthesis expressions---as a unified discrete
+substrate from which causal geometry, quantum amplitude propagation, and
+universal computation jointly emerge.
+A central observation is that the Dyck constraint induces a natural causal
+order. When organized by growth tier and lateral spread, the Catalan lattice
+forms a discrete cone whose extremal configurations reproduce a light-cone--like
+causal envelope. Classical invariance-principle results show that constrained
+Dyck walks converge in the scaling limit to Brownian excursions; the induced
+probability flow satisfies the heat equation and, under Wick rotation, the
+free Schr\"odinger equation.
+Via a uniform structural mapping---the pairs expansion---Dyck trees are placed
+in bijection with SKI and $\lambda$-calculus term graphs. Under this
+identification, causal extension corresponds to functional application, while
+local collapse corresponds to computational reduction. Structural equivalences
+of the substrate induce gauge-like redundancies, and disjoint subtrees commute
+analogously to spacelike-separated operators.
+The paper distinguishes rigorously established correspondences---scaling
+limits, diffusion dynamics, prefix-causal structure, and computational
+universality in the sense of standard SKI/$\lambda$ encodings---from
+conjectural extensions concerning measurement, actualization, and interaction
+structure.
+Taken together, the results show that a single recursive constraint is
+sufficient to support large portions of the operational structure of
+relativistic quantum theory and universal computation, without introducing
+additional primitives.
+\end{abstract}
 
-  \section{Introduction}
+\tableofcontents
 
-  Discrete approaches to fundamental physics have long suggested that continuum
-  spacetime and quantum dynamics may emerge from deeper combinatorial
-  structure. Examples include causal sets \cite{bombelli87}, discrete random
-  surfaces and Causal Dynamical Triangulations (CDT)
-  \cite{ambjorn01,ambjorn12}, spin networks and loop quantum gravity
-  \cite{rovelli04}, tensor networks \cite{orus14}, and rewriting systems
-  inspired by $\lambda$-calculus and combinatory logic.  Typically, however,
-  these models require multiple independent ingredients: a relation or graph
-  for causal structure, an algebra for computation, and additional rules for
-  quantum propagation.  This work explores a more economical possibility: that
-  a \emph{single} recursive structure simultaneously supports all three.
+\section{Introduction}
 
-  The focus is the \emph{Catalan substrate}, the family of structures counted
-  by the Catalan numbers \cite{stanley-catalan}, including Dyck paths, full
-  binary trees, and balanced parenthesis expressions.  These objects are
-  usually studied in enumerative combinatorics, probability theory, and
-  theoretical computer science.  Here they are treated instead as a space of
-  \emph{admissible histories} generated by a minimal growth constraint.
+Discrete approaches to fundamental physics have long suggested that continuum
+spacetime and quantum dynamics may emerge from deeper combinatorial structure.
+Examples include causal sets, discrete random surfaces, spin networks, tensor
+networks, and rewriting systems inspired by $\lambda$-calculus and combinatory
+logic. Typically, however, these models require multiple independent
+ingredients: a relation or graph for causal structure, an algebra for
+computation, and additional rules for quantum propagation. This work explores a
+more economical possibility: that a \emph{single} recursive structure
+simultaneously supports all three.
+
+The focus is the \emph{Catalan substrate}, the family of structures counted by
+the Catalan numbers, including Dyck paths, full binary trees, and balanced
+parenthesis expressions. These objects are usually studied in enumerative
+combinatorics, probability theory, and theoretical computer science. Here they
+are treated instead as a space of \emph{admissible histories} generated by a
+minimal growth constraint.
 
 The central claim is that the Catalan substrate admits three tightly coupled
-interpretations: \begin{enumerate}[label=(\roman*)] \item a discrete causal
-    geometry with a light-cone--like envelope, \item a natural path-integral
-      dynamics with diffusive and wave-like continuum limits, \item a universal
-computational calculus via $\lambda$- and SKI-term graphs.  \end{enumerate}
+interpretations:
+\begin{enumerate}[label=(\roman*)]
+  \item a discrete causal geometry with a light-cone--like envelope,
+  \item a natural path-integral dynamics with diffusive and wave-like continuum
+        limits,
+  \item a universal computational calculus via $\lambda$- and SKI-term graphs.
+\end{enumerate}
 These interpretations do not require distinct primitives; they arise from
 different readings of the same recursive object.
 
 The geometric aspect follows from prefix order and growth bounds intrinsic to
-Dyck paths.  The dynamical aspect follows from classical results on conditioned
-random walks and Brownian excursions \cite{le-gall05,janson07}.  The
+Dyck paths. The dynamical aspect follows from classical results on conditioned
+random walks and Brownian excursions \cite{le-gall05,janson07}. The
 computational aspect follows from the well-known equivalence between binary
 trees, cons-pair structures, and $\lambda$-calculus or SKI combinators
-\cite{church33,curry58,barendregt84}.  Taken together, these results show that
-spacetime-like causal structure, quantum wave dynamics, and computation can be
-viewed as complementary manifestations of a single recursive substrate.
+\cite{church33, curry58, barendregt84}.
 
-The exposition proceeds as follows.  Section~\ref{sec:catalan_cone} establishes
-the discrete causal geometry of the Catalan lattice and its interpretation as a
-light cone.  Subsequent sections place amplitude propagation and computation on
-this structure, analyze continuum limits, and discuss collapse, locality, and
-interaction.  Interpretive considerations concerning origin, vacuum structure,
+Taken together, these results show that spacetime-like causal structure,
+quantum wave dynamics, and computation can be viewed as complementary
+manifestations of a single recursive substrate. The exposition proceeds as
+follows. Section~\ref{sec:catalan_cone} establishes the discrete causal
+geometry of the Catalan lattice and its interpretation as a light cone.
+Subsequent sections place amplitude propagation and computation on this
+structure, analyze continuum limits, and discuss collapse, locality, and
+interaction. Interpretive considerations concerning origin, vacuum structure,
 and time are collected in a clearly labeled appendix, separate from the formal
 claims.
 
@@ -97,192 +107,325 @@ claims.
 
 \subsection{Dyck paths and growth tiers}
 
-A Dyck path of semilength $n$ is a walk on the integers satisfying \[ H_{k+1} =
-H_k \pm 1, \qquad H_k \ge 0, \qquad H_0 = H_{2n} = 0.  \] Equivalently, Dyck
-paths are balanced parenthesis strings or full binary trees with $n$ internal
-nodes.  The number of such paths is the $n$th Catalan number \[ C_n =
-\frac{1}{n+1}\binom{2n}{n}.  \] Each up--down pair \(()\) represents a minimal
-unit of growth.  The integer \[ t = n \] will be called the \emph{tier} and
-will be interpreted as a discrete proper time.
+A Dyck path of semilength $t$ is a walk on the integers satisfying
+\[
+  H_{k+1} = H_k \pm 1, \qquad H_k \ge 0, \qquad H_0 = H_{2t} = 0 ,
+\]
+for steps $k = 0,1,\dots,2t$. Equivalently, Dyck paths are balanced parenthesis
+strings or full binary trees with $t$ internal nodes. The number of such paths
+is the $t$th Catalan number
+\[
+  C_t = \frac{1}{t+1}\binom{2t}{t}.
+\]
+
+Throughout, $t \in \mathbb{N}$ will play a dual role:
+\begin{itemize}
+  \item as the \emph{semilength} of a Dyck path (number of matched pairs /
+        internal nodes),
+  \item as the corresponding \emph{tier} or discrete proper time coordinate.
+\end{itemize}
+We will therefore refer to $t$ interchangeably as semilength and tier when
+context makes the meaning clear.
+
+For a Dyck path $w$ with height process $(H_k)$, we write
+\[
+  h(w) := \max_k H_k
+\]
+for its maximal height, which is equal to its maximal nesting depth in the
+parenthesis/tree representation. When we speak of the ``height'' or ``depth''
+of $w$ without further qualification, we mean this quantity $h(w)$.
 
 \subsection{Prefix order and causality}
 
-Dyck paths carry a natural partial order by prefix inclusion.  If a Dyck word
+Dyck paths carry a natural partial order by prefix inclusion. If a Dyck word
 $u$ is a prefix of $v$, then $u$ represents a causal ancestor of $v$.
 Conversely, prefixes that diverge represent causally incompatible futures.
-This prefix order defines a discrete causal structure: \begin{itemize} \item
-every node has a unique causal past, \item multiple incompatible futures may
-branch from the same prefix, \item cycles are prohibited by construction.
-\end{itemize} No additional causal axiom is required; causality is enforced
-combinatorially by the Dyck constraint.
+This prefix order defines a discrete causal structure:
+\begin{itemize}
+  \item every node has a unique causal past,
+  \item multiple incompatible futures may branch from the same prefix,
+  \item cycles are prohibited by construction.
+\end{itemize}
+No additional causal axiom is required; causality is enforced combinatorially
+by the Dyck constraint.
 
 \subsection{Extremal configurations: chain and star}
 
-At fixed tier $t$ there are many Dyck paths.  Two extremal configurations play
-a distinguished role: \begin{itemize} \item the \emph{chain} (or spine) \[
-      (((\cdots))), \] fully nested, with maximal depth and minimal spread;
-  \item the \emph{star} \[ ()()()\cdots(), \] fully separated, with minimal
-depth and maximal spread.  \end{itemize} All other configurations interpolate
-between these extremes.  Together, the set of Dyck paths at tier $t$ forms a
-discrete envelope bounded by the chain and the star.
+At fixed tier $t$ there are many Dyck paths. Two extremal configurations play a
+distinguished role:
+\begin{itemize}
+  \item the \emph{chain} (or spine)
+    \[
+      (((\cdots))),
+    \]
+    fully nested, with maximal depth and minimal spread;
+  \item the \emph{star}
+    \[
+      ()()()\cdots(),
+    \]
+    fully separated, with minimal depth and maximal spread.
+\end{itemize}
+All other configurations interpolate between these extremes. Together, the set
+of Dyck paths at tier $t$ forms a discrete envelope bounded by the chain and
+the star.
 
-\begin{figure}[h] \centering
+\begin{figure}[h]
+  \centering
   % Placeholder: schematic light-cone diagram
   \begin{tikzpicture}[scale=1.1]
     % axes
-    \draw[->] (0,0) -- (0,4) node[left] {$t$}; \draw[->] (0,0) -- (4,0)
-    node[below] {$r$};
+    \draw[->] (0,0) -- (0,4) node[left] {$t$};
+    \draw[->] (0,0) -- (4,0) node[below] {$r$};
     % cone boundaries
-    \draw[thick] (0,0) -- (3.5,3.5); \draw[thick] (0,0) -- (0.8,3.5);
+    \draw[thick] (0,0) -- (3.5,3.5);
+    \draw[thick] (0,0) -- (0.8,3.5);
     % discrete layers
-    \foreach \y in {1,2,3} { \draw[dashed] (0.25*\y,\y) -- (0.85*\y,\y); }
+    \foreach \y in {1,2,3} {
+      \draw[dashed] (0.25*\y,\y) -- (0.85*\y,\y);
+    }
     % labels
-  \node[left] at (0,3.6) {timelike chain}; \node[above right] at (3.5,3.5)
-  {lightlike envelope (star)}; \node at (1.1,2.2) {\small Dyck layer};
-  \end{tikzpicture} \caption{The Catalan light cone.  Tier $t$ (the number of
-  Dyck units) plays the role of proper time, while breadth $r$ measures spatial
-  radius.  All Dyck configurations at fixed tier lie between the fully nested
-  chain (timelike extreme) and the fully separated star (lightlike envelope).
+    \node[left] at (0,3.6) {timelike chain};
+    \node[above right] at (3.5,3.5) {lightlike envelope (star)};
+    \node at (1.1,2.2) {\small Dyck layer};
+  \end{tikzpicture}
+  \caption{The Catalan light cone.
+  Tier $t$ (the number of Dyck units) plays the role of proper time,
+  while breadth $r$ measures spatial radius. All Dyck configurations at fixed
+  tier lie between the fully nested chain (timelike extreme) and the fully
+  separated star (lightlike envelope).
   Discrete Dyck layers approximate constant-time hypersurfaces, and the bound
-  $r \le t$ is enforced combinatorially.} \label{fig:catalan-cone} \end{figure}
+  $r \le t$ is enforced combinatorially.}
+  \label{fig:catalan-cone}
+\end{figure}
 
-  \subsection{Breadth as spatial extent}
+\subsection{Breadth as spatial extent}
 
-  Define the \emph{breadth} $r(w)$ of a Dyck path $w$ to be the size of a
-  largest level set in the associated full binary tree: \[ r(w) := \max_{\ell}
-  \{\text{number of nodes at depth } \ell\}.  \] Equivalently, $r(w)$ is the
-  maximal number of non-overlapping pairs at a common nesting depth.  For a
-  Dyck word of tier $t$ there are $t$ matched pairs in total, so \[ 1 \le r(w)
-  \le t, \] with $r=1$ for the fully nested chain and $r=t$ for the fully
-  separated star.  The inequality \[ r \le t \] is enforced purely by the
-  recursive constraint.  It is the discrete analogue of the relativistic
-  light-cone bound $|\Delta x| \le \Delta t$ (in units with $c=1$).
+Define the \emph{breadth} $r(w)$ of a Dyck path $w$ to be the size of a largest
+level set in the associated full binary tree:
+\[
+  r(w) := \max_{\ell} \{\text{number of nodes at depth } \ell\}.
+\]
+Equivalently, $r(w)$ is the maximal number of non-overlapping pairs at a common
+nesting depth. For a Dyck word of tier $t$ there are $t$ matched pairs in
+total, so
+\[
+  1 \le r(w) \le t,
+\]
+with $r=1$ for the fully nested chain and $r=t$ for the fully separated star.
+The inequality
+\[
+  r \le t
+\]
+is enforced purely by the recursive constraint. It is the discrete analogue of
+the relativistic light-cone bound $|\Delta x| \le \Delta t$ (in units with
+$c=1$).
 
-  \subsection{Depth--breadth tradeoff}
+\subsection{Depth--breadth tradeoff}
 
-  Let $h(w)$ denote the maximum height of a Dyck path, i.e.\ its maximal
-  nesting depth.  Depth and breadth are not independent.  Interpreting the Dyck
-  tree as a full binary prefix code, assign to each leaf $i$ its depth $d_i$
-  (root at depth $0$).  Then the Kraft equality holds: \[ \sum_i 2^{-d_i} = 1.
-  \] In particular, at any fixed depth $\ell$ there can be at most $2^\ell$
-  leaves at that depth.  Since $r(w)$ is the size of a largest level set, there
-  is some depth $\ell_\ast$ at which $r(w)$ nodes appear, and hence \[ r(w) \le
-  2^{\ell_\ast} \le 2^{h(w)} \quad\Rightarrow\quad h(w) \ge \log_2 r(w).  \]
-  Thus configurations with large breadth necessarily have logarithmically large
-  depth, while very deep trees must concentrate most of their leaves in narrow
-  antichains.  This structural constraint is a combinatorial analogue of the
-  tension between spatial spread and temporal commitment and is the standard
-  Kraft bound for prefix codes \cite{cover-thomas}.
+Let $h(w)$ denote the maximum height of a Dyck path, i.e.\ its maximal nesting
+depth as above. Depth and breadth are not independent. Interpreting the Dyck
+tree as a full binary prefix code, assign to each leaf $i$ its depth $d_i$
+(root at depth $0$). Then the Kraft equality holds:
+\[
+  \sum_i 2^{-d_i} = 1.
+\]
+In particular, at any fixed depth $\ell$ there can be at most $2^\ell$ leaves
+at that depth. Since $r(w)$ is the size of a largest level set, there is some
+depth $\ell_\ast$ at which $r(w)$ nodes appear, and hence
+\[
+  r(w) \le 2^{\ell_\ast} \le 2^{h(w)}
+  \quad\Rightarrow\quad
+  h(w) \ge \log_2 r(w).
+\]
+Thus configurations with large breadth necessarily have logarithmically large
+depth, while very deep trees must concentrate most of their leaves in narrow
+antichains. This structural constraint is a combinatorial analogue of the
+tension between spatial spread and temporal commitment and is the standard
+Kraft bound for prefix codes \cite{cover-thomas}.
 
-  \begin{figure}[h] \centering \[ \begin{array}{ccl} ((())) & \quad & (h=3,\
-  r=1) \\ (()()) &       & (h=2,\ r=2) \\ (())() &       & (h=2,\ r=2) \\
-  ()(()) &       & (h=2,\ r=2) \\ ()()() &       & (h=1,\ r=3) \end{array} \]
-  \caption{All Dyck words of tier $n=3$, ordered from maximal nesting (chain)
-  to maximal separation (star).  These five configurations exhaust the discrete
-  causal possibilities at fixed proper time.  Depth $h$ and breadth $r$
-  interpolate between the two extremes, illustrating the intrinsic tradeoff
-  enforced by the Dyck constraint.  Higher tiers replicate this structure at
-  larger scale.} \label{fig:dyck-n3} \end{figure}
+\begin{figure}[h]
+  \centering
+  \[
+    \begin{array}{ccl}
+      ((())) & \quad & (h=3,\ r=1) \\
+      (()()) &      & (h=2,\ r=2) \\
+      (())() &      & (h=2,\ r=2) \\
+      ()(()) &      & (h=2,\ r=2) \\
+      ()()() &      & (h=1,\ r=3)
+    \end{array}
+  \]
+  \caption{All Dyck words of tier $t=3$, ordered from maximal nesting (chain)
+  to maximal separation (star). These five configurations exhaust the discrete
+  causal possibilities at fixed proper time.
+  Depth $h$ and breadth $r$ interpolate between the two extremes, illustrating
+  the intrinsic tradeoff enforced by the Dyck constraint.
+  Higher tiers replicate this structure at larger scale.}
+  \label{fig:dyck-n3}
+\end{figure}
 
-  \subsection{Cone structure}
+\subsection{Cone structure}
 
 Organizing Dyck paths by tier $t$ and breadth $r$ yields a discrete cone:
-\begin{itemize} \item each tier is a ``constant-time'' slice, \item the chain
-    defines the timelike axis, \item the star defines the lightlike boundary,
-    \item admissible configurations fill the interior.  \end{itemize} This
-      structure will be referred to as the \emph{Catalan light cone}.
+\begin{itemize}
+  \item each tier is a ``constant-time'' slice,
+  \item the chain defines the timelike axis,
+  \item the star defines the lightlike boundary,
+  \item admissible configurations fill the interior.
+\end{itemize}
+This structure will be referred to as the \emph{Catalan light cone}.
 
-      \subsection{Scaling behavior}
+\subsection{Scaling behavior}
 
-      Classical results on conditioned random walks show that typical Dyck
-      paths at tier $t$ have height and breadth of order $\sqrt{t}$
-      \cite{le-gall05,janson07,addario-berry13}.  Extremal configurations
-      saturate the linear bound $r\le t$, while typical configurations lie deep
-      within the cone.  This separation between extremal and typical behavior
-      mirrors the role of null, timelike, and spacelike trajectories in
-      relativistic geometry.
+Classical results on conditioned random walks show that typical Dyck paths at
+tier $t$ have height and breadth of order $\sqrt{t}$
+\cite{le-gall05,janson07,addario-berry13}. Extremal configurations saturate
+the linear bound $r\le t$, while typical configurations lie deep within the
+cone. This separation between extremal and typical behavior mirrors the role of
+null, timelike, and spacelike trajectories in relativistic geometry.
 
-      \begin{theorem}[Discrete light-cone bound and scaling] Let $w$ be a Dyck
-        word of semilength $t$ and breadth $r(w)$ as above.  Then \[ 1 \le r(w)
-        \le t.  \] Moreover, for a uniformly random Dyck word of semilength
-        $t$, the typical height and breadth are of order $\sqrt{t}$.
-      \end{theorem}
+\begin{theorem}[Discrete light-cone bound and scaling]
+Let $w$ be a Dyck word of semilength $t$ and breadth $r(w)$ as above. Then
+\[
+  1 \le r(w) \le t.
+\]
+Moreover, for a uniformly random Dyck word of semilength $t$, the typical
+height and breadth are of order $\sqrt{t}$.
+\end{theorem}
 
-      \noindent The first statement follows from the definition of $r(w)$ and
-      the fact that there are $t$ internal nodes, while the scaling behavior is
-      a consequence of invariance-principle results for conditioned random
-      walks \cite{le-gall05,janson07,addario-berry13}.
+\noindent
+The first statement follows from the definition of $r(w)$ and the fact that
+there are $t$ internal nodes, while the scaling behavior is a consequence of
+invariance-principle results for conditioned random walks
+\cite{le-gall05,janson07,addario-berry13}.
 
-      \subsection{Summary}
+\subsection{Summary}
 
-    The Catalan substrate supports a discrete causal geometry determined
-  entirely by recursive constraint.  Without introducing a manifold, metric, or
-causal relation by fiat, it yields: \begin{itemize} \item a partial order
-      interpretable as causality, \item a cone-shaped causal envelope, \item
-intrinsic bounds on spatial extension, \item well-defined constant-time layers.
-\end{itemize} Subsequent sections place dynamical rules---quantum amplitudes
-and computational reduction---on this geometry.
+The Catalan substrate supports a discrete causal geometry determined entirely
+by recursive constraint. Without introducing a manifold, metric, or causal
+relation by fiat, it yields:
+\begin{itemize}
+  \item a partial order interpretable as causality,
+  \item a cone-shaped causal envelope,
+  \item intrinsic bounds on spatial extension,
+  \item well-defined constant-time layers.
+\end{itemize}
+Subsequent sections place dynamical rules---quantum amplitudes and
+computational reduction---on this geometry.
 
-\section{Recursive Pairing and Universal Computation} \label{sec:computation}
+\section{Recursive Pairing and Universal Computation}
+\label{sec:computation}
 
 \subsection{Pairs expansion}
 
-Every Dyck path admits a unique decomposition into nested pairs.  Writing
+Every Dyck path admits a unique decomposition into nested pairs. Writing
 parentheses explicitly, the simplest nontrivial closure of the empty expression
-\(()\) is \[ (()) , \] which contains a single internal pairing.  Iterating
-this rule produces the entire Catalan family.
+\(()\) is
+\[
+  (()) ,
+\]
+which contains a single internal pairing. Iterating this rule produces the
+entire Catalan family.
 
 This recursive pairing induces a uniform transformation, referred to here as
 the \emph{pairs expansion}, which places Dyck trees in bijection with binary
-application trees.  Under this correspondence: \begin{itemize} \item each
-      matched pair corresponds to a cons cell, \item containment corresponds to
-functional application, \item sibling subtrees correspond to arguments at equal
-precedence.  \end{itemize} The transformation is purely structural and
-preserves prefix order.
+application trees. Under this correspondence:
+\begin{itemize}
+  \item each matched pair corresponds to a cons cell,
+  \item containment corresponds to functional application,
+  \item sibling subtrees correspond to arguments at equal precedence.
+\end{itemize}
+The transformation is purely structural and preserves prefix order.
 
-\begin{figure}[h] \centering \begin{tikzpicture}[ level 1/.style={level
-  distance=7mm,sibling distance=7mm}, level 2/.style={level
-  distance=7mm,sibling distance=7mm}, every node/.style={circle,draw,inner
-  sep=1pt,minimum size=2pt} ]
-  % 1) ((()))
-  \begin{scope}[shift={(-6,0)}] \node (r1) {} child { node {} child { node {}
-  child { node {} } child { node {} } } child { node {} } } child { node {} };
-  \node[draw=none] at (0,-2.6) {\(\text{((()))}\)}; \end{scope}
-
-  % 2) (()())
-  \begin{scope}[shift={(-3,0)}] \node (r2) {} child[level distance=7mm] { node
-  {} child { node {} } child { node {} child { node {} } child { node {} } } }
-  child { node {} }; \node[draw=none] at (0,-2.6) {\(\text{(()())}\)};
-  \end{scope}
-
-  % 3) (())()
-  \begin{scope}[ shift={(0,0)}, level 1/.style={level distance=7mm,sibling
-    distance=10mm} ] \node (r3) {} child { node {} child { node {} } child {
-      node {} } } child { node {} child { node {} } child { node {} } };
-    \node[draw=none] at (0,-2.6) {\(\text{(())()}\)}; \end{scope}
-
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[
+    level 1/.style={level distance=7mm,sibling distance=7mm},
+    level 2/.style={level distance=7mm,sibling distance=7mm},
+    every node/.style={circle,draw,inner sep=1pt,minimum size=2pt}
+  ]
+    % 1) ((()))
+    \begin{scope}[shift={(-6,0)}]
+      \node (r1) {}
+        child { node {}
+          child { node {}
+            child { node {} }
+            child { node {} }
+          }
+          child { node {} }
+        }
+        child { node {} };
+      \node[draw=none] at (0,-2.6) {\(\text{((()))}\)};
+    \end{scope}
+    % 2) (()())
+    \begin{scope}[shift={(-3,0)}]
+      \node (r2) {}
+        child[level distance=7mm] { node {}
+          child { node {} }
+          child { node {}
+            child { node {} }
+            child { node {} }
+          }
+        }
+        child { node {} };
+      \node[draw=none] at (0,-2.6) {\(\text{(()())}\)};
+    \end{scope}
+    % 3) (())()
+    \begin{scope}[
+      shift={(0,0)},
+      level 1/.style={level distance=7mm,sibling distance=10mm}
+    ]
+      \node (r3) {}
+        child { node {}
+          child { node {} }
+          child { node {} }
+        }
+        child { node {}
+          child { node {} }
+          child { node {} }
+        };
+      \node[draw=none] at (0,-2.6) {\(\text{(())()}\)};
+    \end{scope}
     % 4) ()(())
-    \begin{scope}[shift={(3,0)}] \node (r4) {} child { node {} } child { node
-    {} child { node {} child { node {} } child { node {} } } child { node {} }
-    }; \node[draw=none] at (0,-2.6) {\(\text{()(())}\)}; \end{scope}
-
+    \begin{scope}[shift={(3,0)}]
+      \node (r4) {}
+        child { node {} }
+        child { node {}
+          child { node {}
+            child { node {} }
+            child { node {} }
+          }
+          child { node {} }
+        };
+      \node[draw=none] at (0,-2.6) {\(\text{()(())}\)};
+    \end{scope}
     % 5) ()()()
-    \begin{scope}[shift={(6,0)}] \node (r5) {} child { node {} } child { node
-    {} child { node {} } child { node {} child { node {} } child { node {} } }
-    }; \node[draw=none] at (0,-2.6) {\(\text{()()()}\)}; \end{scope}
-\end{tikzpicture} \caption{Binary-tree representations of the five Dyck words
-of semilength \(3\), corresponding to Fig.~\ref{fig:dyck-n3}.  From left to
-right: maximal nesting (chain) through mixed cases to maximal separation
-(star).} \label{fig:trees-n3-tikz} \end{figure}
+    \begin{scope}[shift={(6,0)}]
+      \node (r5) {}
+        child { node {} }
+        child { node {}
+          child { node {} }
+          child { node {}
+            child { node {} }
+            child { node {} }
+          }
+        };
+      \node[draw=none] at (0,-2.6) {\(\text{()()()}\)};
+    \end{scope}
+  \end{tikzpicture}
+  \caption{Binary-tree representations of the five Dyck words of semilength \(3\),
+  corresponding to Fig.~\ref{fig:dyck-n3}. From left to right: maximal nesting
+  (chain) through mixed cases to maximal separation (star).}
+  \label{fig:trees-n3-tikz}
+\end{figure}
 
 \subsection{Connection to $\lambda$-calculus and SKI}
 
 Binary trees are a standard representation of $\lambda$-terms and SKI
-combinators \cite{church33,curry58,barendregt84}.  Variables may be represented
+combinators \cite{church33,curry58,barendregt84}. Variables may be represented
 by leaf positions, abstraction by structural capture, and application by tree
-composition.  Under the pairs expansion, each Dyck tree canonically determines
-an unlabeled application graph.  When variables are suppressed, the resulting
-graphs coincide with the structure graphs used in combinatory logic.  No
+composition. Under the pairs expansion, each Dyck tree canonically determines
+an unlabeled application graph. When variables are suppressed, the resulting
+graphs coincide with the structure graphs used in combinatory logic. No
 additional primitives beyond recursive pairing are required to obtain this
 representation.
 
@@ -290,167 +433,206 @@ Choosing a finite set of tree patterns to represent the SKI combinators and
 interpreting local tree rewrites as SKI reduction therefore equips the Catalan
 substrate with a standard universal calculus: every partial recursive function
 can be encoded as an SKI term, and hence by a finite Dyck tree, and every
-computation corresponds to a sequence of local tree transformations.  In this
-sense, the Catalan substrate is \emph{computationally universal}.  What is new
+computation corresponds to a sequence of local tree transformations. In this
+sense, the Catalan substrate is \emph{computationally universal}. What is new
 here is that the same underlying objects simultaneously carry a causal and
 geometric interpretation.
 
 \subsection{Reduction and local collapse}
 
 In the computational interpretation, reduction corresponds to local pattern
-replacement.  A redex occupies a finite region of a tree and may be reduced
-without reference to distant subtrees.  This locality mirrors the causal
-structure established in Section~\ref{sec:catalan_cone}.  From the perspective
+replacement. A redex occupies a finite region of a tree and may be reduced
+without reference to distant subtrees. This locality mirrors the causal
+structure established in Section~\ref{sec:catalan_cone}. From the perspective
 of the Catalan lattice, reduction may be viewed as \emph{collapse}: a locally
 ambiguous structure is replaced by a simpler one consistent with the global
-constraint.  Importantly, collapse does not alter causal ancestry; it refines
-an already-admissible history.  Confluence of reduction in the
-$\lambda$-calculus ensures that independent local reductions commute.  This
-computational fact will later support an interpretation of spacelike
-commutativity.
+constraint. Importantly, collapse does not alter causal ancestry; it refines an
+already-admissible history. Confluence of reduction in the $\lambda$-calculus
+ensures that independent local reductions commute. This computational fact will
+later support an interpretation of spacelike commutativity.
 
 \subsection{Summary}
 
-Recursive pairing suffices to encode universal computation.  Via the pairs
+Recursive pairing suffices to encode universal computation. Via the pairs
 expansion, Dyck trees and application graphs are two views of the same
-structure.  Local computational reduction aligns naturally with causal locality
+structure. Local computational reduction aligns naturally with causal locality
 on the Catalan light cone.
 
-\section{Quantum Amplitudes on the Catalan Lattice} \label{sec:amplitudes}
+\section{Quantum Amplitudes on the Catalan Lattice}
+\label{sec:amplitudes}
 
 \subsection{Histories as paths}
 
 Interpreting Dyck paths as admissible histories suggests assigning weights to
-each history.  Let $\mathcal{D}_t$ denote the set of Dyck paths of tier $t$.  A
-state at tier $t$ may be represented as a formal superposition \[ \Psi_t =
-\sum_{w \in \mathcal{D}_t} \psi(w)\,|w\rangle .  \] Local extensions of a Dyck
-path correspond to admissible future steps.  Thus, time evolution is governed
-by transitions that respect the Dyck constraint.
+each history. Let $\mathcal{D}_t$ denote the set of Dyck paths of tier $t$. A
+state at tier $t$ may be represented as a formal superposition
+\[
+  \Psi_t = \sum_{w \in \mathcal{D}_t} \psi(w)\,|w\rangle .
+\]
+Local extensions of a Dyck path correspond to admissible future steps. Thus,
+time evolution is governed by transitions that respect the Dyck constraint.
 
 \subsection{Path integrals and conditioned walks}
 
 Dyck paths are random walks conditioned to remain nonnegative and return to
-zero.  Classical results show that, when rescaled appropriately, ensembles of
+zero. Classical results show that, when rescaled appropriately, ensembles of
 such paths converge to Brownian excursions \cite{le-gall05,janson07}.
 Assigning equal weight to all admissible paths yields a discrete path integral.
 More general amplitude assignments may depend on local features such as height
 or curvature, provided the Dyck constraint is preserved.
 
-\begin{figure}[h] \centering \begin{tikzpicture}[scale=0.7]
-  % axes
-  \draw[->] (0,0) -- (13,0) node[below] {$k$}; \draw[->] (0,0) -- (0,6)
-  node[left] {$H_k$};
-  % sample Dyck path (semilength 6)
-  \draw[thick] (0,0) -- (1,1) -- (2,2) -- (3,3) -- (4,2) -- (5,3) -- (6,4) --
-  (7,3) -- (8,2) -- (9,3) -- (10,2) -- (11,1) -- (12,0);
-  % labels
-  \node[below] at (0,0) {0}; \node[below] at (12,0) {$2n$}; \node[above right]
-  at (3,3) {\small Dyck walk};
-  % schematic smooth excursion overlay
-\draw[dashed] plot[smooth] coordinates { (0,0) (2,1) (4,2.8) (6,4.2) (8,2.5)
-(10,1.2) (12,0) }; \node[right] at (12,4.2) {\small Brownian excursion (scaling
-limit)}; \end{tikzpicture} \caption{A Dyck path as a nearest-neighbour walk
-$(H_k)$ constrained to stay nonnegative and return to zero at time $2n$.  Under
-diffusive rescaling of $k$ and $H_k$, ensembles of such paths converge to
-Brownian excursions, providing the bridge to the heat and Schr\"odinger
-equations discussed in the text.} \label{fig:dyck-walk-excursion} \end{figure}
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[scale=0.7]
+    % axes
+    \draw[->] (0,0) -- (13,0) node[below] {$k$};
+    \draw[->] (0,0) -- (0,6) node[left] {$H_k$};
+    % sample Dyck path (semilength t=6)
+    \draw[thick]
+      (0,0) -- (1,1) -- (2,2) -- (3,3) -- (4,2) -- (5,3) -- (6,4)
+      -- (7,3) -- (8,2) -- (9,3) -- (10,2) -- (11,1) -- (12,0);
+    % labels
+    \node[below] at (0,0) {0};
+    \node[below] at (12,0) {$2t$};
+    \node[above right] at (3,3) {\small Dyck walk};
+    % schematic smooth excursion overlay
+    \draw[dashed] plot[smooth] coordinates {
+      (0,0) (2,1) (4,2.8) (6,4.2) (8,2.5) (10,1.2) (12,0)
+    };
+    \node[right] at (12,4.2) {\small Brownian excursion (scaling limit)};
+  \end{tikzpicture}
+  \caption{A Dyck path as a nearest-neighbour walk $(H_k)$ constrained to stay
+  nonnegative and return to zero at time $2t$.
+  Under diffusive rescaling of $k$ and $H_k$, ensembles of such paths converge
+  to Brownian excursions, providing the bridge to the heat and Schr\"odinger
+  equations discussed in the text.}
+  \label{fig:dyck-walk-excursion}
+\end{figure}
 
 \subsection{Diffusion limit}
 
-Let $n\to\infty$ and rescale time and height by \[ t \mapsto n\tau, \qquad h
-\mapsto \sqrt{n}\,x .  \] Under this scaling, the probability density
-$\rho(\tau,x)$ for conditioned walks converges to the density of a Brownian
-excursion on $x\ge0$.  It follows from the invariance principle that $\rho$
-satisfies the heat equation \begin{equation} \partial_\tau \rho =
-\frac{1}{2}\,\partial_x^2 \rho, \end{equation} with boundary conditions
-enforcing reflection or absorption at $x=0$.  Full derivations may be found in
-\cite{le-gall05,janson07}.
+For a Dyck path of semilength $t$, consider the height process $(H_k)$ for
+$k=0,\dots,2t$ as in Fig.~\ref{fig:dyck-walk-excursion}. Define rescaled
+variables
+\[
+  \tau = \frac{k}{2t}, \qquad x = \frac{H_k}{\sqrt{t}} .
+\]
+As $t \to \infty$, the law of the rescaled process converges to that of a
+Brownian excursion on $x \ge 0$. Denoting by $\rho(\tau,x)$ the corresponding
+probability density, the invariance principle implies that $\rho$ satisfies the
+heat equation
+\begin{equation}
+  \partial_\tau \rho = \frac{1}{2}\,\partial_x^2 \rho,
+\end{equation}
+with boundary conditions enforcing reflection or absorption at $x=0$. Full
+derivations may be found in \cite{le-gall05,janson07}.
 
 \subsection{Schr\"odinger equation}
 
 More formally, if $\rho(\tau,x)$ denotes the real heat kernel on $x\ge 0$,
 analytic continuation in the diffusion parameter, $\tau \mapsto it$, produces a
 complex-valued kernel $\psi(t,x)$ satisfying the free Schr\"odinger equation
-\begin{equation} i\partial_t \psi = -\frac{1}{2}\,\partial_x^2 \psi.
-\end{equation} Boundary conditions at $x=0$ are carried over from the diffusive
-regime (e.g.\ reflecting or absorbing), and the choice of boundary does not
-affect the existence of the continuum limit itself.  Thus, quantum wave
-dynamics arises here as the analytic continuation of diffusive propagation on
-the Catalan lattice, in line with the classical connection between diffusion
-and Schr\"odinger evolution \cite{feynman-hibbs65,kac49}.  No separate
-quantization procedure is required; the wave equation is inherited from the
-scaling limit of constrained combinatorial growth.
+\begin{equation}
+  i\partial_t \psi = -\frac{1}{2}\,\partial_x^2 \psi.
+\end{equation}
+Boundary conditions at $x=0$ are carried over from the diffusive regime (e.g.\
+reflecting or absorbing), and the choice of boundary does not affect the
+existence of the continuum limit itself. Thus, quantum wave dynamics arises
+here as the analytic continuation of diffusive propagation on the Catalan
+lattice, in line with the classical connection between diffusion and
+Schr\"odinger evolution \cite{feynman-hibbs65,kac49}. No separate quantization
+procedure is required; the wave equation is inherited from the scaling limit of
+constrained combinatorial growth.
 
 \subsection{Relation to discrete quantum gravity}
 
 Similar scaling behavior appears in two-dimensional quantum gravity and random
-surface models.  In particular, Causal Dynamical Triangulations (CDT) enforce a
+surface models. In particular, Causal Dynamical Triangulations (CDT) enforce a
 preferred foliation and causal constraint that parallels the prefix order of
-Dyck paths \cite{ambjorn01,ambjorn12}.  In CDT, the continuum limit is taken
-after summing over causally admissible triangulations.  Here the admissible
+Dyck paths \cite{ambjorn01,ambjorn12}. In CDT, the continuum limit is taken
+after summing over causally admissible triangulations. Here the admissible
 structures are Dyck paths rather than triangulations, but the organizing
 principle---restriction to histories that respect a causal growth rule---is the
 same.
 
-\section{Locality, Commutation, and Interaction} \label{sec:locality}
+\section{Locality, Commutation, and Interaction}
+\label{sec:locality}
 
 \subsection{Disjoint subtrees}
 
 Two subtrees of a Dyck tree that share no common ancestor beyond a given prefix
-are causally independent.  Operations localized to one subtree do not affect
-the other.  In the computational interpretation, this corresponds to
-independent reductions.  In the amplitude interpretation, it corresponds to
-commuting operators acting on spacelike-separated regions.
+are causally independent. Operations localized to one subtree do not affect the
+other. In the computational interpretation, this corresponds to independent
+reductions. In the amplitude interpretation, it corresponds to commuting
+operators acting on spacelike-separated regions. Multiple Dyck paths may
+represent the same abstract computation or the same coarse-grained geometry.
+Such redundancies may be quotiented out without changing observable
+predictions, yielding equivalence classes of histories. This redundancy plays a
+role analogous to gauge symmetry: distinct internal descriptions correspond to
+the same external behavior.
 
-Multiple Dyck paths may represent the same abstract computation or the same
-coarse-grained geometry.  Such redundancies may be quotiented out without
-changing observable predictions, yielding equivalence classes of histories.
-This redundancy plays a role analogous to gauge symmetry: distinct internal
-descriptions correspond to the same external behavior.
-
-\begin{figure}[h] \centering \begin{tikzpicture}[ level 1/.style={level
-  distance=7mm,sibling distance=10mm}, level 2/.style={level
-  distance=7mm,sibling distance=7mm}, every node/.style={circle, draw, inner
-  sep=1pt, minimum size=2pt} ]
-  % common ancestor and two full binary subtrees
-  \node (root) {} child { node (a) {} child { node {} } child { node {} } }
-  child { node (b) {} child { node {} } child { node {} } };
-  % labels A and B centered under each subtree
-\node[draw,circle,inner sep=1pt,below=7mm of a] (Alabel) {A};
-\node[draw,circle,inner sep=1pt,below=7mm of b] (Blabel) {B}; \end{tikzpicture}
-\caption{Schematic of disjoint subtrees $A$ and $B$ hanging from a common
-ancestor.  Local operations (reductions, amplitude updates, or collapse rules)
-supported on $A$ commute with those supported on $B$ as long as neither subtree
-lies in the causal past of the other.  This combinatorial notion of disjoint
-subtrees provides the substrate analogue of spacelike separation and
-microcausality.} \label{fig:disjoint-subtrees} \end{figure}
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[
+    level 1/.style={level distance=7mm,sibling distance=10mm},
+    level 2/.style={level distance=7mm,sibling distance=7mm},
+    every node/.style={circle, draw, inner sep=1pt, minimum size=2pt}
+  ]
+    % common ancestor and two full binary subtrees
+    \node (root) {}
+      child { node (a) {}
+        child { node {} }
+        child { node {} }
+      }
+      child { node (b) {}
+        child { node {} }
+        child { node {} }
+      };
+    % labels A and B centered under each subtree
+    \node[draw,circle,inner sep=1pt,below=7mm of a] (Alabel) {A};
+    \node[draw,circle,inner sep=1pt,below=7mm of b] (Blabel) {B};
+  \end{tikzpicture}
+  \caption{Schematic of disjoint subtrees $A$ and $B$ hanging from a common
+  ancestor. Local operations (reductions, amplitude updates, or collapse rules)
+  supported on $A$ commute with those supported on $B$ as long as neither
+  subtree lies in the causal past of the other. This combinatorial notion of
+  disjoint subtrees provides the substrate analogue of spacelike separation and
+  microcausality.}
+  \label{fig:disjoint-subtrees}
+\end{figure}
 
 \subsection{Collapse and selection}
 
-Both computation and amplitude propagation require selection: \begin{itemize}
-\item computational reduction chooses a redex, \item measurement-like selection
-chooses an outcome.  \end{itemize} In the Catalan substrate, selection operates
-locally, refining rather than destroying structure.  The global constraint
-ensures consistency after selection.  The formal development of collapse
-probabilities lies beyond the scope of this paper and is treated here only
-structurally.
+Both computation and amplitude propagation require selection:
+\begin{itemize}
+  \item computational reduction chooses a redex,
+  \item measurement-like selection chooses an outcome.
+\end{itemize}
+In the Catalan substrate, selection operates locally, refining rather than
+destroying structure. The global constraint ensures consistency after
+selection. The formal development of collapse probabilities lies beyond the
+scope of this paper and is treated here only structurally.
 
 \subsection{Summary}
 
 Locality, commutation, and interaction emerge directly from the causal and
-recursive structure of the Catalan lattice.  The same principles underlie both
+recursive structure of the Catalan lattice. The same principles underlie both
 computational reduction and quantum amplitude propagation.
 
-\section{Discussion and Limitations} \label{sec:discussion}
+\section{Discussion and Limitations}
+\label{sec:discussion}
 
 The results presented here establish a shared structural basis for causal
-geometry, quantum dynamics, and computation.  Several limitations should be
-emphasized: \begin{itemize} \item Physical constants and interactions are not
-    derived.  \item Only free (noninteracting) wave dynamics appears
-      explicitly.  \item Collapse probabilities are not fixed uniquely by the
-structure.  \end{itemize} These limitations reflect a deliberate restriction of
-scope.  The goal has been to isolate the minimal recursive structure common to
-multiple domains, not to provide a complete physical theory.
+geometry, quantum dynamics, and computation. Several limitations should be
+emphasized:
+\begin{itemize}
+  \item Physical constants and interactions are not derived.
+  \item Only free (noninteracting) wave dynamics appears explicitly.
+  \item Collapse probabilities are not fixed uniquely by the structure.
+\end{itemize}
+These limitations reflect a deliberate restriction of scope. The goal has been
+to isolate the minimal recursive structure common to multiple domains, not to
+provide a complete physical theory.
 
 \appendix
 
@@ -458,144 +640,175 @@ multiple domains, not to provide a complete physical theory.
 \label{app:interpretive}
 
 This appendix records an interpretive perspective that motivates the formal
-development of the paper.  The material here is not required for the results of
-the main text.  It is included to clarify the conceptual picture suggested by
+development of the paper. The material here is not required for the results of
+the main text. It is included to clarify the conceptual picture suggested by
 the recursive structures analyzed above.
 
 \subsection{Void and first differentiation}
 
 Let \(()\) denote the null structure: a state with no internal distinction and
-no recursive content.  Formally, it is the base case of the Catalan
-construction.  The minimal nontrivial closure of \(()\) under recursive pairing
-is \[ (()) .  \] This object introduces an internal relation without
-introducing multiplicity.  It is the smallest structure capable of supporting
-further recursive growth while remaining globally consistent with the Dyck
-constraint.  In this sense, \((())\) represents the first differentiation of
-the void: not an object placed \emph{in} an existing space, but the emergence
-of relational structure itself.
+no recursive content. Formally, it is the base case of the Catalan
+construction. The minimal nontrivial closure of \(()\) under recursive pairing
+is
+\[
+  (()) .
+\]
+This object introduces an internal relation without introducing multiplicity. It
+is the smallest structure capable of supporting further recursive growth while
+remaining globally consistent with the Dyck constraint. In this sense,
+\((())\) represents the first differentiation of the void: not an object placed
+\emph{in} an existing space, but the emergence of relational structure itself.
 
 \subsection{Possibility space from recursive expansion}
 
-Iterating the pairing rule generates the full Catalan family.  Each
-construction step introduces new admissible extensions while preserving all
-previous structural commitments.  The resulting set of Dyck paths may be read
-as a space of mutually compatible but not jointly realizable futures.  From
-this perspective, the Catalan lattice represents a structured \emph{possibility
-space}.  The Dyck constraint does not merely limit growth; it organizes it,
+Iterating the pairing rule generates the full Catalan family. Each construction
+step introduces new admissible extensions while preserving all previous
+structural commitments. The resulting set of Dyck paths may be read as a space
+of mutually compatible but not jointly realizable futures. From this
+perspective, the Catalan lattice represents a structured \emph{possibility
+space}. The Dyck constraint does not merely limit growth; it organizes it,
 enforcing consistency across all scales.
 
 \subsection{Temporal interpretation}
 
-The recursive construction index naturally induces an ordering.  Each step
+The recursive construction index naturally induces an ordering. Each step
 corresponds to the introduction of new structure relative to what has already
-been fixed.  This ordering provides a discrete notion of time internal to the
-construction, without presupposing an external temporal parameter.  At each
-stage, two complementary processes are present: \begin{itemize} \item
-    expansion, in which new admissible configurations are introduced; \item
-      restriction, in which incompatible possibilities are locally excluded.
-\end{itemize} Temporal progression may be read as the alternation between these
-processes: the opening of new potential followed by selection consistent with
-prior structure.  The formal theory requires only that both processes respect
-the global recursive constraint.
+been fixed. This ordering provides a discrete notion of time internal to the
+construction, without presupposing an external temporal parameter. At each
+stage, two complementary processes are present:
+\begin{itemize}
+  \item expansion, in which new admissible configurations are introduced;
+  \item restriction, in which incompatible possibilities are locally excluded.
+\end{itemize}
+Temporal progression may be read as the alternation between these processes:
+the opening of new potential followed by selection consistent with prior
+structure. The formal theory requires only that both processes respect the
+global recursive constraint.
 
 \subsection{Emergent spacetime properties}
 
 The causal and geometric features described in the main text arise directly
-from this alternation.  Recursive depth tracks accumulated structural
-commitment, while breadth tracks contemporaneous branching.  Bounds on breadth
-as a function of depth yield a cone-shaped causal envelope.  Under scaling
-limits, this discrete structure supports diffusion and wave propagation.  These
+from this alternation. Recursive depth tracks accumulated structural
+commitment, while breadth tracks contemporaneous branching. Bounds on breadth
+as a function of depth yield a cone-shaped causal envelope. Under scaling
+limits, this discrete structure supports diffusion and wave propagation. These
 continuum behaviors do not require additional geometric axioms; they emerge
 from the organization of possibility imposed by the recursive constraint.
 
 \subsection{Interpretive status}
 
 Nothing in this appendix asserts a physical identity between recursive pairing
-and any particular physical process.  The interpretations offered here are
-meant to guide intuition rather than to extend the formal claims of the paper.
-The central formal result remains unchanged: a single recursive constraint
-suffices to generate a structured possibility space exhibiting causal order,
-wave dynamics, and computational universality.  The interpretive perspective
-suggests how these features may be interpreted as aspects of a unified
-underlying process, but the validity of the formal results does not depend on
-that reading.
+and any particular physical process. The interpretations offered here are meant
+to guide intuition rather than to extend the formal claims of the paper. The
+central formal result remains unchanged: a single recursive constraint suffices
+to generate a structured possibility space exhibiting causal order, wave
+dynamics, and computational universality. The interpretive perspective suggests
+how these features may be interpreted as aspects of a unified underlying
+process, but the validity of the formal results does not depend on that
+reading.
 
-\section{Conclusion} \label{sec:conclusion}
+\section{Conclusion}
+\label{sec:conclusion}
 
 This paper has examined the Catalan family of recursive structures as a common
 substrate for causal geometry, quantum amplitude propagation, and computation.
 The Dyck constraint induces a natural causal order and a discrete cone-shaped
-geometry exhibiting light-cone--like bounds.  Classical invariance principles
+geometry exhibiting light-cone--like bounds. Classical invariance principles
 show that ensembles of admissible histories converge in the continuum limit to
 Brownian excursions, yielding the heat equation and, under analytic
-continuation, the free Schr\"odinger equation.  Through the pairs expansion,
-the same structures encode universal computation via $\lambda$-calculus and SKI
-combinators.  These correspondences require no additional primitives beyond
+continuation, the free Schr\"odinger equation. Through the pairs expansion, the
+same structures encode universal computation via $\lambda$-calculus and SKI
+combinators. These correspondences require no additional primitives beyond
 recursive pairing and constraint.
 
 Spacetime-like geometry, wave dynamics, and computation emerge as complementary
-aspects of a single recursive system.  Several open problems remain, including
+aspects of a single recursive system. Several open problems remain, including
 the incorporation of interaction terms, the determination of collapse
-probabilities, and the connection to physical constants.  The results presented
+probabilities, and the connection to physical constants. The results presented
 here establish a minimal and structurally unified foundation upon which such
 extensions may be explored.
 
-\bibliographystyle{plain} \begin{thebibliography}{99}
+\bibliographystyle{plain}
+\begin{thebibliography}{99}
 
-  \bibitem{ambjorn01} J.~Ambj{\o}rn, J.~Jurkiewicz, and R.~Loll.  \newblock
-    Dynamically triangulating Lorentzian quantum gravity.  \newblock {\em
-    Nuclear Physics B}, 610:347--382, 2001.
+\bibitem{ambjorn01}
+J.~Ambj{\o}rn, J.~Jurkiewicz, and R.~Loll.
+\newblock Dynamically triangulating Lorentzian quantum gravity.
+\newblock {\em Nuclear Physics B}, 610:347--382, 2001.
 
-  \bibitem{ambjorn12} J.~Ambj{\o}rn, A.~G{\"o}rlich, J.~Jurkiewicz, and
-    R.~Loll.  \newblock Nonperturbative quantum gravity.  \newblock {\em
-    Physics Reports}, 519:127--210, 2012.
+\bibitem{ambjorn12}
+J.~Ambj{\o}rn, A.~G{\"o}rlich, J.~Jurkiewicz, and R.~Loll.
+\newblock Nonperturbative quantum gravity.
+\newblock {\em Physics Reports}, 519:127--210, 2012.
 
-  \bibitem{barendregt84} H.~P. Barendregt.  \newblock {\em The Lambda Calculus:
-    Its Syntax and Semantics}.  \newblock North-Holland, 1984.
+\bibitem{barendregt84}
+H.~P. Barendregt.
+\newblock {\em The Lambda Calculus: Its Syntax and Semantics}.
+\newblock North-Holland, 1984.
 
-  \bibitem{bombelli87} L.~Bombelli, J.~Lee, D.~Meyer, and R.~D. Sorkin.
-    \newblock Space-time as a causal set.  \newblock {\em Physical Review
-    Letters}, 59(5):521--524, 1987.
+\bibitem{bombelli87}
+L.~Bombelli, J.~Lee, D.~Meyer, and R.~D. Sorkin.
+\newblock Space-time as a causal set.
+\newblock {\em Physical Review Letters}, 59(5):521--524, 1987.
 
-  \bibitem{church33} A.~Church.  \newblock A set of postulates for the
-    foundation of logic.  \newblock {\em Annals of Mathematics}, 34:839--864,
-    1933.
+\bibitem{church33}
+A.~Church.
+\newblock A set of postulates for the foundation of logic.
+\newblock {\em Annals of Mathematics}, 34:839--864, 1933.
 
-  \bibitem{cover-thomas} T.~M. Cover and J.~A. Thomas.  \newblock {\em Elements
-    of Information Theory}.  \newblock 2nd edition, John Wiley \& Sons, 2006.
+\bibitem{cover-thomas}
+T.~M. Cover and J.~A. Thomas.
+\newblock {\em Elements of Information Theory}.
+\newblock 2nd edition, John Wiley \& Sons, 2006.
 
-  \bibitem{curry58} H.~B. Curry.  \newblock Foundations of mathematical logic.
-    \newblock {\em McGraw--Hill}, 1958.
+\bibitem{curry58}
+H.~B. Curry.
+\newblock Foundations of mathematical logic.
+\newblock {\em McGraw--Hill}, 1958.
 
-  \bibitem{addario-berry13} L.~Addario-Berry, L.~Devroye, and S.~Janson.
-    \newblock Sub-Gaussian tail bounds for the width and height of conditioned
-    Galton--Watson trees.  \newblock {\em Annals of Probability},
-    41(2):1074--1087, 2013.
+\bibitem{addario-berry13}
+L.~Addario-Berry, L.~Devroye, and S.~Janson.
+\newblock Sub-Gaussian tail bounds for the width and height of conditioned
+  Galton--Watson trees.
+\newblock {\em Annals of Probability}, 41(2):1074--1087, 2013.
 
-  \bibitem{feynman-hibbs65} R.~P. Feynman and A.~R. Hibbs.  \newblock {\em
-    Quantum Mechanics and Path Integrals}.  \newblock McGraw--Hill, 1965.
-    (Dover reprint, 2010).
+\bibitem{feynman-hibbs65}
+R.~P. Feynman and A.~R. Hibbs.
+\newblock {\em Quantum Mechanics and Path Integrals}.
+\newblock McGraw--Hill, 1965. (Dover reprint, 2010).
 
-  \bibitem{janson07} S.~Janson.  \newblock Brownian excursion area, Wright's
-    constants in graph enumeration, and other Brownian areas.  \newblock {\em
-    Probability Surveys}, 4:80--145, 2007.
+\bibitem{janson07}
+S.~Janson.
+\newblock Brownian excursion area, Wright's constants in graph enumeration, and
+  other Brownian areas.
+\newblock {\em Probability Surveys}, 4:80--145, 2007.
 
-  \bibitem{kac49} M.~Kac.  \newblock On distributions of certain Wiener
-    functionals.  \newblock {\em Transactions of the American Mathematical
-    Society}, 65(1):1--13, 1949.
+\bibitem{kac49}
+M.~Kac.
+\newblock On distributions of certain Wiener functionals.
+\newblock {\em Transactions of the American Mathematical Society},
+  65(1):1--13, 1949.
 
-  \bibitem{le-gall05} J.-F. Le~Gall.  \newblock Random trees and applications.
-    \newblock {\em Probability Surveys}, 2:245--311, 2005.
+\bibitem{le-gall05}
+J.-F. Le~Gall.
+\newblock Random trees and applications.
+\newblock {\em Probability Surveys}, 2:245--311, 2005.
 
-  \bibitem{orus14} R.~Or\'us.  \newblock A practical introduction to tensor
-    networks: Matrix product states and projected entangled pair states.
-    \newblock {\em Annals of Physics}, 349:117--158, 2014.
+\bibitem{orus14}
+R.~Or\'us.
+\newblock A practical introduction to tensor networks: Matrix product states and
+  projected entangled pair states.
+\newblock {\em Annals of Physics}, 349:117--158, 2014.
 
-  \bibitem{rovelli04} C.~Rovelli.  \newblock {\em Quantum Gravity}.  \newblock
-    Cambridge University Press, 2004.
+\bibitem{rovelli04}
+C.~Rovelli.
+\newblock {\em Quantum Gravity}.
+\newblock Cambridge University Press, 2004.
 
-  \bibitem{stanley-catalan} R.~P. Stanley.  \newblock {\em Catalan Numbers}.
-    \newblock Cambridge University Press, 2015.
+\bibitem{stanley-catalan}
+R.~P. Stanley.
+\newblock {\em Catalan Numbers}.
+\newblock Cambridge University Press, 2015.
 
 \end{thebibliography}
 
