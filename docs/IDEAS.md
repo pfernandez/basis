@@ -737,6 +737,188 @@ In this view:
 * **Speculative.** This is a research program outline; no explicit derivation
   is given.
 
+--- 
+
+## 21. Mode decompositions on Dyck trees and discrete field equations
+
+### 21.1. Fields on words, prefixes, and nodes
+
+There are (at least) three natural ways to define a “field” on the Catalan substrate:
+
+1. **Field on words at fixed tier.**  
+   For tier \(n\), define a complex field
+   \[
+     \Phi_n : \mathcal{D}_n \to \mathbb{C},\qquad
+     w \mapsto \Phi_n(w),
+   \]
+   where \(\mathcal{D}_n\) is the set of Dyck words of semilength \(n\). Each \(w\) is a full history at that proper time.
+
+2. **Field on prefixes (the global possibility tree).**  
+   Let \(\mathcal{C}\) be the infinite Dyck-prefix tree. A field is
+   \[
+     \Phi : \mathrm{Pref}(\mathcal{C}) \to \mathbb{C},\qquad
+     u \mapsto \Phi(u),
+   \]
+   assigning a value to every prefix \(u\). This is the most global viewpoint; it “lives” directly on the Catalan light-cone substrate with all local cones (see Sections 2 and 19).
+
+3. **Field on nodes of a single Dyck tree.**  
+   For a fixed word \(w\), with tree representation \(T(w)\), one can define a local field
+   \[
+     \phi_w : V(T(w)) \to \mathbb{C},\qquad
+     v \mapsto \phi_w(v),
+   \]
+   where \(V(T(w))\) is the set of internal nodes or edges of the tree. This is the “internal field on a given history,” analogous to a field configuration on a single spacetime background.
+
+The first two are **global** (fields on ensembles / prefixes); the third is **local** (fields on one realized history). The mode-decomposition picture below uses the third, but is compatible with the first two.
+
+**Status**
+
+* **Solid (definitions).** All three views are straightforward structures on the Catalan objects already in use.
+* **Speculative.** Identifying these fields with physical fields (e.g. scalar, gauge) is an interpretive layer, not derived.
+
+---
+
+### 21.2. Subtree modes as a multiscale basis
+
+Every Dyck tree \(T(w)\) admits a canonical hierarchy of subtrees:
+
+* each internal node \(v\) of \(T(w)\) defines a subtree \(T_v\),
+* these subtrees are themselves Catalan trees, with the usual depth–breadth structure.
+
+This suggests treating these subtrees as **localized modes**. Concretely:
+
+* For each internal node \(v\), define a mode function \(\psi_v\) on histories (or on trees) that is “supported on” the corresponding subtree \(T_v\). For example:
+  * \(\psi_v(w) = 1\) if the configuration around \(v\) in \(T(w)\) matches a particular pattern, and \(0\) otherwise.
+  * Or more smoothly, \(\psi_v(w)\) could be a function of the shape of \(T_v\) (height, breadth, area, motif class, etc.).
+
+Then amplitudes on the full tree can be written as a **discrete mode expansion**:
+\[
+  \Phi(w) \;=\; \sum_{v \in V(T(w))} a_v\,\psi_v(w),
+\]
+where the coefficients \(a_v\) quantify how strongly each subtree mode contributes.
+
+This is analogous to a **wavelet decomposition**:
+
+* the tree hierarchy provides the “scales”;
+* subtrees at different depths provide coarse vs fine modes;
+* the set \(\{\psi_v\}\) is finite for any finite Dyck word \(w\).
+
+In the global language, one can also define a family of modes \(\psi_\alpha\) indexed by small subtree types (motifs) and express \(\Phi_n\) as
+\[
+  \Phi_n(w) \;=\; \sum_\alpha a_\alpha^{(n)}\,\psi_\alpha(w),
+\]
+where \(\alpha\) runs over a library of motif-types (see Section 15 on motif ecology).
+
+**Status**
+
+* **Solid (structural).** The hierarchy of subtrees and the finite mode expansion are exact combinatorial facts.
+* **Speculative.** The particular choice of mode family \(\{\psi_v\}\) or \(\{\psi_\alpha\}\), and any claim of uniqueness, is model-dependent.
+
+---
+
+### 21.3. Static decomposition vs dynamic evolution
+
+At a fixed tier \(n\), the field \(\Phi_n(w)\) (or \(\phi_w(v)\)) is a **static snapshot**. Dynamics arise in two distinct ways:
+
+1. **Tier growth (external / causal time).**  
+   Moving from tier \(n\) to \(n+1\) adds a new pair step to the Dyck word. This extends the tree by a local growth rule, increasing the pool of subtrees and therefore the basis of modes. A generic update law looks like
+   \[
+     \Phi_{n+1}(w') \;=\; \sum_{w \prec w'} K(w' \leftarrow w)\,\Phi_n(w),
+   \]
+   where the kernel \(K(w' \leftarrow w)\) is nonzero only if \(w'\) is a one-step extension of \(w\) that respects the Dyck constraint. This is the “global” time evolution used in the path-integral picture (Section 3).
+
+2. **Internal redistribution (internal / phase-like time).**  
+   Even at fixed tier \(n\), amplitude can be redistributed among the nodes of a single tree via a discrete operator acting on \(\phi_w\), for example:
+   \[
+     \phi_w^{(m+1)}(v)
+       \;=\; \phi_w^{(m)}(v) - \kappa \bigl(L_T \phi_w^{(m)}\bigr)(v),
+   \]
+   where \(m\) is an internal time step and \(L_T\) is a graph Laplacian on the tree \(T(w)\) (see below). This is a **diffusion** or **wave** evolution on a fixed combinatorial background.
+
+In the continuum limit, tier-growth dynamics give rise to **Brownian excursion + heat/Schrödinger** behaviour (Section 2), while internal redistribution on the tree or prefix graph corresponds to **field propagation** on a fixed “slice” of the substrate.
+
+**Status**
+
+* **Solid (formal structure).** Decomposing dynamics into (i) causal-tier growth and (ii) internal redistribution is consistent with the existing path-integral and light-cone constructions.
+* **Speculative.** Interpreting these two times as physically distinct (proper time vs phase time, or similar) is interpretive (see Section 4).
+
+---
+
+### 21.4. Tree Laplacians and discrete heat/Schrödinger equations
+
+Given a Dyck tree \(T(w)\) with node set \(V\) and edges \(E\), define a discrete **tree Laplacian** \(L_T\) acting on node fields \(\phi_w : V \to \mathbb{C}\) by
+\[
+  (L_T \phi_w)(v)
+    := \phi_w(v) - \frac{1}{\deg(v)} \sum_{u \sim v} \phi_w(u),
+\]
+where \(\deg(v)\) is the degree of node \(v\) and \(u \sim v\) ranges over neighbours connected by tree edges.\footnote{Other normalizations (combinatorial, normalized Laplacian, weighted edges) are possible; the choice affects spectra but not the basic structure.}
+
+Then:
+
+* The **discrete heat equation** on the tree is
+  \[
+    \frac{\partial}{\partial \tau} \phi_w(\tau, v)
+      = -\kappa \,(L_T \phi_w)(\tau, v),
+  \]
+  or in discrete internal time steps \(\tau_m = m \Delta \tau\),
+  \[
+    \phi_w^{(m+1)} = \bigl(I - \kappa \Delta \tau \, L_T\bigr) \phi_w^{(m)}.
+  \]
+
+* The **discrete Schrödinger-like equation** on the tree is
+  \[
+    i \frac{\partial}{\partial \tau} \phi_w(\tau, v)
+      = H_T \phi_w(\tau, v),
+  \]
+  with a Hamiltonian
+  \[
+    H_T := \alpha L_T + V_T,
+  \]
+  where \(V_T\) is a potential term depending on local features (height, breadth, motif labels, etc.). In discrete steps:
+  \[
+    \phi_w^{(m+1)} \approx e^{-i H_T \Delta \tau} \phi_w^{(m)}.
+  \]
+
+Analogous definitions apply to the **prefix tree \(\mathcal{C}\)** at fixed tier \(n\): a Laplacian on the induced subgraph of prefixes of length \(2n\) gives a heat/Schrödinger-type evolution on the “rim” Hilbert space discussed in Section 2 (Hilbert-space and spectral view).
+
+In large-\(n\) limits:
+
+* \(T(w)\) for typical random Dyck words converges (in an appropriate sense) to the **Continuum Random Tree (CRT)** / Brownian excursion object.
+* Spectral properties of \(L_T\) are expected to converge to Laplacian-type operators on the limiting continuum tree.  
+* The discrete heat/Schrödinger equations on \(T(w)\) should then approximate continuum differential equations on that limiting object, paralleling the Dyck \(\to\) Brownian excursion \(\to\) heat/Schr chain already used for amplitudes.
+
+**Status**
+
+* **Solid (discrete operators).** The definition of \(L_T\) and the discrete heat/Schr equations on trees and prefix graphs is standard spectral graph theory.
+* **Speculative.** The precise continuum limit of these operators on random Dyck trees, and the identification of the limiting PDEs with physical field equations, is a research program rather than a completed derivation.
+
+---
+
+### 21.5. Relation to global spectral view and gauge/field ideas
+
+This mode-decomposition and tree-Laplacian picture connects several earlier ideas:
+
+* Section 2 (Hilbert-space and spectral view) diagonalizes a **shift operator around the rim** at fixed tier \(n\), giving global “Fourier modes” indexed by a discrete momentum \(k\). The present section adds **local modes on trees / prefixes**, giving a complementary “position / shape space” description.
+
+* Section 18 (fields and gauge symmetry) treats labels on nodes/edges as fields, with gauge redundancy implemented by structural equivalences. The Laplacian + mode picture gives these fields a natural **dynamics** (heat/Schr-type evolution) on a fixed combinatorial background.
+
+* Section 19 (global vs local views) distinguishes:
+  * a **global** multicomputation picture (all histories), and
+  * a **local** actualization picture (one realized path).  
+  Fields and mode decompositions can be defined in both regimes: globally as amplitudes over histories, locally as fields on a single realized tree. The same Catalan structure supports both.
+
+Taken together, this suggests a program:
+
+* Use **subtree modes** as a combinatorial analogue of Fourier/wavelet bases.
+* Use **tree/prefix Laplacians** to define discrete heat/Schrödinger dynamics on those modes.
+* Study the **scaling limits** of spectra and eigenmodes under Dyck \(\to\) Brownian / CRT convergence.
+* Compare the resulting continuum operators to familiar field operators in QFT / quantum mechanics.
+
+**Status**
+
+* **Solid (structural alignment).** The connections to Sections 2, 18, and 19 are mathematically consistent: all constructions live on the same Catalan objects and standard graph/Laplacian tools.
+* **Speculative.** Whether this program yields a concrete, physically viable field theory on the Catalan substrate remains open; at present it is a roadmap for future work.
+
 ---
 
 Taken together, these extended notes form a library of ideas that sit around
