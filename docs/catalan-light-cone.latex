@@ -9,13 +9,22 @@
 \usetikzlibrary{positioning}
 \usetikzlibrary{decorations.pathreplacing}
 \geometry{margin=1in}
+
 \newtheorem{theorem}{Theorem}[section]
+\newtheorem{definition}{Definition}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{corollary}{Corollary}[section]
+\newtheorem{remark}{Remark}[section]
+
 \title{The Catalan Light Cone:\\
 A Recursive Substrate for Causal Geometry, Quantum Amplitudes, and Computation}
 \author{Paul Fernandez}
 \date{}
+
 \begin{document}
 \maketitle
+
 \begin{abstract}
 We investigate the Catalan family of combinatorial structures---Dyck paths,
 full binary trees, and balanced parenthesis expressions---as a unified discrete
@@ -453,7 +462,8 @@ computational reduction---on this geometry.
 
 The Catalan family---Dyck paths, full binary trees, and balanced-parenthesis expressions---forms the free magma on a single binary constructor.  As observed in foundational work on the $\lambda$-calculus and combinatory logic \cite{CurryFeys1958,Barendregt1984}, every computable program has a canonical representation as a finite binary application tree: internal nodes encode application; leaves encode atomic symbols or combinators.  Conversely, any finite binary tree equipped with leaf labels denotes a unique program modulo surface syntax.  Thus the infinite Catalan tree is not merely a combinatorial object but the structural possibility space of all programs expressible in any Turing-complete functional calculus.
 
-This observation also extends to operational semantics.  Standard reductions (such as $\beta$-reduction or SKI contraction) are local rewrite rules on binary trees, and the pairs-expansions of combinators remain within the Catalan family.  Accordingly, a program, its intermediate expansion frames, and each permissible reduction schedule are all representable as paths through a single Catalan substrate.  Selecting a program shape or selecting a specific reduction history is therefore equivalent to selecting a path in the Catalan tree.  In this sense the Catalan substrate uniformly encodes program syntax, program semantics, and the full ensemble of admissible computational histories.
+This observation also extends to operational semantics.  Standard reductions (such as $\beta$-reduction or SKI contraction) are local rewrite rules on binary trees, and the pairs-expansions of combinators remain within the Catalan family.  Accordingly, a program, its intermediate expansion frames, and each permissible reduction schedule are all representable as paths through a single Catalan substrate.  Selecting a program shape or selecting a specific reduction history is therefore equivalent to selecting a path in the Catalan tree.  In this sense the Catalan substrate uniformly encodes program syntax, program semantics, and the full ensemble of admissible computational histories.  A formal treatment of these embeddings, together with illustrative examples and the associated rewrite semantics, is provided in Appendix~\ref{appendix:computational-foundations}.
+
 Every Dyck path admits a unique decomposition into nested pairs. Writing
 parentheses explicitly, the simplest nontrivial closure of the empty expression
 \(()\) is
@@ -756,7 +766,386 @@ These limitations reflect a deliberate restriction of scope. The goal has been
 to isolate the minimal recursive structure common to multiple domains, not to
 provide a complete physical theory.
 
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper has examined the Catalan family of recursive structures as a common
+substrate for causal geometry, quantum amplitude propagation, and computation.
+The Dyck constraint induces a natural causal order and a discrete cone-shaped
+geometry exhibiting light-cone--like bounds. Classical invariance principles
+show that ensembles of admissible histories converge in the continuum limit to
+Brownian excursions, yielding the heat equation and, under analytic
+continuation, the free Schr\"odinger equation. Through the pairs expansion, the
+same structures encode universal computation via $\lambda$-calculus and SKI
+combinators. These correspondences require no additional primitives beyond
+recursive pairing and constraint.
+Spacetime-like geometry, wave dynamics, and computation emerge as complementary
+aspects of a single recursive system. Several open problems remain, including
+the incorporation of interaction terms, the determination of collapse
+probabilities, and the connection to physical constants. The results presented
+here establish a minimal and structurally unified foundation upon which such
+extensions may be explored.
+
+
 \appendix
+
+\section{Computational Foundations}
+\label{appendix:computational-foundations}
+
+This appendix collects the formal background supporting the use of the Catalan substrate as a universal space of program structures and computational histories.  The material here provides precise statements and examples for readers wishing to verify the correspondence between full binary trees, combinatory calculi, and rewrite dynamics.
+
+
+\begin{proposition}[Catalan Universality for Program Structure]
+\label{prop:catalan-programs}
+Let $\mathcal{C}$ denote the Catalan family of finite full binary trees.  
+Every program in any Turing-complete functional calculus (such as the $\lambda$-calculus or SKI) admits a canonical representation as an element of $\mathcal{C}$ with leaf labels drawn from a finite alphabet.  
+Conversely, every labeled element of $\mathcal{C}$ denotes a unique program modulo surface syntax.  
+Furthermore, standard operational semantics (including $\beta$-reduction and SKI contraction) act as local rewrite rules that preserve membership in $\mathcal{C}$.  
+Thus a program, its syntactic expansions, and every admissible reduction history correspond to paths within the Catalan substrate.
+\end{proposition}
+
+\begin{proof}[Proof Sketch]
+As described in classical treatments of combinatory logic and the $\lambda$-calculus \cite{CurryFeys1958,Barendregt1984}, 
+application is a binary operation, and every term therefore possesses a unique representation as a full binary tree: internal nodes encode application, and leaves encode variables, constants, or combinators.  
+This establishes a canonical embedding of programs into $\mathcal{C}$.
+
+Conversely, any full binary tree with labeled leaves may be interpreted as a well-formed program term by reading internal nodes as applications and leaves as atomic symbols, yielding a unique term up to $\alpha$-equivalence.  
+
+Operational semantics are defined via local tree rewrites.  
+A $\beta$-redex $(\lambda x.M)\,N$ contracts by replacing the parent application with $M[x:=N]$;  
+SKI reductions replace specific subtrees according to fixed patterns.  
+In each case, the output remains a full binary tree, so evaluation never leaves $\mathcal{C}$.  
+Because nondeterministic redex choices correspond to branching in the space of trees, each complete reduction sequence is a path through the Catalan possibility space, completing the correspondence.
+\end{proof}
+
+
+\subsection{Binary Trees as Universal Program Frames}
+\label{appendix:program-frames}
+
+The identification of Catalan objects with program structures is a standard but essential foundation for the present work.  
+Let $\mathcal{C}$ denote the set of full binary trees.  
+A term in a functional calculus is constructed by repeated application, and an application $M\,N$ is represented by a binary node whose children encode $M$ and $N$:
+\[
+(M\,N)
+\quad\mapsto\quad
+\begin{tikzpicture}[baseline=-3pt,level distance=7mm,
+every node/.style={inner sep=1pt}]
+\node {$\bullet$}
+  child { node {$M$} }
+  child { node {$N$} };
+\end{tikzpicture}
+\]
+This mapping is bijective between program terms (modulo $\alpha$-conversion) and labeled elements of $\mathcal{C}$.
+
+Pairs-expansions of combinators---for example the standard expansions of $\mathrm{S}$ and $\mathrm{K}$ into $\lambda$-terms—produce larger trees but remain within the Catalan family.  
+Thus the Catalan substrate is closed under syntactic elaboration.
+
+Operational semantics are likewise internal.  
+Both $\beta$-reduction and SKI contraction replace subtrees with simpler subtrees while preserving the global full-binary-tree form.  
+Each admissible reduction path therefore corresponds to a trajectory within $\mathcal{C}$, and nondeterminism in reduction strategy corresponds to branching structure within the Catalan tree itself.
+
+This uniformity demonstrates that the Catalan substrate simultaneously captures:  
+\begin{enumerate}
+  \item program syntax (binary application structure),  
+  \item program elaboration (via pairs-expansion or substitution), and  
+  \item program dynamics (via evaluation rewrites).  
+\end{enumerate}
+Consequently, computation lives entirely within the Catalan family, justifying its use as the structural substrate for the unified causal--computational model developed in the main text.
+
+\subsection{Illustrative Figures}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  level distance=10mm,
+  sibling distance=18mm,
+  every node/.style={circle,draw,inner sep=1.5pt}
+]
+\node {$\cdot$}
+  child { node {$M$} }
+  child { node {$N$} };
+\end{tikzpicture}
+\caption{A binary application node representing the term $M\,N$.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  level distance=10mm,
+  sibling distance=16mm,
+  every node/.style={circle,draw,inner sep=1.5pt}
+]
+\node {$\cdot$}
+  child {
+    node {$\cdot$}
+      child { node {$\cdot$} child { node {$\mathrm{S}$} } child { node {$f$} } }
+      child { node {$g$} }
+  }
+  child { node {$x$} };
+\end{tikzpicture}
+\caption{Binary-tree representation of the term $\mathrm{S}\,f\,g\,x$.}
+\label{fig:Sfgx-binary-tree}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  level distance=10mm,
+  sibling distance=20mm,
+  every node/.style={circle,draw,inner sep=1.5pt}
+]
+\node {$\cdot$}
+  child { node {$\lambda x.M$} }
+  child { node {$N$} };
+\end{tikzpicture}
+\qquad$\Longrightarrow$\qquad
+\begin{tikzpicture}[
+  level distance=10mm,
+  sibling distance=20mm,
+  every node/.style={circle,draw,inner sep=1.5pt}
+]
+\node {$M[x:=N]$};
+\end{tikzpicture}
+\caption{$\beta$-reduction as a local rewrite inside the Catalan family.}
+\end{figure}
+
+\subsection{Pairs Expansion as Variable-Free S-Expressions}
+\label{subsec:pairs-s-expressions}
+
+A central observation motivating this work is that the pairs expansions of combinators can be written as \emph{variable- and label-free} S-expressions, exactly in the style of McCarthy's original Lisp notation \cite{McCarthy1960}.  In McCarthy's formulation, the core data structure is the cons-cell, written as a parenthesized pair.  Here we push this idea to an extreme: we erase all atom labels and regard the program itself as a pure cons-tree, encoded only by balanced parentheses.
+
+Concretely, consider the binary application tree for the term $\mathrm{S}\,f\,g\,x$ (as in Figure~\ref{fig:Sfgx-binary-tree}).  Under the pairs encoding used in our simulations, this same shape appears as the variable-free S-expression
+\[
+\texttt{(()(()(()())))}.
+\]
+This S-expression can be understood as \emph{looking up into} the underlying binary tree shape:
+the outer parentheses form the root frame, and each \texttt{()} corresponds to a leaf.  The
+corresponding binary tree is
+
+\begin{center}
+\begin{tikzpicture}[
+   level 1/.style={level distance=7mm,sibling distance=7mm},
+   level 2/.style={level distance=7mm,sibling distance=7mm},
+   every node/.style={circle,draw,inner sep=1pt,minimum size=2pt}
+ ]
+   % 1) ((()))
+   \begin{scope}[shift={(-6,0)}]
+     \node (r1) {}
+       child { node {}
+         child { node {}
+           child { node {} }
+           child { node {} }
+         }
+         child { node {} }
+       }
+       child { node {} };
+   \end{scope}
+\end{tikzpicture}.
+\end{center}
+
+Viewed this way, the S-expression is simply a linear traversal of this binary tree: each ``(''
+descends into a cons-cell, each ``)'' returns toward the trunk, and the empty pairs \texttt{()} mark
+the terminal leaves of the structure.
+
+More generally, the pairs simulation
+\begin{verbatim}
+n=0, c=1:  ()
+n=1, c=1:  (()())
+n=2, c=2:  (()(()())) ((()())())
+n=3, c=5:  (()(()(()()))) (()((()())())) ((()())(()())) ((()(()()))()) (((()())())())
+\end{verbatim}
+enumerates exactly the same Catalan shapes that appear as Dyck paths
+\begin{verbatim}
+n=1, c=1:  ()
+n=2, c=2:  (()) ()()
+n=3, c=5:  ((())) (()()) (())() ()(()) ()()()
+\end{verbatim}
+but seen through a different projection.  The Dyck words emphasize the one-dimensional ``height'' profile of the walk, making the Lorentzian scaling limit and the breadth--depth tradeoff of the light cone especially transparent.  The pairs S-expressions, by contrast, foreground the \emph{binary computational structure}: they are precisely the unlabeled S-expression trees of a Lisp-like language, with cons as the only constructor.
+
+In this sense, Dyck words and pairs expansions are two complementary Catalan bijections:
+\begin{itemize}
+  \item Dyck words: a one-dimensional time--breadth profile well adapted to continuum limits and Lorentzian geometry;
+  \item pairs S-expressions: a fully binary application tree well adapted to combinatory computation.
+\end{itemize}
+Both encode the same Catalan shapes; one may view them as distinct ``Lorentz frames'' on the same underlying combinatorial substrate.  The pairs expansion can thus be regarded as an additional invariant transform: it preserves the Catalan class while re-expressing the same light-cone structure in purely computational coordinates.
+
+There is also an intrinsic handedness in this picture.  Dyck words of a given semilength $n$ are not symmetric under reversal of the walk; the distribution of shapes across the tier reflects the left-to-right order in which parentheses are added.  This asymmetry is the combinatorial trace of the fundamental handedness of applicative collapse in the pairs expansion: application is not commutative, and the collapse rule is oriented.  The sequential construction of the S-expression tree makes this visible as a bias in how breadth is accumulated relative to depth.
+
+A further simplification arises when we observe that in the S-expression view, explicit application nodes disappear entirely.  Application is seen as a \emph{property of the parentheses themselves}: a nested pair structure is already an applicative program.  From the standpoint of Schönfinkel's combinatory logic \cite{Schoenfinkel1924}, where even the familiar $\mathrm{S}$ and $\mathrm{K}$ can be reduced to a single sufficiently expressive combinator, one may heuristically say that if a lone combinator $J$ acting on parentheses is enough, then we can omit $J$ and work directly with the bare parentheses~$()$.  The Catalan substrate then becomes a \emph{combinator-free} calculus of pure application.
+
+Although traditional functional calculi permit several evaluation strategies (normal-order, applicative-order, call-by-need, etc.), the Catalan substrate eliminates this freedom.  Because collapse is a local, causally constrained rewrite, the order of evaluation is not a convention but a consequence of the causal geometry of the tree.  A redex may collapse only when its causal predecessors have done so, and once permitted, the collapse rule determines its successor configuration uniquely.  Thus a computation corresponds to a causally admissible path through the Catalan substrate, and its one-dimensional projection is a Dyck path.  In this sense, evaluation order is fixed by causality rather than chosen by convention. Formalizing this as a partial order on redexes yields a causal-consistency lemma and shows that standard evaluation strategies arise as coarse-grainings of this order (Appendix~\ref{appendix:computational-foundations}).
+
+\paragraph{Historical Perspective.}
+The S-expression viewpoint connects the present framework to three classical constructions.
+First, McCarthy's original Lisp treats cons-pairs as the sole data constructor, with atoms added as a
+separate syntactic category \cite{McCarthy1960}.  Here we invert the hierarchy: structure is primary,
+and atoms---if present at all---arise as designated structural motifs.
+
+Second, Church encodings demonstrate that data and control structures can be represented entirely by
+higher-order functions; similarly, SKI combinatory logic eliminates variables altogether.  These
+developments show that symbolic reference is not primitive but can be reconstructed from purely
+structural or operational primitives.
+
+Third, Gödel numbering treats syntax as arithmetic structure.  The present approach may be viewed as
+a ``Catalan numbering,'' where syntactic entities are mapped to unlabeled binary trees.  The Dyck,
+pairs, and binary-tree bijections then provide multiple coordinate systems for the same structural
+universe.  In this sense, the Catalan substrate acts simultaneously as a computational calculus and
+as a structural semantics for symbolic systems.
+
+\subsection{Symbolic Representation in a Structure-Only Substrate}
+\label{subsec:symbolic-representation}
+
+In the Catalan substrate all information is structural: the only primitive constructor is the
+cons-pair, and there are no atomic labels.  This raises a fundamental question: how can a system
+without atoms support symbols, naming, or reference?  The answer is that symbols arise not as
+primitives but as \emph{structural motifs} that function as internal or external markers depending on
+context.  We distinguish two forms of symbolic representation.
+
+\subsubsection{Internal Structural Symbols}
+Within a closed Catalan machine, one may bootstrap symbolic reference by designating particular tree
+shapes as internal ``names.''  A higher-level self-referential mechanism (conceptually similar to a
+Y-like fixed-point operator) can maintain a dictionary of such shapes, mapping them to programs,
+behaviours, or combinator expansions.  In this mode, names are themselves Catalan objects, and
+symbolic reference arises entirely from geometry: identifying a symbol is equivalent to matching a
+structural pattern.  This yields a Lisp-like environment without atomic identifiers, where all
+``atoms'' are implemented as canonical shapes in the tree.
+
+\subsubsection{External Structural Symbols}
+When interacting with external systems, the same structural motifs can serve as \emph{extrinsic}
+symbols.  Distinguished shapes may encode character codes, vector-drawing glyphs, device signals, or
+other forms of I/O.  This does not modify the underlying calculus: it merely overlays a conventional
+interpretation on structural patterns.  The Catalan substrate remains atomless internally, while
+external systems treat designated shapes as meaningful codes.
+
+\subsubsection{Unified View: Symbols as Distinguished Motifs}
+Both internal and external naming mechanisms exemplify a common principle: in a structure-only
+universe, symbols are not primitive entities but \emph{designated Catalan motifs}.  A symbol is simply
+a tree pattern endowed—internally or externally—with stable semantic interpretation.  The substrate
+itself does not distinguish between data and code, or between program and identifier; all such
+distinctions emerge from the placement and recognition of specific structural forms.
+
+\begin{definition}[Structural Symbol]
+A \emph{structural symbol} is a finite Catalan tree $S$ together with an interpretation map
+$\iota$ assigning $S$ either (i) an internal computational meaning within the Catalan machine, or
+(ii) an external semantic meaning communicated to an outside system.  The substrate recognizes $S$
+only as a structure; all semantics flow from~$\iota$.
+\end{definition}
+
+\begin{remark}
+Although traditional programming languages begin with atoms and build structure on top of them,
+the Catalan substrate inverts this perspective: structure comes first, and atoms (if needed) are
+reintroduced later as structural patterns.  From this viewpoint Lisp's cons-based representation,
+and even Schönfinkel's proposal of a single universal combinator, appear naturally as degenerate
+cases of a more general structure-first semantics.
+\end{remark}
+
+
+\subsection{Causal Admissibility of Redex Contraction}
+\label{subsec:causal-admissibility}
+
+We now formalize the sense in which evaluation order is fixed by causality rather than chosen by convention.
+
+\begin{definition}[Causal Preorder on Positions]
+Let $T$ be a full binary tree in the Catalan substrate, representing a program term.  A \emph{position} in $T$ is a node address $p$ in the usual tree sense (e.g.\ a finite word over $\{L,R\}$ indicating left/right choices from the root).  We write $p \prec q$ if the node at position $p$ lies on the unique path from the root to the node at position $q$.  The reflexive, transitive closure of $\prec$ defines a preorder $\preceq$ on positions, which we call the \emph{causal preorder}.
+\end{definition}
+
+Intuitively, $p \preceq q$ means that the subtree at $q$ is causally downstream of the subtree at $p$: any change at $p$ may propagate to $q$ but not conversely.
+
+\begin{definition}[Redex and Causal Admissibility]
+A \emph{redex} in $T$ is a position $p$ such that the subtree rooted at $p$ matches the left-hand side of a reduction rule (e.g.\ a $\beta$-redex or an SKI contraction).  Let $R(T)$ be the set of all redex positions in $T$.
+
+A redex at position $p \in R(T)$ is \emph{causally admissible} if there is no other redex $q \in R(T)$ with $q \prec p$.  In other words, a redex is causally admissible if it is minimal in $R(T)$ with respect to the strict causal order.
+\end{definition}
+
+\begin{definition}[Causally Admissible Reduction Sequence]
+A finite or infinite sequence of trees
+\[
+T_0 \to T_1 \to T_2 \to \cdots
+\]
+is \emph{causally admissible} if, for each step $T_i \to T_{i+1}$, the contracted redex is causally admissible in $T_i$ in the above sense.  A \emph{causal computation} is a causally admissible sequence starting from some initial tree $T_0$.
+\end{definition}
+
+
+\begin{lemma}[Causal Consistency of the Catalan Substrate]
+\label{lem:causal-consistency}
+Let $T_0$ be an initial Catalan tree, and let
+\[
+T_0 \to T_1 \to \cdots \to T_m, 
+\qquad
+T_0 \to T'_1 \to \cdots \to T'_n
+\]
+be two causally admissible reduction sequences that both terminate in a normal form (i.e.\ a tree with no redexes).  Then:
+\begin{enumerate}
+  \item The normal forms coincide: $T_m \equiv T'_n$.
+  \item The two sequences differ, if at all, only by permutations of reductions at redexes that are pairwise incomparable under $\preceq$ (i.e.\ reductions occurring in disjoint causal subtrees).
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}[Proof Sketch]
+The first claim is a standard confluence argument: the underlying rewrite system (e.g.\ $\beta$-reduction or SKI contraction) is known to be confluent on well-formed terms \cite{CurryFeys1958,Barendregt1984}.  Since we never leave the Catalan family, the usual diamond property implies uniqueness of normal forms.
+
+For the second claim, note that two redexes at positions $p$ and $q$ are causally independent if neither $p \prec q$ nor $q \prec p$ holds, i.e.\ they lie in disjoint subtrees.  Contracting such redexes in either order yields the same result, by locality of the rewrite rules.  Causally admissible sequences always contract redexes that are minimal in the causal order, so any difference between two such sequences can only be due to different interleavings of contractions at pairwise incomparable positions.  This is the usual ``causal consistency'' property familiar from event structures and partial-order semantics of concurrency: linearizations of the same partial order differ only by permuting independent events.  Here the partial order is given by the causal preorder on redex positions, and the corresponding linear extensions are precisely the causally admissible evaluation histories.
+\end{proof}
+
+
+\subsection{Evaluation Strategies as Coarse-Grainings of Causal Order}
+\label{subsec:evaluation-strategies}
+
+Traditional presentations of the $\lambda$-calculus distinguish several evaluation strategies: normal-order, applicative-order, call-by-need, and many others.  These are usually defined syntactically (e.g.\ by specifying which redex is chosen at each step), with confluence guaranteeing that they terminate in the same normal form when one exists.  In the Catalan substrate, however, causality constrains redex selection more tightly.
+
+\begin{definition}[Strategy-Compatible Causal Computation]
+Let $\mathcal{S}$ be a syntactic evaluation strategy (e.g.\ normal-order or applicative-order) which, given a term, selects one or more redex positions considered ``eligible'' at each step.  A causal computation
+\[
+T_0 \to T_1 \to \cdots
+\]
+is \emph{compatible} with $\mathcal{S}$ if, at each step, the contracted redex is both causally admissible in $T_i$ and belongs to the set of redexes selected by $\mathcal{S}$ for the corresponding term.
+\end{definition}
+
+\begin{proposition}[Strategies as Coarse-Grainings of Causal Structure]
+\label{prop:strategies-coarse-graining}
+Let $T_0$ be an initial term, and suppose $\mathcal{S}$ is a standard evaluation strategy that is normalizing on $T_0$ (e.g.\ normal-order for a weakly normalizing term).  Then:
+\begin{enumerate}
+  \item Every $\mathcal{S}$-guided reduction sequence can be refined to a causally admissible computation by reordering only reductions that occur at redexes incomparable under the causal preorder.
+  \item Conversely, every causally admissible computation from $T_0$ to normal form projects to an $\mathcal{S}$-valid history by forgetting the precise interleaving of causally independent reductions.
+\end{enumerate}
+In this sense, classical evaluation strategies are coarse-grainings of the underlying causal order: they differ only in how they resolve the residual freedom to permute causally independent redex contractions.
+\end{proposition}
+
+\begin{proof}[Proof Sketch]
+For (1), observe that any $\mathcal{S}$-guided sequence that temporarily contracts a non-minimal redex (with respect to $\preceq$) must do so in a context where all redexes on which it causally depends will eventually be contracted as well.  By standard commuting-conversion arguments, we can reorder the sequence so that causally prior redexes are contracted first, without changing the final normal form.  This reordering affects only redexes that lie in disjoint subtrees, i.e.\ are incomparable under $\preceq$.
+
+For (2), given a causally admissible computation, we can group together all contractions that $\mathcal{S}$ regards as taking place at the ``same'' redex position in the syntactic term, ignoring the precise ordering among contractions in disjoint subtrees.  The resulting abstract history matches what $\mathcal{S}$ would produce, by confluence and the fact that $\mathcal{S}$ is normalizing on $T_0$.  Thus $\mathcal{S}$ may be seen as a projection that forgets the fine-grained causal structure of independent collapses while preserving the global reduction behaviour.
+\end{proof}
+
+\begin{corollary}[Universality of Structural Symbol Embedding]
+\label{cor:structural-universality}
+Let $\Sigma$ be any countable alphabet (finite or infinite), and let $\mathcal{L}(\Sigma)$ be the set
+of all well-formed symbolic expressions over~$\Sigma$ with arbitrary syntactic structure.  Then there
+exists an injective map
+\[
+E : \mathcal{L}(\Sigma) \hookrightarrow \mathcal{C},
+\]
+where $\mathcal{C}$ is the Catalan family of full binary trees, such that distinct symbols in
+$\Sigma$ correspond to pairwise non-isomorphic Catalan motifs, and syntactic composition in
+$\mathcal{L}(\Sigma)$ corresponds to tree composition in $\mathcal{C}$.
+
+In particular, any symbolic system (including alphabets, identifiers, typed terms, or abstract
+syntax trees) can be encoded as a system of \emph{structural symbols} embedded within the Catalan
+substrate.  Thus the Catalan universe is universal for symbolic representation, with atoms appearing
+only as designated structural shapes.
+\end{corollary}
+
+\begin{proof}[Proof Sketch]
+Enumerate $\Sigma = \{s_1, s_2, \dots\}$ and assign to each $s_i$ a distinct Catalan tree~$S_i$ not
+isomorphic to any previously assigned motif.  Define $E(s_i) = S_i$.  Extend $E$ compositionally:
+if a symbolic expression is built by forming a tree or sequence of symbols, map the compositional
+operation to the corresponding binary-tree constructor in~$\mathcal{C}$.  Injectivity follows from
+injectivity on generators and the fact that full binary trees are freely generated; well-formedness
+follows from closure of~$\mathcal{C}$ under cons-pairing.  Since $\mathcal{L}(\Sigma)$ is
+countable, such an embedding exists for any countable symbolic system.
+\end{proof}
+
 
 \section{Interpretive Appendix: Void, Potential, and Recursive Actualization}
 \label{app:interpretive}
@@ -824,28 +1213,14 @@ how these features may be interpreted as aspects of a unified underlying
 process, but the validity of the formal results does not depend on that
 reading.
 
-\section{Conclusion}
-\label{sec:conclusion}
-
-This paper has examined the Catalan family of recursive structures as a common
-substrate for causal geometry, quantum amplitude propagation, and computation.
-The Dyck constraint induces a natural causal order and a discrete cone-shaped
-geometry exhibiting light-cone--like bounds. Classical invariance principles
-show that ensembles of admissible histories converge in the continuum limit to
-Brownian excursions, yielding the heat equation and, under analytic
-continuation, the free Schr\"odinger equation. Through the pairs expansion, the
-same structures encode universal computation via $\lambda$-calculus and SKI
-combinators. These correspondences require no additional primitives beyond
-recursive pairing and constraint.
-Spacetime-like geometry, wave dynamics, and computation emerge as complementary
-aspects of a single recursive system. Several open problems remain, including
-the incorporation of interaction terms, the determination of collapse
-probabilities, and the connection to physical constants. The results presented
-here establish a minimal and structurally unified foundation upon which such
-extensions may be explored.
-
 \bibliographystyle{plain}
 \begin{thebibliography}{99}
+
+\bibitem{addario-berry13}
+L.~Addario-Berry, L.~Devroye, and S.~Janson.
+\newblock Sub-Gaussian tail bounds for the width and height of conditioned
+  Galton--Watson trees.
+\newblock {\em Annals of Probability}, 41(2):1074--1087, 2013.
 
 \bibitem{ambjorn01}
 J.~Ambj{\o}rn, J.~Jurkiewicz, and R.~Loll.
@@ -877,16 +1252,15 @@ T.~M. Cover and J.~A. Thomas.
 \newblock {\em Elements of Information Theory}.
 \newblock 2nd edition, John Wiley \& Sons, 2006.
 
+\bibitem{CurryFeys1958}
+H.~B. Curry and R.~Feys.
+\newblock {\em Combinatory Logic, Vol.~I}.
+\newblock North-Holland, 1958.
+
 \bibitem{curry58}
 H.~B. Curry.
-\newblock Foundations of mathematical logic.
-\newblock {\em McGraw--Hill}, 1958.
-
-\bibitem{addario-berry13}
-L.~Addario-Berry, L.~Devroye, and S.~Janson.
-\newblock Sub-Gaussian tail bounds for the width and height of conditioned
-  Galton--Watson trees.
-\newblock {\em Annals of Probability}, 41(2):1074--1087, 2013.
+\newblock {\em Foundations of Mathematical Logic}.
+\newblock McGraw--Hill, 1958.
 
 \bibitem{feynman-hibbs65}
 R.~P. Feynman and A.~R. Hibbs.
@@ -910,6 +1284,12 @@ J.-F. Le~Gall.
 \newblock Random trees and applications.
 \newblock {\em Probability Surveys}, 2:245--311, 2005.
 
+\bibitem{McCarthy1960}
+J.~McCarthy.
+\newblock Recursive functions of symbolic expressions and their computation by
+  machine, Part I.
+\newblock {\em Communications of the ACM}, 3(4):184--195, 1960.
+
 \bibitem{orus14}
 R.~Or\'us.
 \newblock A practical introduction to tensor networks: Matrix product states and
@@ -921,25 +1301,15 @@ C.~Rovelli.
 \newblock {\em Quantum Gravity}.
 \newblock Cambridge University Press, 2004.
 
+\bibitem{Schoenfinkel1924}
+M.~Sch{\"o}nfinkel.
+\newblock {\"U}ber die Bausteine der mathematischen Logik.
+\newblock {\em Mathematische Annalen}, 92:305--316, 1924.
+
 \bibitem{stanley-catalan}
 R.~P. Stanley.
 \newblock {\em Catalan Numbers}.
 \newblock Cambridge University Press, 2015.
 
-@book{CurryFeys1958,
-  author    = {Haskell B. Curry and Robert Feys},
-  title     = {Combinatory Logic. {V}ol. {I}},
-  publisher = {North-Holland},
-  year      = {1958}
-}
-
-@book{Barendregt1984,
-  author    = {Henk Barendregt},
-  title     = {The Lambda Calculus: Its Syntax and Semantics},
-  publisher = {North-Holland},
-  year      = {1984}
-}
-
 \end{thebibliography}
-
 \end{document}
