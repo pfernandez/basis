@@ -1,352 +1,81 @@
 # Basis
 
-*A Catalan machine where `()` + local collapse yields universal computation, stable motifs, and diagrammatic structure.*
+This repository is where I keep a mix of research notes, experiments, and code around a simple but surprisingly rich family of objects: Catalan structures — balanced parentheses (Dyck paths), full binary trees, and closely related forms.
+
+I started working with these structures because they sit at an interesting intersection of ideas I care about: recursion, syntax, computation, and the way local structure can induce global constraints. Over time, this grew into both a draft paper and a small experimental platform for exploring how far these ideas can be pushed in a concrete, hands-on way.
+
+The goal of the repository isn’t to present a finished theory. It’s to make the work visible: the formal parts, the exploratory parts, and the code that connects them.
 
 ---
 
-## Quick overview
+## Contents
 
-Basis is a playground built on one idea:
+There are two main threads running through the repo.
 
-> Start with `()`, allow only pairing and local collapse, and see how far structure alone can take you.
+**1. A working research paper**
 
-With that, this repo lets you:
+The file docs/catalan-light-cone.tex is the center of gravity. It’s a LaTeX draft of a paper that tries to state the ideas as cleanly and rigorously as possible, using standard mathematical and probabilistic tools where applicable.
 
-- generate and explore **Catalan objects** (balanced parentheses, Dyck paths, trees),
-- run a tiny **universal computer** built from these shapes,
-- study **recurrent motifs and cycles** under different collapse rules,
-- and, if you want, experiment with **physics-flavored** interpretations (diagrams, forces, curvature) in a controlled, combinatorial setting.
+That document is where definitions live, where claims are made carefully, and where speculative material is clearly separated from established results. If you’re primarily interested in the conceptual side, that’s the place to start.
 
-For the research notes and paper, see `docs/`.
+**2. An experimental codebase**
 
-If you’re in a hurry, jump to **[Getting started](#6-getting-started)**.
+Alongside the paper is code I use to explore and test ideas before (and while) they make their way into formal writing. This includes:
+* Generators for Dyck paths, trees, and alternative Catalan normal forms
+* Small experiments with local rewrite or “collapse” rules on trees
+* Tools for enumerating, normalizing, and comparing structures
+* A minimal graph-based evaluator for SK-style combinator expressions
+* Trace and visualization tools for stepping through reductions
 
----
-
-## 1) Why `()` and Catalan?
-
-We treat `()` as both **vacuum** and **potential**. By pairing `()` with itself we generate the classic **Catalan families**:
-
-- balanced parentheses (Dyck words),
-- binary trees,
-- noncrossing diagrams.
-
-This gives us a simple but rich **possibility space** of well-formed, nested structures.
-
-Example (small `n`):
-
-```text
-()
-(())
-()()
-((()))
-(()())
-(())()
-()(())
-()()()
-```
-
-You can draw each string as an up–down path:
-
-* `(` = step up,
-* `)` = step down,
-* you never go below zero,
-* you end where you started.
-
-Interpretation:
-
-* **height** in the Dyck path ≈ how many things are “open” → a notion of causal depth / “time”
-* **horizontal position** ≈ where you are in the history → a notion of “space” or branching
-* **the set of paths at a given length** ≈ a collection of structured histories
-
-Basis takes this shared Catalan family as its **universe of possibilities** and then asks:
-“What happens if we give it a small set of local rules for growth and collapse?”
+The code isn’t meant to be a polished framework. It’s a laboratory: something I can run, tweak, and inspect to see what actually happens when simple rules are applied repeatedly.
 
 ---
 
-## 2) What this repository is for
+## What the work is about
 
-This repo supports three intertwined uses:
+At a high level, the project explores how much structure you can get from:
+- Purely combinatorial objects with a nesting constraint
+- Local, syntax-level transformations on trees
+- Familiar computational primitives expressed structurally
+- Standard scaling limits of conditioned random walks
 
-1. **Minimal universal computer from `()`**
-   A pure structural SK/λ system (no opcodes):
+Rather than starting from equations or physical interpretation, the emphasis is on structure first: how paths, trees, and programs relate to one another, what invariants they share, and what kinds of patterns recur when you explore them algorithmically.
 
-   * binders as `(() body)`,
-   * De Bruijn references `#n` (for “the n-th enclosing binder”),
-   * application as pairing,
-   * evaluation as **structural collapse** `(() x) ⇒ x` plus substitution.
-
-   This shows that `()` + pairing + collapse are enough for **general computation**.
-
-2. **Motif discovery**
-   Stochastic, local collapse policies over Catalan trees reveal:
-
-   * **recurrent motifs** (shapes that keep reappearing),
-   * survival and frequency statistics for different policies.
-
-3. **A structural lens on diagrams, gauge, and geometry** *(exploratory)*
-   If you’re physics-inclined, you can read:
-
-   * collapse events as interaction **vertices**,
-   * persistent links as **propagators**,
-   * whole histories as **diagram expansions**,
-   * local encoding freedom as **gauge-like** redundancy,
-   * motif-density gradients as **force-like** effects,
-   * “collapse of computed history” as a **curvature-like** bending of structure.
-
-Nothing here claims a finished physical theory. Everything is explicit, testable **combinatorics + code**.
-
-You can happily ignore (3) and still get a lot of value from (1) and (2).
+Some of these directions connect naturally to known results; others are still very much “let’s see what happens if…”. Both live here side by side.
 
 ---
 
-## 3) Core pieces
+## Navigating the repo
 
-### A) Catalan / Dyck engine
-
-Utilities for generating and working with Catalan families:
-
-* balanced parentheses (Dyck words),
-* trees,
-* noncrossing diagrams,
-* simple statistics and bijections between them.
-
-This is the shared **substrate** for compute, motifs, and diagrams.
-
-### B) Pure structural SK / λ
-
-We interpret the same structures as a tiny λ-like language:
-
-* **Binder:** `(() body)` introduces an argument slot.
-* **Reference:** `#n` addresses the `n`-th enclosing binder (De Bruijn style).
-* **Application:** `(f x)` is just binary pairing.
-* **Evaluation:** repeated structural collapse
-
-```text
-(() x) ⇒ x
-```
-
-plus substitution and a few standard rules.
-
-`programs/sk-basis.lisp` defines:
-
-* `I`, `K`, `S`,
-* booleans,
-* composition,
-
-all as **trees on this substrate**.
-
-**Bottom line:** `()` + pairing + collapse is expressive enough to be **Turing-complete**.
-
-You don’t need to follow all the λ-calculus details to use the rest of the repo; they are there for readers who want the programming-language angle.
-
-### C) Collapse policies & motif discovery
-
-Different local policies determine how the structure actually evolves:
-
-* prefer **leftmost** branches,
-* prefer **heavier/more structured** branches,
-* treat exactly balanced cases as “frozen” (no collapse),
-* etc.
-
-The exploration scripts record:
-
-* which motifs recur,
-* how long they survive,
-* which configurations act as **attractors**.
-
-These are the raw data behind the geometry/diagram analogies.
-
-### D) Pattern graph & reentry (identity as conserved form)
-
-The raw causal evolution is acyclic: it’s a tree of events.
-But if we **identify isomorphic subtrees** (same shape, different location), we can quotient down to a **pattern graph** that may have cycles:
-
-```text
-Causal tree (unfolded):         Pattern graph (quotiented):
-
-        A                              [A]
-       / \                              |
-      B   B        ===>                [B]
-     /     \                             \
-    C       C                            [C]  (possible cycle B → C → B …)
-```
-
-In this view:
-
-* **Recurrent motifs** behave like fixed points or “particle types”.
-* **Cycles** correspond to reentry: the same structural form keeps feeding into itself.
-* Many concrete embeddings of one motif-class look like many “instances” of the same thing.
-
-This matches intuition like “one field, many quanta” or Wheeler’s “one electron” picture, but implemented as **one conserved pattern reused everywhere**, without literal time loops.
+A quick map:
+* docs/ - The paper and working notes.
+* src/catalan/ - Generators, normal forms, local rewrite rules, and motif exploration for
+Catalan objects.
+* src/graph/ - A small graph-based evaluator used to study structural computation and
+reduction traces.
+* programs/ - Example combinator definitions built up into a minimal Lisp, and related test programs.
+* src/vis/ - A lightweight browser-based trace viewer.
+* tests/ - Unit tests that keep the experiments honest.
+* lib/ - A small functional UI toolkit for use in demos and visualization.
 
 ---
 
-## 4) Dyck paths as discrete spacetime (design constraint)
+## Running things
 
-Dyck words ↔ paths with:
+Most everything runs under Node.js:
 
-* `(` = +1,
-* `)` = −1,
-* stay ≥ 0,
-* return to 0.
-
-Known scaling limits (toward Brownian-like excursions) provide a disciplined bridge from **discrete Catalan combinatorics** to **continuous path-like behavior**.
-
-In this project we treat that as a **constraint** on dynamics:
-
-> Any rule we propose should respect the causal cone:
-> you can only change depth by one unit per step.
-
-That keeps the discrete model loosely aligned with relativistic intuition (no “instant” arbitrarily-distant effects in the underlying walk).
-
----
-
-## 5) Collapse as dynamics (and a gravity analogy)
-
-Conceptually, you can think of a partial history as sitting in a landscape of possible continuations:
-
-* some continuations are very constrained (few ways to keep going),
-* some are very loose (many ways to extend).
-
-The **number or weight of consistent continuations** behaves like a local “potential”:
-
-* regions where histories tend to concentrate look like **wells**,
-* differences in that potential drive **flow** toward those regions,
-* the realized history bends through areas of high “density” in a way that can be read as **curvature-like**.
-
-In practice, the code simply:
-
-1. runs collapse policies on trees,
-2. tracks motif frequencies and distributions,
-3. maps where structure tends to accumulate.
-
-This is an explicit **hypothesis lab**, not a GR/QFT package. The analogy is there for readers who want it; the computations are just tree rewrites and statistics.
-
----
-
-## 6) Getting started
-
-### Requirements
-
-* Node.js (v18+)
-
-### Install
-
-```bash
+```sh
 npm install
+npm test
 ```
 
-### First things to try
-
-Generate and inspect some Catalan structures:
-
-```bash
-npm run dyck
-npm run dyck:center
-npm run pairs
-npm run pairs:spine
-npm run motzkin
-npm run motzkin:spine
-```
-
-Explore collapse and motifs under different policies:
-
-```bash
-npm run motifs
-npm run motifs:freeze
-npm run motifs:heavier
-npm run motifs:lighter
-npm run motifs:left
-npm run motifs:right
-npm run policies            # quick sweep of collapse options
-npm run bijections          # show Catalan ↔ tree ↔ path bijections
-```
-
-Run the SK interpreter on the structural substrate:
-
-```bash
-npm run sk
-
-# or with custom expressions / defs:
-node src/cli/sk.js --defs=programs/sk-basis.lisp "((I x) y)" "(((S K K) z))"
-```
-
-### Inspect collapse traces in a viewer
-
-An experimental viewer lives under `src/vis/`. It renders per-step collapse snapshots, with either explicit loop arrows (binder re-entry) or true structural sharing (motifs literally fold onto themselves):
-
-```bash
-# export one or more traces into the viewer folder
-npm run sk -- --trace=src/vis/trace.json "(I z)"
-
-# serve src/vis/
-npx http-server src/vis
-```
-
-Then open `http://localhost:8080` and click “Load trace.json”.
-
-The viewer consumes the exported nodes/links trace (an array when multiple expressions are evaluated) and lets you scrub through the steps. You can also paste arbitrary graph JSON to inspect a snapshot manually.
-
-This part is optional; everything else works fine at the CLI.
+There are also small CLI scripts for enumeration, collapse-policy exploration,
+and evaluation (see package.json for entry points). Some scripts emit trace
+data that can be viewed interactively in the browser.
 
 ---
 
-## 7) Repository layout
-
-* `src/`
-
-  * `catalan/` — Dyck/Motzkin generators, bijections, motif tools.
-  * `graph/` — node/link graph core plus the new evaluator.
-  * `cli/` — command-line entry points (e.g. `sk.js`, motif runners).
-  * `vis/` — lightweight HTML/CSS/JS viewers for graph snapshots.
-* `programs/`
-
-  * `sk-basis.lisp` — SK, booleans, helpers in pure binder syntax.
-* `scheme/`
-
-  * `recursive.scm` — early structural attention/memory demo (Turing-style read-head).
-* `docs/`
-
-  * `catalan-light-cone.(latex|pdf)` — main paper (discrete cone + diffusion/Schrödinger limit + SKI mapping).
-  * `IDEAS.md` — extended field guide with solid/speculative/interpretive labels.
-* `tests/`
-
-  * checks for bijections, interpreter correctness, motif stats.
-
-If you are only interested in **computation**, focus on `src/`, `programs/`, and `tests/`.
-If you are here for **concepts and physics analogies**, see `docs/` and the motif tools under `src/catalan/`.
-
----
-
-## 8) Audience & stance
-
-This repo is aimed at readers who enjoy some combination of:
-
-* λ-calculus and combinatory logic,
-* Catalan combinatorics,
-* programming languages and interpreters,
-* planar / diagrammatic methods,
-* structural takes on memory and physics.
-
-The **kernel / compute layers** (Catalan machine, interpreter, motif explorer) are concrete and tested.
-The **diagram / gauge / geometry** layers are explicitly **exploratory** and meant to be **probed and falsified**, not taken as finished theory.
-
----
-
-## 9) License
-
-* **Code:** Apache License 2.0 (see `LICENSE`)
-* **Documentation & essays (`README.md`, `docs/`):** CC BY 4.0
-
----
-
-## 10) Citation (optional)
-
-If you reference this work, you can cite it as:
-
-```text
-Paul Fernandez, “A Catalan Basis for Computation, Memory, and
-Relativistic Quantum Dynamics from a Single Collapse Rule” (2025).
-GitHub: pfernandez/basis.
-```
+This repo exists because I find these structures genuinely interesting, and
+because having the paper, the code, and the experiments in one place makes it
+easier to think clearly about them. If you’re curious too, you’re very welcome
+to poke around.
