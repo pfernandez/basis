@@ -742,9 +742,9 @@ on the Catalan light cone.
 
 \subsection{Histories as paths}
 
-Interpreting Dyck paths as admissible histories suggests assigning weights to
-each history. Let $\mathcal{D}_t$ denote the set of Dyck paths of tier $t$. A
-state at tier $t$ may be represented as a formal superposition
+Interpreting Dyck paths as admissible histories motivates assigning weights to
+each history.  Let $\mathcal{D}_t$ denote the set of Dyck paths of tier $t$. A
+state at tier $t$ may be represented as a formal superposition of histories
 
 \[
 	\Psi_t = \sum_{w \in \mathcal{D}_t} \psi(w)\,|w\rangle .
@@ -752,6 +752,66 @@ state at tier $t$ may be represented as a formal superposition
 
 Local extensions of a Dyck path correspond to admissible future steps. Thus,
 time evolution is governed by transitions that respect the Dyck constraint.
+
+\subsection{Observables, projection, and coherent summation}
+
+Fix a tier $t$ and consider the set $\mathcal D_t$ of Dyck paths of semilength
+$t$. Each $w\in\mathcal D_t$ represents a complete admissible history at discrete
+time $t$, with an associated height profile
+\[
+H_w : \{0,1,\dots,2t\} \to \mathbb Z_{\ge 0}.
+\]
+An observable is defined as a deterministic coarse-graining
+\[
+f : \mathcal D_t \to \mathcal X,
+\]
+where $\mathcal X$ is a discrete set of outcomes corresponding to a chosen
+equivalence relation on histories. An outcome $x\in\mathcal X$ corresponds to
+the equivalence class $f^{-1}(x)\subset\mathcal D_t$ of histories.  By
+construction, such a projection discards information: many distinct histories
+may be identified as the same observable outcome.
+
+With no additional structure imposed, the natural measure on $\mathcal D_t$ is
+uniform counting. The induced distribution on the outcome space $\mathcal X$ is
+therefore the pushforward of the uniform counting measure,
+\[
+N(x) := \#\{w\in\mathcal D_t : f(w)=x\}.
+\]
+Even with uniform weight on histories, the induced distribution on $\mathcal X$
+is generically non-uniform, reflecting the combinatorial geometry of the
+projection rather than any imposed dynamics.
+
+A discrete analogue of an integral along a history is given by the step-sum of
+the height profile,
+\[
+A(w) := \sum_{k=0}^{2t-1} H_w(k),
+\]
+which measures the cumulative dwell time at nonzero height. This quantity
+depends on the full distribution of height along the path, not merely on
+extrema such as maximum height or peak count.
+
+From this additive structural functional one may define a complex phase
+\[
+\theta(w) := \alpha\,A(w),
+\qquad
+\psi(w) := e^{i\theta(w)},
+\]
+where $\alpha$ is a global scale parameter. No per-path phase assignment is
+introduced; distinct phases arise solely from differences in the distribution of
+height over the history.
+
+Given an observable $f$, the complex amplitude associated with an outcome
+$x\in\mathcal X$ is the coherent sum
+\[
+\Psi(x) := \sum_{w:\,f(w)=x} \psi(w),
+\]
+and observed probabilities are obtained by normalization of squared magnitudes,
+\[
+P(x) = \frac{|\Psi(x)|^2}{\sum_{x'\in\mathcal X}|\Psi(x')|^2}.
+\]
+Thus histories that are indistinguishable under the observable $f$ are combined
+prior to squaring, while distinguishable histories are not. Interference is
+therefore not postulated but forced by the structure of projection.
 
 \subsection{Path integrals and conditioned walks}
 
@@ -790,6 +850,105 @@ or curvature, provided the Dyck constraint is preserved.
 	\label{fig:dyck-walk-excursion}
 \end{figure}
 
+\subsection{Modal structure and Narayana classes}
+
+Beyond global observables such as height or area, Dyck paths admit a natural
+discrete modal decomposition. For a Dyck path $w\in\mathcal D_t$, define its
+\emph{Narayana index} $K(w)$ to be the number of peaks of $w$, i.e.\ the number
+of occurrences of an up-step immediately followed by a down-step. For fixed $t$,
+the Narayana numbers $N(t,k)$ count the number of Dyck paths with $K(w)=k$.
+
+Combinatorially, the Narayana index measures the number of local maxima of the
+height signal $H_w(k)$ along the path. Paths with the same $K$ therefore share
+a common oscillatory structure but may differ in the relative placement of their
+peaks along the word. This induces a refinement of the path ensemble into mode
+classes indexed by $k$.
+
+At fixed tier $t$, these mode classes are orthogonal to radial observables such
+as area or mean height.  Distinct Narayana classes may contribute to the same
+observable outcome under a given projection, while paths within a fixed Narayana
+class may differ in the distribution of height over time and hence in the
+structural phase defined by~$A(w)$. Thus the Narayana index plays a role
+analogous to a discrete frequency, while the relative placement of peaks
+provides a phase offset within that mode.
+
+This decomposition clarifies how interference structure arises prior to any
+continuum limit. Radial observables determine which coarse region of the outcome
+space a history contributes to, while Narayana classes and peak placement govern
+how those contributions interfere. In the scaling limit discussed below, these
+discrete mode classes converge to the familiar harmonic structure of continuum
+wave equations.
+
+\subsection{Discrete path-integral formulation}
+
+The preceding constructions admit a direct interpretation as a discrete path
+integral on the Catalan light cone. Fix a tier $t$ and an observable
+$f:\mathcal D_t\to\mathcal X$, where $\mathcal X$ is a finite set of outcomes
+corresponding to a chosen coarse-graining of histories. Each Dyck path
+$w\in\mathcal D_t$ represents a complete admissible history, and the projection
+$f$ determines which distinctions between histories are retained and which are
+discarded.
+
+Define a complex weight for each history by
+\[
+\psi(w) = e^{i\alpha A(w)},
+\]
+where
+\[
+A(w) = \sum_{k=0}^{2t-1} H_w(k)
+\]
+is the discrete height integral introduced above. The amplitude associated with
+an observable outcome $x\in\mathcal X$ is then
+\[
+\Psi(x) = \sum_{w:\,f(w)=x} e^{i\alpha A(w)}.
+\]
+
+
+This expression is formally identical to a path integral: the amplitude is a sum
+over all admissible histories compatible with the observable outcome, with each
+history contributing a phase determined by an additive functional. No continuum
+limit, action functional, or variational principle is assumed at this stage; the
+structure arises purely from discrete combinatorics.
+
+Several features commonly associated with continuum path integrals are already
+present:
+
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{Sum over histories.}
+All admissible Dyck paths consistent with the observable contribute. The Dyck
+constraint enforces causal admissibility in the same way that restrictions on
+allowed paths do in relativistic path integrals.
+
+\item \textbf{Additive phase functional.}
+
+The quantity $A(w)$ is additive under concatenation of path segments and depends
+only on the local height increments. It therefore plays the role of a discrete
+action accumulated along the history.
+
+\item \textbf{Interference from coarse-graining.}
+Interference arises precisely because the observable $f$ fails to distinguish
+between certain histories. Histories that are identified by the projection are
+summed coherently, while those distinguished by the observable are not.
+
+\item \textbf{Gauge redundancy.}
+Different Dyck paths may correspond to the same abstract computation or the same
+coarse-grained structure, differing only by the ordering of spacelike-separated
+updates. The path integral sums coherently over such gauge-equivalent histories,
+while observable probabilities depend only on the resulting amplitudes.
+\end{enumerate}
+
+From this perspective, the Catalan lattice provides a discrete realization of
+the sum-over-histories principle in which both the space of histories and the
+phase functional are combinatorially well defined. In the next subsection we
+show that, under appropriate scaling limits, this discrete formulation converges
+to the familiar continuum descriptions governed by diffusion and Schr\"odinger
+dynamics.
+
+Concrete physical measurements may be modeled by choosing observables that
+retain geometric features of a history (such as transverse displacement at a
+fixed tier), but no such spatial interpretation is required for the formal
+development.
+
 \subsection{Diffusion limit}
 \label{sec:continuum-limit}
 
@@ -800,7 +959,7 @@ Let $n\to\infty$ and rescale time and height by
 \]
 
 Under this scaling, the probability density $\rho(\tau,x)$ for conditioned walks
-converges to the density of a Brownian excursion on $x\ge0$. It follows from the
+converges to that of a Brownian excursion on $x\ge0$. It follows from the
 invariance principle that $\rho$ satisfies the heat equation
 
 \begin{equation}
@@ -837,8 +996,8 @@ preferred foliation and causal constraint that parallels the prefix order of
 Dyck paths \cite{ambjorn01,ambjorn12}. In CDT, the continuum limit is taken
 after summing over causally admissible triangulations. Here the admissible
 structures are Dyck paths rather than triangulations, but the organizing
-principle---restriction to histories that respect a causal growth
-rule---is the same.
+principle—the restriction to histories that respect a causal growth rule—is
+closely analogous.
 
 \section{Locality, Commutation, and Interaction}
 \label{sec:locality}
@@ -907,8 +1066,13 @@ of the corresponding causal-consistency and commutation property.)
 Both computation and amplitude propagation require selection:
 \begin{itemize}
 	\item computational reduction chooses a redex,
-	\item measurement-like selection chooses an outcome.
+	\item measurement-like selection chooses an observable outcome, corresponding
+		to an equivalence class under the chosen projection.
 \end{itemize}
+In the Catalan substrate, selection operates locally, refining rather than
+destroying structure. The global constraint ensures consistency after
+selection. The formal development of collapse probabilities lies beyond the
+scope of this paper and is treated here only structurally.
 In the Catalan substrate, selection operates locally, refining rather than
 destroying structure. The global constraint ensures consistency after
 selection. The formal development of collapse probabilities lies beyond the
