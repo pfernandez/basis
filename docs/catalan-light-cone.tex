@@ -940,14 +940,19 @@ while observable probabilities depend only on the resulting amplitudes.
 From this perspective, the Catalan lattice provides a discrete realization of
 the sum-over-histories principle in which both the space of histories and the
 phase functional are combinatorially well defined. In the next subsection we
-show that, under appropriate scaling limits, this discrete formulation converges
-to the familiar continuum descriptions governed by diffusion and Schr\"odinger
-dynamics.
+show that, under appropriate scaling limits, this discrete formulation
+converges to familiar continuum descriptions governed by diffusion and
+Schr\"odinger dynamics.
 
 Concrete physical measurements may be modeled by choosing observables that
 retain geometric features of a history (such as transverse displacement at a
-fixed tier), but no such spatial interpretation is required for the formal
-development.
+fixed tier). No such spatial interpretation, however, is required for the
+formal development.
+
+For readers seeking a concrete intuition for how this discrete
+sum-over-histories mechanism produces interference,
+Appendix~\ref{appendix:doubleslit} sketches a finite thought experiment
+analogous to the double-slit experiment.
 
 \subsection{Diffusion limit}
 \label{sec:continuum-limit}
@@ -1119,6 +1124,130 @@ here establish a minimal and structurally unified foundation upon which such
 extensions may be explored.
 
 \appendix
+
+\appendix
+\section{A Double-Slit Thought Experiment on the Catalan Light Cone}
+\label{appendix:doubleslit}
+
+This appendix provides an illustrative thought experiment showing how the
+discrete path-integral formalism developed in Section~\ref{sec:amplitudes}
+exhibits interference in a setting analogous to the double-slit experiment.
+The construction is entirely combinatorial and finite. No new assumptions,
+dynamical rules, or continuum limits are introduced; the purpose is solely to
+instantiate the formalism in a familiar narrative.
+
+\subsection{Two sources as boundary-conditioned cones}
+
+Consider two distinct Dyck prefixes $u_L$ and $u_R$ of equal length and height.
+Each prefix induces a local Catalan cone of admissible continuations, as
+described in Section~\ref{sec:multiplecones}. We refer to these as the left and
+right source cones, although no spatial interpretation is assumed at this
+stage.
+
+Both cones are evolved to a common tier $n$, producing two ensembles of Dyck
+paths of semilength $n$ that differ only in their initial boundary condition.
+The admissible histories from both cones are evaluated relative to the same
+observable defined below.
+
+\subsection{Observable and indistinguishability}
+
+Fix a tier $n$ and define an observable
+\[
+f : \mathcal D_n \to \mathcal X,
+\]
+where $\mathcal X$ is a discrete outcome space. The observable $f$ retains a
+coarse-grained feature of each history (for example, a bin determined by the
+mean height or total area) and discards all other information, including which
+source cone the history originated from.
+
+Interference arises precisely because histories originating from distinct cones
+may be rendered indistinguishable by the observable. If the observable were to
+retain source information, no interference would occur.
+
+\subsection{Enumeration of histories at $n=3$}
+
+At semilength $n=3$, the set $\mathcal D_3$ consists of the five Dyck words
+\[
+((())),\quad (()()),\quad (())(),\quad ()(()),\quad ()()().
+\]
+
+Each word $w$ determines a height profile $H_w(k)$ for $k=0,\dots,6$, and an
+associated discrete area
+\[
+A(w) = \sum_{k=0}^{5} H_w(k).
+\]
+
+These quantities are listed in Table~\ref{tab:n3-dyck}.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{c c c}
+Dyck word $w$ & height profile $H_w(k)$ & $A(w)$ \\ \hline
+$((()))$   & $(0,1,2,3,2,1,0)$ & $9$ \\
+$(()())$   & $(0,1,2,1,2,1,0)$ & $7$ \\
+$(())()$   & $(0,1,2,1,0,1,0)$ & $5$ \\
+$()(())$   & $(0,1,0,1,2,1,0)$ & $5$ \\
+$()()()$   & $(0,1,0,1,0,1,0)$ & $3$
+\end{tabular}
+\caption{Dyck words at semilength $n=3$, with height profiles and discrete areas.}
+\label{tab:n3-dyck}
+\end{table}
+
+\subsection{Coherent summation and interference}
+
+Assign to each history the complex weight
+\[
+\psi(w) = e^{i\alpha A(w)},
+\]
+as in Section~\ref{sec:amplitudes}. Let $x\in\mathcal X$ be a fixed observable
+outcome such that multiple histories from both source cones satisfy $f(w)=x$.
+
+The amplitude associated with $x$ is
+\[
+\Psi(x) = \sum_{w:\,f(w)=x} e^{i\alpha A(w)}.
+\]
+
+Because the observable discards source information, contributions from the left
+and right cones are summed coherently. Histories with equal area contribute the
+same phase, while histories with different distributions of height contribute
+distinct phases. Depending on the relative values of $A(w)$, the sum may exhibit
+constructive or destructive interference.
+
+By contrast, a classical counting model would assign the weight
+\[
+N(x) = \#\{w\in\mathcal D_n : f(w)=x\},
+\]
+which cannot produce cancellation. The difference between $|\Psi(x)|^2$ and
+$N(x)$ is therefore entirely due to coherent summation over indistinguishable
+histories.
+
+\subsection{Interpretation}
+
+No wave equation, spatial geometry, or continuum approximation has been assumed
+in this construction. Interference arises solely from three ingredients:
+\begin{enumerate}[label=(\roman*)]
+\item multiple admissible histories,
+\item an additive structural phase functional,
+\item coarse-graining that renders distinct histories indistinguishable.
+\end{enumerate}
+
+This mirrors the logical structure of the continuum double-slit experiment, but
+here the phenomenon is entirely discrete and combinatorial.
+
+\subsection{A pedagogical coarse-graining limit}
+
+For intuition, one may further coarse-grain the observable or rescale $\alpha$
+so that phases reduce to $\psi(w)\in\{+1,-1\}$. In this limit, interference
+appears as signed counting over equivalence classes of histories. This toy limit
+is purely pedagogical and plays no role in the formal development of the theory.
+
+\subsection{Summary}
+
+This appendix demonstrates that the kinematic core of interference phenomena is
+already present on the Catalan light cone. Distinguishability is determined by
+the observable rather than by the ontology of histories, and coherent summation
+over indistinguishable combinatorial paths suffices to produce interference
+patterns familiar from continuum quantum mechanics.
 
 \section{Computational Foundations}
 \label{appendix:computational-foundations}
