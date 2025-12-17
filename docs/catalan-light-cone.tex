@@ -5,6 +5,7 @@
 \usepackage{hyperref}
 \usepackage{enumitem}
 \usepackage{tikz}
+\usepackage{float}
 \usetikzlibrary{calc}
 \usetikzlibrary{positioning}
 \usetikzlibrary{decorations.pathreplacing}
@@ -595,107 +596,127 @@ the full ensemble of admissible computational histories. A formal treatment of
 these embeddings, together with illustrative examples and the associated rewrite
 semantics, is provided in Appendix~\ref{appendix:computational-foundations}.
 
-Every Dyck path admits a unique decomposition into nested pairs. Writing
-parentheses explicitly, the simplest nontrivial closure of the empty expression
-\(()\) is
+\paragraph{Two canonical parenthesis encodings.}
+There are (at least) two particularly useful parenthesis-only encodings of a
+full binary tree:
 
-\[
-	(()) ,
-\]
-
-which contains a single internal pairing. Iterating this rule produces the
-entire Catalan family.
-
-This recursive pairing induces a uniform transformation, referred to here as
-the \emph{pairs expansion}, which places Dyck trees in bijection with binary
-application trees. Under this correspondence:
 \begin{itemize}
-	\item each matched pair corresponds to a cons cell,
-	\item containment corresponds to functional application,
-	\item sibling subtrees correspond to arguments at equal precedence.
+  \item \textbf{Dyck encoding} (``walk'' view): balanced parentheses of length
+    $2t$, naturally adapted to height profiles and scaling limits.
+  \item \textbf{Pairs (S-expression) encoding} (``cons'' view): write each leaf
+    as \texttt{()} and each internal node as a parenthesized pair of its two
+    children, i.e.\ $T=(L,R)\mapsto (\texttt{enc}(L)\,\texttt{enc}(R))$.  This is
+    a variable- and label-free Lisp-style representation with \texttt{()} as the
+    only atom.
 \end{itemize}
-The transformation is purely structural and preserves prefix order.
 
-\begin{figure}[h]
-	\centering
-	\begin{tikzpicture}[
-		level 1/.style={level distance=7mm,sibling distance=7mm},
-		level 2/.style={level distance=7mm,sibling distance=7mm},
-		every node/.style={circle,draw,inner sep=1pt,minimum size=2pt}
-		]
-		% 1) ((()))
-		\begin{scope}[shift={(-6,0)}]
-			\node (r1) {}
-				child { node {}
-					child { node {}
-						child { node {} }
-						child { node {} }
-					}
-					child { node {} }
-				}
-				child { node {} };
-			\node[draw=none] at (0,-2.6) {\(\text{((()))}\)};
-		\end{scope}
-		% 2) (()())
-		\begin{scope}[shift={(-3,0)}]
-			\node (r2) {}
-				child[level distance=7mm] { node {}
-					child { node {} }
-					child { node {}
-						child { node {} }
-						child { node {} }
-					}
-				}
-				child { node {} };
-			\node[draw=none] at (0,-2.6) {\(\text{(()())}\)};
-		\end{scope}
-		% 3) (())()
-		\begin{scope}[
-			shift={(0,0)},
-			level 1/.style={level distance=7mm,sibling distance=10mm}
-			]
-			\node (r3) {}
-				child { node {}
-					child { node {} }
-					child { node {} }
-				}
-				child { node {}
-					child { node {} }
-					child { node {} }
-				};
-			\node[draw=none] at (0,-2.6) {\(\text{(())()}\)};
-		\end{scope}
-		% 4) ()(())
-		\begin{scope}[shift={(3,0)}]
-			\node (r4) {}
-				child { node {} }
-				child { node {}
-					child { node {}
-						child { node {} }
-						child { node {} }
-					}
-					child { node {} }
-				};
-			\node[draw=none] at (0,-2.6) {\(\text{()(())}\)};
-		\end{scope}
-		% 5) ()()()
-		\begin{scope}[shift={(6,0)}]
-			\node (r5) {}
-				child { node {} }
-				child { node {}
-					child { node {} }
-					child { node {}
-						child { node {} }
-						child { node {} }
-					}
-				};
-			\node[draw=none] at (0,-2.6) {\(\text{()()()}\)};
-		\end{scope}
-	\end{tikzpicture}
-	\caption{Binary-tree representations of the five Dyck words of semilength \(3\),
-		corresponding to Fig.~\ref{fig:dyck-n3}. From left to right: maximal nesting
-	(chain) through mixed cases to maximal separation (star).}
-	\label{fig:trees-n3-tikz}
+In particular, in the \emph{pairs} encoding, the smallest object is the empty
+pair \texttt{()}, and the smallest nontrivial \emph{binary} object is
+\texttt{(()())}, i.e.\ a root pair whose two children are leaves.  In the Dyck
+encoding, the semilength-$1$ object is \texttt{()}, since Dyck words begin only
+after the first matched pair exists.
+
+\subsection{A small tier shown three ways (Dyck / tree / pairs)}
+Figure~\ref{fig:trees-n3-tikz} augments the standard Dyck-$n=3$ list by
+displaying, for the \emph{same} five Catalan shapes, the corresponding pairs
+(S-expression) encodings.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    level 1/.style={level distance=7mm,sibling distance=7mm},
+    level 2/.style={level distance=7mm,sibling distance=7mm},
+    every node/.style={circle,draw,inner sep=1pt,minimum size=2pt}
+    ]
+    % Order: ((())), (()()), (())(), ()(()), ()()()
+    % Pairs encodings (canonical): 
+    % ((())) -> (((()())())())
+    % (()()) -> ((()(()()))())
+    % (())() -> ((()())(()()))
+    % ()(()) -> (()((()())()))
+    % ()()() -> (()(()(()())))
+    %
+    % 1) ((()))
+    \begin{scope}[shift={(-5,0)}]
+      \node {}
+        child { node {}
+          child { node {}
+            child { node {} }
+            child { node {} }
+          }
+          child { node {} }
+        }
+        child { node {} };
+      \node[draw=none,align=center] at (0,-2.6)
+      {\scriptsize\text{((()))}\\[-0.6mm]\scriptsize\texttt{(((()())())())}};
+    \end{scope}
+    % 2) (()())
+    \begin{scope}[shift={(-2.5,0)}]
+      \node {}
+        child { node {}
+          child { node {} }
+          child { node {}
+            child { node {} }
+            child { node {} }
+          }
+        }
+        child { node {} };
+      \node[draw=none,align=center] at (0,-2.6)
+      {\scriptsize\text{(()())}\\[-0.6mm]\scriptsize\texttt{((()(()()))())}};
+    \end{scope}
+    % 3) (())()
+    \begin{scope}[
+      shift={(0,0)},
+      level 1/.style={level distance=7mm,sibling distance=10mm}
+      ]
+      \node {}
+        child { node {}
+          child { node {} }
+          child { node {} }
+        }
+        child { node {}
+          child { node {} }
+          child { node {} }
+        };
+      \node[draw=none,align=center] at (0,-2.6)
+      {\scriptsize\text{(())()}\\[-0.6mm]\scriptsize\texttt{((()())(()()))}};
+    \end{scope}
+    % 4) ()(())
+    \begin{scope}[shift={(2.5,0)}]
+      \node {}
+        child { node {} }
+        child { node {}
+          child { node {}
+            child { node {} }
+            child { node {} }
+          }
+          child { node {} }
+        };
+      \node[draw=none,align=center] at (0,-2.6)
+      {\scriptsize\text{()(())}\\[-0.6mm]\scriptsize\texttt{(()((()())()))}};
+    \end{scope}
+    % 5) ()()()
+    \begin{scope}[shift={(5,0)}]
+      \node {}
+        child { node {} }
+        child { node {}
+          child { node {} }
+          child { node {}
+            child { node {} }
+            child { node {} }
+          }
+        };
+      \node[draw=none,align=center] at (0,-2.6)
+      {\scriptsize\text{()()()}\\[-0.6mm]\scriptsize\texttt{(()(()(()())))}};    
+    \end{scope}
+  \end{tikzpicture}
+  \vspace{-2.5em}
+  \caption{The five Catalan shapes at tier $t=3$ shown as (i) Dyck words,
+  (ii) full binary trees, and (iii) pairs (S-expression) encodings in which each
+  leaf is \texttt{()} and each internal node is a parenthesized pair of its two
+  children (as if one were looking "down into" the tree). These are three
+  coordinate systems for the same underlying Catalan objects.}
+  \label{fig:trees-n3-tikz}
 \end{figure}
 
 \subsection{Connection to \texorpdfstring{$\lambda$}{lambda}-calculus and SKI}
@@ -1148,10 +1169,6 @@ Both computation and amplitude propagation require selection:
 	\item measurement-like selection chooses an observable outcome, corresponding
 		to an equivalence class under the chosen projection.
 \end{itemize}
-In the Catalan substrate, selection operates locally, refining rather than
-destroying structure. The global constraint ensures consistency after
-selection. The formal development of collapse probabilities lies beyond the
-scope of this paper and is treated here only structurally.
 In the Catalan substrate, selection operates locally, refining rather than
 destroying structure. The global constraint ensures consistency after
 selection. The formal development of collapse probabilities lies beyond the

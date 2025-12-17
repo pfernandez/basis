@@ -3,6 +3,7 @@ node_modules/
 .npm
 .eslintcache
 .node_repl_history
+notes.md
 *.tgz
 *.aux
 *.fdb_latexmk
