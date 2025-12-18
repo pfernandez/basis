@@ -214,26 +214,26 @@ the relativistic light-cone bound $|\Delta x| \le \Delta t$ (in units with
 $c=1$).
 
 \subsection{Depth--breadth tradeoff}
-Let $h(w)$ denote the maximum height of a Dyck path, i.e.\ its maximal nesting
-depth. Depth and breadth are not independent. Interpreting the Dyck tree as a
-full binary prefix code, assign to each leaf $i$ its depth $d_i$ (root at depth
-$0$). Then the Kraft equality holds:
+Let $h(w)$ denote the maximum height of a Dyck path, i.e.\ the maximum nesting
+depth of its associated full binary tree (root at depth $0$). Recall that the
+breadth $r(w)$ is the maximum number of nodes occurring at any fixed depth
+level:
 \[
-	\sum_i 2^{-d_i} = 1.
+r(w):=\max_{\ell}{\text{number of nodes at depth }\ell}.
 \]
-In particular, at any fixed depth $\ell$ there can be at most $2^\ell$ leaves
-at that depth. Since $r(w)$ is the size of a largest level set, there is some
-depth $\ell_\ast$ at which $r(w)$ nodes appear, and hence
+Depth and breadth are not independent. In any full binary tree, the number of
+nodes at depth $\ell$ is at most $2^{\ell}$ (each level can at most double from
+its parent level). Hence, if the maximum level set size $r(w)$ occurs at depth
+$\ell_\ast$, then
 \[
-	r(w) \le 2^{\ell_\ast} \le 2^{h(w)}
-	\quad\Rightarrow\quad
-	h(w) \ge \log_2 r(w).
+r(w)\le 2^{\ell_\ast}\le 2^{h(w)}
+\quad\Rightarrow\quad
+h(w)\ge \log_2 r(w).
 \]
 Thus configurations with large breadth necessarily have logarithmically large
-depth, while very deep trees must concentrate most of their leaves in narrow
-antichains. This structural constraint is a combinatorial analogue of the
-tension between spatial spread and temporal commitment and is the standard
-Kraft bound for prefix codes \cite{cover-thomas}.
+depth. Equivalently, very shallow trees cannot support wide level sets, while
+trees with very large depth must concentrate most nodes away from any single
+breadth-maximizing level.
 
 \begin{figure}[h]
 	\centering
@@ -291,62 +291,67 @@ invariance-principle results for conditioned random walks
 \label{subsec:dyck-lorentz-computation}
 
 The Dyck encoding places each Catalan object into a discrete $(1+1)$-dimensional
-causal geometry.  A Dyck path of semilength $n$ is a walk composed of steps
-
+walk geometry. A Dyck path of semilength $n$ may be viewed as an integer-valued
+nearest-neighbour walk $(x_t)*{t=0}^{2n}$ with
 \[
-	(\Delta x, \Delta t) = (\pm 1, 1),
+x*{t+1}=x_t\pm 1,\qquad x_0=0,
 \]
-
-subject to the non-negativity constraint $h(t) \ge 0$ with $h(0)=h(2n)=0$. This
-forces every admissible history to lie within the discrete light cone
-
+where $t$ is the discrete time index and $x_t$ is the height (or transverse
+displacement) at time~$t$.  For \emph{any} walk with steps $(\Delta x,\Delta t)=(\pm1,1)$,
+one has the kinematic bound
 \[
-	|x| \le t, \qquad t \in \{0,1,\dots,2n\}.
+|x_t|\le t \qquad (t=0,1,\dots,2n),
 \]
+since the position can change by at most one unit per time step.  Thus the
+ambient step rule already embeds the walk space inside the discrete cone
+$|x|\le t$.
 
-Under diffusive rescaling, Dyck paths converge to Brownian excursions
-(Section~\ref{sec:continuum-limit}), and the cone $|x| \le t$ becomes the
-standard Minkowski light cone in the continuum limit. Thus the Dyck
-parametrization already expresses the $(t,x)$ structure of a relativistic frame.
+The Dyck constraint imposes additional \emph{pathwise} conditions: it selects
+exactly those walks that stay in the future half-cone and return to the origin,
+\[
+x_t\ge 0 \ \text{for all }t,\qquad x_{2n}=0.
+\]
+These are stronger than the cone bound and encode the Catalan admissibility
+restriction. Under diffusive rescaling, Dyck paths converge to Brownian
+excursions on $x\ge 0$ (Section~\ref{sec:continuum-limit}), so the continuum
+limit naturally inherits a Lorentzian-style $(t,x)$ parametrization together
+with a boundary at $x=0$.
 
 \paragraph{Light-cone coordinates.}
 
 Introduce the usual light-cone coordinates
-
 \begin{equation}
-	u = t + x, \qquad v = t - x,
-	\label{eq:lightcone-coordinates}
+u=t+x,\qquad v=t-x,
+\label{eq:lightcone-coordinates}
 \end{equation}
+in which each discrete step increments exactly one of $(u,v)$ by~$2$.  The cone
+condition $|x|\le t$ is equivalent to $u,v\ge 0$.  The Dyck constraint further
+imposes the pathwise restriction $x\ge 0$ (hence $v\ge 0$ automatically) and the
+endpoint condition $x_{2n}=0$.
 
-in which a Dyck step increments exactly one of $(u,v)$ by $2$, while the height
-constraint becomes simply $u,v \ge 0$. A Lorentz boost with rapidity $\eta$ acts
-linearly as
-
+A Lorentz boost with rapidity $\eta$ acts linearly as
 \begin{equation}
-	u' = e^{\eta} u, \qquad v' = e^{-\eta} v.
-	\label{eq:lightcone-boost}
+u' = e^{\eta} u,\qquad v' = e^{-\eta} v,
+\label{eq:lightcone-boost}
 \end{equation}
-
-Transforming back to $(t,x)$ gives the familiar Lorentz transformation
-
+and transforming back to $(t,x)$ gives the familiar Lorentz transformation
 \begin{equation}
-	t' = \gamma (t - v_{\!L} x), \qquad x' = \gamma (x - v_{\!L} t),
-	\label{eq:lorentz-tx}
+t' = \gamma (t - v_{!L} x),\qquad x' = \gamma (x - v_{!L} t),
+\label{eq:lorentz-tx}
 \end{equation}
-
 where
 \[
-	\gamma = \frac{1}{\sqrt{1 - v_{\!L}^2}}, \qquad v_{\!L} = \tanh \eta,
+\gamma=\frac{1}{\sqrt{1-v_{!L}^2}},\qquad v_{!L}=\tanh\eta,
 \]
 with $c=1$ units understood. The Minkowski interval
-
 \begin{equation}
-	\mathrm{d}s^{2} = \mathrm{d}t^{2} - \mathrm{d}x^{2}
-	\label{eq:minkowski}
+\mathrm{d}s^{2}=\mathrm{d}t^{2}-\mathrm{d}x^{2}
+\label{eq:minkowski}
 \end{equation}
-
 is invariant under~\eqref{eq:lorentz-tx} and may be regarded as the continuum
-limit of the discrete metric induced by Dyck-constrained paths.
+limit of the kinematic cone geometry induced by the step rule, while the Dyck
+constraint supplies the additional boundary and return conditions that define
+the Catalan ensemble.
 
 \paragraph{Computational proper time.}
 
@@ -355,36 +360,29 @@ A reduction history carries more than geometric information: it has an intrinsic
 events (local redex contractions) performed along the evaluation of a Catalan
 object. Passing to a continuum description, introduce a computational proper
 time $\tau$ via
-
 \begin{equation}
-	\tau = \alpha\, k,
-	\label{eq:tau-discrete}
+\tau=\alpha,k,
+\label{eq:tau-discrete}
 \end{equation}
-
 where $\alpha$ is the characteristic scale associated with a single collapse.
 In the continuum limit, for a parametrized world-line $(t(s),x(s))$, the proper
 time satisfies
-
 \begin{equation}
-	\frac{\mathrm{d}\tau^{2}}{\mathrm{d}s^{2}}
-	= \left(\frac{\mathrm{d}t}{\mathrm{d}s}\right)^{2}
-	- \left(\frac{\mathrm{d}x}{\mathrm{d}s}\right)^{2},
-	\label{eq:proper-time-continuum}
+\left(\frac{\mathrm{d}\tau}{\mathrm{d}s}\right)^{2}
+\left(\frac{\mathrm{d}t}{\mathrm{d}s}\right)^{2}
+\left(\frac{\mathrm{d}x}{\mathrm{d}s}\right)^{2},
+\label{eq:proper-time-continuum}
 \end{equation}
-
 so that $\tau$ is the Lorentz-invariant ``computational length'' of the causal
 trajectory. The discrete relation~\eqref{eq:tau-discrete} is therefore the
-microscopic counterpart of \eqref{eq:proper-time-continuum}, with each local
+microscopic counterpart of~\eqref{eq:proper-time-continuum}, with each local
 collapse contributing one quantum of proper computational time.
 
-In this interpretation, a Dyck path encodes not only the $(t,x)$ geometry of the
-light cone but also the admissible orderings of collapse events. A particular
-evaluation strategy corresponds to selecting which admissible steps count as
-computational advances in~$\tau$; that is, a choice of a \emph{computational
-world-line} within the Catalan cone. Thus the Dyck bijection expresses, in
-discrete form, the same invariants that appear in continuous Lorentzian
-geometry, together with an additional computational invariant associated with
-the collapse dynamics of the Catalan substrate.
+In this interpretation, a Dyck path encodes not only the $(t,x)$ kinematics of a
+cone-bounded walk but also a constrained ensemble of admissible trajectories
+within that cone. A particular evaluation strategy corresponds to selecting
+which admissible updates count as computational advances in~$\tau$, i.e.\ a
+choice of a \emph{computational world-line} within the Catalan substrate.
 
 \subsection{Recursive Self-Similarity and Local Re-Centering}
 \label{sec:selfsimilarity}
@@ -648,7 +646,7 @@ displaying, for the \emph{same} five Catalan shapes, the corresponding pairs
         }
         child { node {} };
       \node[draw=none,align=center] at (0,-2.6)
-      {\scriptsize\text{((()))}\\[-0.6mm]\scriptsize\texttt{(((()())())())}};
+      {\scriptsize\texttt{((()))}\\[-0.6mm]\scriptsize\texttt{(((()())())())}};
     \end{scope}
     % 2) (()())
     \begin{scope}[shift={(-2.5,0)}]
@@ -662,7 +660,7 @@ displaying, for the \emph{same} five Catalan shapes, the corresponding pairs
         }
         child { node {} };
       \node[draw=none,align=center] at (0,-2.6)
-      {\scriptsize\text{(()())}\\[-0.6mm]\scriptsize\texttt{((()(()()))())}};
+      {\scriptsize\texttt{(()())}\\[-0.6mm]\scriptsize\texttt{((()(()()))())}};
     \end{scope}
     % 3) (())()
     \begin{scope}[
@@ -679,7 +677,7 @@ displaying, for the \emph{same} five Catalan shapes, the corresponding pairs
           child { node {} }
         };
       \node[draw=none,align=center] at (0,-2.6)
-      {\scriptsize\text{(())()}\\[-0.6mm]\scriptsize\texttt{((()())(()()))}};
+      {\scriptsize\texttt{(())()}\\[-0.6mm]\scriptsize\texttt{((()())(()()))}};
     \end{scope}
     % 4) ()(())
     \begin{scope}[shift={(2.5,0)}]
@@ -693,7 +691,7 @@ displaying, for the \emph{same} five Catalan shapes, the corresponding pairs
           child { node {} }
         };
       \node[draw=none,align=center] at (0,-2.6)
-      {\scriptsize\text{()(())}\\[-0.6mm]\scriptsize\texttt{(()((()())()))}};
+      {\scriptsize\texttt{()(())}\\[-0.6mm]\scriptsize\texttt{(()((()())()))}};
     \end{scope}
     % 5) ()()()
     \begin{scope}[shift={(5,0)}]
@@ -707,7 +705,7 @@ displaying, for the \emph{same} five Catalan shapes, the corresponding pairs
           }
         };
       \node[draw=none,align=center] at (0,-2.6)
-      {\scriptsize\text{()()()}\\[-0.6mm]\scriptsize\texttt{(()(()(()())))}};    
+      {\scriptsize\texttt{()()()}\\[-0.6mm]\scriptsize\texttt{(()(()(()())))}};    
     \end{scope}
   \end{tikzpicture}
   \vspace{-2.5em}
@@ -1216,7 +1214,6 @@ extensions may be explored.
 
 \appendix
 
-\appendix
 \section{A Double-Slit Thought Experiment on the Catalan Light Cone}
 \label{appendix:doubleslit}
 
