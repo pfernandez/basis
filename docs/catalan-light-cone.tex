@@ -291,198 +291,10 @@ there are $t$ internal nodes, while the scaling behavior is a consequence of
 invariance-principle results for conditioned random walks
 \cite{le-gall05,janson07,addario-berry13}.
 
-\subsection{Coordinate charts on the Catalan cone}
-\label{sec:coordinate-charts}
-
-\begin{remark}[Notation hygiene]
-\label{rem:notation-hygiene}
-To avoid collisions, the \emph{tier} (semilength) of a completed history is
-denoted by $n$. A \emph{prefix length} is denoted by $k\in\{0,1,\dots,2n\}$.
-Within this subsection only, the symbols $(t_k,x_k)$ denote an \emph{embedded}
-spacetime chart derived from cumulative counts (Definition~\ref{def:null-counts}),
-and should not be confused with the tier index $n$ used elsewhere.
-\end{remark}
-
-\paragraph{The Catalan cone as the master object.}
-Let $\mathcal{C}$ denote the set of Dyck prefixes (balanced-parentheses
-\emph{prefixes} that never go below height $0$), partially ordered by extension:
-$p\preceq q$ iff $q$ has prefix $p$. A completed history is a maximal element
-$w\in\mathcal{D}_n\subset\mathcal{C}$ of semilength $n$.
-For any prefix $p\in\mathcal{C}$, the future
-\[
-\mathcal{C}(p)\;:=\;\{\,q\in\mathcal{C}: p\preceq q\,\}
-\]
-is canonically a ``local cone'' rooted at $p$: the same growth law, re-centered.
-Thus there is a single substrate $\mathcal{C}$ (and its re-rootings), and
-different ``cones'' arise from different coordinate charts or coarse-grainings
-of this same object.
-
-\paragraph{Two cumulative counts and a light-cone chart.}
-The most rigid chart on $\mathcal{C}$ is obtained by tracking the cumulative
-numbers of opens and closes.
-
-\begin{definition}[Null counts and embedded coordinates]
-\label{def:null-counts}
-Fix a Dyck word $w\in\mathcal{D}_n$, and let $w[1\!:\!k]$ denote its length-$k$
-prefix. Define
-\[
-u(k)\;:=\;\#\{\texttt{(}\text{ in }w[1\!:\!k]\},\qquad
-v(k)\;:=\;\#\{\texttt{)}\text{ in }w[1\!:\!k]\}.
-\]
-The Dyck admissibility constraint is $u(k)\ge v(k)$ for all $k$, and completion
-is $u(2n)=v(2n)=n$. Define the height (frontier) process
-\[
-H(k)\;:=\;u(k)-v(k)\;\ge\;0,
-\]
-and the embedded ``spacetime'' coordinates
-\[
-t_k\;:=\;\frac{u(k)+v(k)}{2}\;=\;\frac{k}{2},\qquad
-x_k\;:=\;\frac{u(k)-v(k)}{2}\;=\;\frac{H(k)}{2}.
-\]
-Equivalently $u=t_k+x_k$ and $v=t_k-x_k$ (a discrete null-coordinate form).
-\end{definition}
-
-Under this embedding, each symbol advances time and changes space by one unit
-(up to the $1/2$ normalization):
-\[
-\texttt{(}:\ (t,x)\mapsto (t+\tfrac12,\ x+\tfrac12),\qquad
-\texttt{)}:\ (t,x)\mapsto (t+\tfrac12,\ x-\tfrac12).
-\]
-Hence the path stays inside the cone $|x_k|\le t_k$, with the boundary $x_k=0$
-representing zero frontier (no outstanding opens).
-
-\paragraph{Why ``return to $0$'' is not ``return to the origin.''}
-The completion constraint $H(2n)=0$ means only that the \emph{imbalance} vanishes:
-every open has been matched by a close. In spacetime coordinates, the endpoint is
-\[
-(t_{2n},x_{2n})\;=\;\bigl(n,0\bigr),
-\]
-not $(0,0)$. Thus a history expands monotonically in $t$ (prefix length grows),
-while the spatial coordinate $x$ is a \emph{frontier variable} that eventually
-returns to $0$ because no unfinished structure may remain at completion.
-
-\paragraph{Pairs, trees, and $S$-expressions are identical structure.}
-A Dyck word $w$ can be read as a parenthesized $S$-expression skeleton, and it
-already \emph{is} a rooted ordered tree:
-matched parenthesis pairs are nodes; containment defines parent/child; and
-left-to-right order in the string gives sibling order.
-For example, $w=\texttt{(()())}$ has one outer pair (the root) containing two
-inner pairs (two leaves). Under this identification, the height $H(k)$ is the
-number of currently-open pairs---the size of the \emph{active frontier} of the
-tree under construction.
-
-\paragraph{Evaluation ``return'' as frontier discharge.}
-If evaluation is recorded at the level of control (continuations), then entering
-a subproblem pushes a context frame and finishing it pops that frame. In a
-well-bracketed evaluation regime, this push/pop trace is Dyck, and the same
-counts $(u(k),v(k))$ track control events. The embedded coordinate $x_k$
-therefore measures continuation depth (pending contexts), and the return to
-$x=0$ at termination is the emptying of the continuation stack: no pending
-contexts remain. Value return is mediated by this control return; the Dyck
-``return'' is fundamentally the discharge of outstanding obligations.
-
-\paragraph{Breadth as a different projection (history-level, not frontier-level).}
-Statistics such as breadth $r(w)$ summarize a \emph{completed} history by the
-maximum size of a constant-depth slice in its associated tree. This is a
-coarse-graining of $w$ (many distinct histories share the same $(n,r)$), and it
-should be distinguished from the frontier coordinate $x_k$, which is an
-instantaneous depth/obligation variable along a single prefix trajectory.
-
-\paragraph{Summary of the two readings.}
-There is one substrate $\mathcal{C}$ (and its re-rooted futures $\mathcal{C}(p)$).
-Two useful ``cone'' pictures arise from:
-(i) the embedded prefix trajectory $(t_k,x_k)$ derived from null counts
-(pathwise frontier dynamics), and
-(ii) history-level projections such as $(n,r(w))$ (coarse geometric envelope).
-The pairs/tree/$S$-expression view does not introduce a new object; it is an
-identity of representations of the same Catalan structure.
-
-\subsection{Dyck Coordinates, Lorentz Geometry, and Computational Proper Time}
-\label{subsec:dyck-lorentz-computation}
-
-\begin{remark}[Indices and coordinate conventions]
-Throughout, $n$ denotes the tier (semilength) of a completed Dyck history.
-Within this subsection, $k\in\{0,1,\dots,2n\}$ denotes a \emph{step index} along a
-single history, and $m$ denotes the number of \emph{collapse events} (local redex
-contractions) performed by a chosen evaluation strategy.
-\end{remark}
-
-A Dyck history $w\in\mathcal D_n$ induces an integer-valued nearest-neighbour
-walk $(H_k)_{k=0}^{2n}$ (the height / nesting depth signal) with
-\[
-H_{k+1}=H_k\pm 1,\qquad H_0=0,\qquad H_k\ge 0,\qquad H_{2n}=0.
-\]
-Define the rescaled coordinates
-\[
-t_k:=\frac{k}{2},\qquad x_k:=\frac{H_k}{2},
-\]
-so that each parenthesis advances time by $\tfrac12$ and changes the transverse
-coordinate by $\pm\tfrac12$:
-\[
-\texttt{(}:\ (t,x)\mapsto (t+\tfrac12,\ x+\tfrac12),\qquad
-\texttt{)}:\ (t,x)\mapsto (t+\tfrac12,\ x-\tfrac12).
-\]
-For any walk with steps $(\Delta t,\Delta x)=(\tfrac12,\pm\tfrac12)$ one has the
-kinematic cone bound $|x_k-x_0|\le t_k-t_0$. In the Dyck case, the additional
-constraint is one-sided: $x_k\ge 0$ for all $k$, together with the endpoint
-condition $x_{2n}=0$. Thus Dyck histories occupy the right half of a discrete
-light cone and return to the axis only at completion.
-
-Introduce discrete null coordinates (compare Definition~\ref{def:null-counts})
-\[
-u:=t+x,\qquad v:=t-x.
-\]
-In continuum $(1+1)$-dimensional Minkowski space, a Lorentz boost with rapidity
-$\eta$ acts linearly as
-\begin{equation}
-u' = e^{\eta} u,\qquad v' = e^{-\eta} v,
-\label{eq:lightcone-boost}
-\end{equation}
-and transforming back to $(t,x)$ yields the standard Lorentz transformation
-\begin{equation}
-t' = \gamma (t - v_{\!L} x),\qquad x' = \gamma (x - v_{\!L} t),
-\label{eq:lorentz-tx}
-\end{equation}
-where
-\[
-\gamma=\frac{1}{\sqrt{1-v_{\!L}^2}},\qquad v_{\!L}=\tanh\eta,
-\]
-in units $c=1$. The Minkowski interval
-\begin{equation}
-\mathrm{d}s^{2}=\mathrm{d}t^{2}-\mathrm{d}x^{2}
-\label{eq:minkowski}
-\end{equation}
-is invariant under~\eqref{eq:lorentz-tx}. In this sense the step rule supplies a
-discrete null-step kinematics, while the Dyck constraint supplies the boundary
-and return conditions selecting the Catalan ensemble. We emphasize that generic
-nontrivial boosts do not preserve the discrete Dyck lattice itself (the counts
-$u,v$ are integers), so the Lorentz discussion here is a continuum comparison
-for the embedded coordinates rather than a discrete symmetry claim.
-
-\paragraph{Computational proper time.}
-A reduction history carries an intrinsic progress parameter given by the count
-of collapse events. Let $m$ be the number of local redex contractions performed
-by an evaluation strategy up to a given stage, and define the \emph{computational
-proper time}
-\begin{equation}
-\tau := \alpha\, m,
-\label{eq:tau-discrete}
-\end{equation}
-where $\alpha>0$ is the characteristic scale associated with a single collapse.
-In continuum Minkowski space, a parametrized world-line $(t(s),x(s))$ admits a
-proper-time functional
-\begin{equation}
-\left(\frac{\mathrm{d}\tau}{\mathrm{d}s}\right)^{2}
-=
-\left(\frac{\mathrm{d}t}{\mathrm{d}s}\right)^{2}
--
-\left(\frac{\mathrm{d}x}{\mathrm{d}s}\right)^{2},
-\label{eq:proper-time-continuum}
-\end{equation}
-which is Lorentz-invariant under~\eqref{eq:lorentz-tx}. In the present discrete
-setting, Equation~\eqref{eq:tau-discrete} is simply a well-defined event-count
-parameter; the analogy is that collapse count plays the role of a proper-time
-progress variable along a chosen computational history.
+\paragraph{Coordinate charts and continuum comparisons.}
+Appendix~\ref{appendix:coordinate-charts} collects optional coordinate-chart
+constructions (null-count embeddings and related continuum comparisons) used for
+intuition; the combinatorial results below do not depend on these embeddings.
 
 \subsection{Recursive Self-Similarity and Local Re-Centering}
 \label{sec:selfsimilarity}
@@ -690,9 +502,24 @@ reduction schedule are all representable as paths through a single Catalan
 substrate. Selecting a program shape or selecting a specific reduction history
 is therefore equivalent to selecting a path in the Catalan tree. In this sense
 the Catalan substrate uniformly encodes program syntax, program semantics, and
-the full ensemble of admissible computational histories. A formal treatment of
-these embeddings, together with illustrative examples and the associated rewrite
-semantics, is provided in Appendix~\ref{appendix:computational-foundations}.
+the full ensemble of admissible computational histories.
+
+\begin{proposition}[Catalan Universality for Program Structure]
+	\label{prop:catalan-programs}
+	Let $\mathcal{C}$ denote the Catalan family of finite full binary trees.
+	Every program in any Turing-complete functional calculus (such as the
+	$\lambda$-calculus or SKI) admits a canonical representation as an element of
+	$\mathcal{C}$ with leaf labels drawn from a finite alphabet. Conversely,
+	every labeled element of $\mathcal{C}$ denotes a unique program modulo surface
+	syntax. Furthermore, standard operational semantics (including
+	$\beta$-reduction and SKI contraction) act as local rewrite rules that
+	preserve membership in $\mathcal{C}$. Thus a program, its syntactic
+	expansions, and every admissible reduction history correspond to paths within
+	the Catalan substrate.
+\end{proposition}
+\noindent
+A proof sketch and illustrative examples are provided in
+Appendix~\ref{appendix:computational-foundations}.
 
 \paragraph{Two canonical parenthesis encodings.}
 There are (at least) two particularly useful parenthesis-only encodings of a
@@ -1388,6 +1215,206 @@ extensions may be explored.
 
 \appendix
 
+\section{Coordinate Charts and Continuum Comparisons}
+\label{appendix:coordinate-charts}
+
+This appendix collects optional coordinate embeddings and continuum comparisons
+used for intuition; the combinatorial results in the main text do not depend on
+these constructions.
+
+\subsection{Coordinate charts on the Catalan cone}
+\label{sec:coordinate-charts}
+
+\begin{remark}[Notation hygiene]
+\label{rem:notation-hygiene}
+To avoid collisions, the \emph{tier} (semilength) of a completed history is
+denoted by $n$. A \emph{prefix length} is denoted by $k\in\{0,1,\dots,2n\}$.
+Within this subsection only, the symbols $(t_k,x_k)$ denote an \emph{embedded}
+spacetime chart derived from cumulative counts (Definition~\ref{def:null-counts}),
+and should not be confused with the tier index $n$ used elsewhere.
+\end{remark}
+
+\paragraph{The Catalan cone as the master object.}
+Let $\mathcal{C}$ denote the set of Dyck prefixes (balanced-parentheses
+\emph{prefixes} that never go below height $0$), partially ordered by extension:
+$p\preceq q$ iff $q$ has prefix $p$. A completed history is a maximal element
+$w\in\mathcal{D}_n\subset\mathcal{C}$ of semilength $n$.
+For any prefix $p\in\mathcal{C}$, the future
+\[
+\mathcal{C}(p)\;:=\;\{\,q\in\mathcal{C}: p\preceq q\,\}
+\]
+is canonically a ``local cone'' rooted at $p$: the same growth law, re-centered.
+Thus there is a single substrate $\mathcal{C}$ (and its re-rootings), and
+different ``cones'' arise from different coordinate charts or coarse-grainings
+of this same object.
+
+\paragraph{Two cumulative counts and a light-cone chart.}
+The most rigid chart on $\mathcal{C}$ is obtained by tracking the cumulative
+numbers of opens and closes.
+
+\begin{definition}[Null counts and embedded coordinates]
+\label{def:null-counts}
+Fix a Dyck word $w\in\mathcal{D}_n$, and let $w[1\!:\!k]$ denote its length-$k$
+prefix. Define
+\[
+u(k)\;:=\;\#\{\texttt{(}\text{ in }w[1\!:\!k]\},\qquad
+v(k)\;:=\;\#\{\texttt{)}\text{ in }w[1\!:\!k]\}.
+\]
+The Dyck admissibility constraint is $u(k)\ge v(k)$ for all $k$, and completion
+is $u(2n)=v(2n)=n$. Define the height (frontier) process
+\[
+H(k)\;:=\;u(k)-v(k)\;\ge\;0,
+\]
+and the embedded ``spacetime'' coordinates
+\[
+t_k\;:=\;\frac{u(k)+v(k)}{2}\;=\;\frac{k}{2},\qquad
+x_k\;:=\;\frac{u(k)-v(k)}{2}\;=\;\frac{H(k)}{2}.
+\]
+Equivalently $u=t_k+x_k$ and $v=t_k-x_k$ (a discrete null-coordinate form).
+\end{definition}
+
+Under this embedding, each symbol advances time and changes space by one unit
+(up to the $1/2$ normalization):
+\[
+\texttt{(}:\ (t,x)\mapsto (t+\tfrac12,\ x+\tfrac12),\qquad
+\texttt{)}:\ (t,x)\mapsto (t+\tfrac12,\ x-\tfrac12).
+\]
+Hence the path stays inside the cone $|x_k|\le t_k$, with the boundary $x_k=0$
+representing zero frontier (no outstanding opens).
+
+\paragraph{Why ``return to $0$'' is not ``return to the origin.''}
+The completion constraint $H(2n)=0$ means only that the \emph{imbalance} vanishes:
+every open has been matched by a close. In spacetime coordinates, the endpoint is
+\[
+(t_{2n},x_{2n})\;=\;\bigl(n,0\bigr),
+\]
+not $(0,0)$. Thus a history expands monotonically in $t$ (prefix length grows),
+while the spatial coordinate $x$ is a \emph{frontier variable} that eventually
+returns to $0$ because no unfinished structure may remain at completion.
+
+\paragraph{Pairs, trees, and $S$-expressions are identical structure.}
+A Dyck word $w$ can be read as a parenthesized $S$-expression skeleton, and it
+already \emph{is} a rooted ordered tree:
+matched parenthesis pairs are nodes; containment defines parent/child; and
+left-to-right order in the string gives sibling order.
+For example, $w=\texttt{(()())}$ has one outer pair (the root) containing two
+inner pairs (two leaves). Under this identification, the height $H(k)$ is the
+number of currently-open pairs---the size of the \emph{active frontier} of the
+tree under construction.
+
+\paragraph{Evaluation ``return'' as frontier discharge.}
+If evaluation is recorded at the level of control (continuations), then entering
+a subproblem pushes a context frame and finishing it pops that frame. In a
+well-bracketed evaluation regime, this push/pop trace is Dyck, and the same
+counts $(u(k),v(k))$ track control events. The embedded coordinate $x_k$
+therefore measures continuation depth (pending contexts), and the return to
+$x=0$ at termination is the emptying of the continuation stack: no pending
+contexts remain. Value return is mediated by this control return; the Dyck
+``return'' is fundamentally the discharge of outstanding obligations.
+
+\paragraph{Breadth as a different projection (history-level, not frontier-level).}
+Statistics such as breadth $r(w)$ summarize a \emph{completed} history by the
+maximum size of a constant-depth slice in its associated tree. This is a
+coarse-graining of $w$ (many distinct histories share the same $(n,r)$), and it
+should be distinguished from the frontier coordinate $x_k$, which is an
+instantaneous depth/obligation variable along a single prefix trajectory.
+
+\paragraph{Summary of the two readings.}
+There is one substrate $\mathcal{C}$ (and its re-rooted futures $\mathcal{C}(p)$).
+Two useful ``cone'' pictures arise from:
+(i) the embedded prefix trajectory $(t_k,x_k)$ derived from null counts
+(pathwise frontier dynamics), and
+(ii) history-level projections such as $(n,r(w))$ (coarse geometric envelope).
+The pairs/tree/$S$-expression view does not introduce a new object; it is an
+identity of representations of the same Catalan structure.
+
+\subsection{Dyck Coordinates, Lorentz Geometry, and Computational Proper Time}
+\label{subsec:dyck-lorentz-computation}
+
+\begin{remark}[Indices and coordinate conventions]
+Throughout, $n$ denotes the tier (semilength) of a completed Dyck history.
+Within this subsection, $k\in\{0,1,\dots,2n\}$ denotes a \emph{step index} along a
+single history, and $m$ denotes the number of \emph{collapse events} (local redex
+contractions) performed by a chosen evaluation strategy.
+\end{remark}
+
+A Dyck history $w\in\mathcal D_n$ induces an integer-valued nearest-neighbour
+walk $(H_k)_{k=0}^{2n}$ (the height / nesting depth signal) with
+\[
+H_{k+1}=H_k\pm 1,\qquad H_0=0,\qquad H_k\ge 0,\qquad H_{2n}=0.
+\]
+Define the rescaled coordinates
+\[
+t_k:=\frac{k}{2},\qquad x_k:=\frac{H_k}{2},
+\]
+so that each parenthesis advances time by $\tfrac12$ and changes the transverse
+coordinate by $\pm\tfrac12$:
+\[
+\texttt{(}:\ (t,x)\mapsto (t+\tfrac12,\ x+\tfrac12),\qquad
+\texttt{)}:\ (t,x)\mapsto (t+\tfrac12,\ x-\tfrac12).
+\]
+For any walk with steps $(\Delta t,\Delta x)=(\tfrac12,\pm\tfrac12)$ one has the
+kinematic cone bound $|x_k-x_0|\le t_k-t_0$. In the Dyck case, the additional
+constraint is one-sided: $x_k\ge 0$ for all $k$, together with the endpoint
+condition $x_{2n}=0$. Thus Dyck histories occupy the right half of a discrete
+light cone and return to the axis only at completion.
+
+Introduce discrete null coordinates (compare Definition~\ref{def:null-counts})
+\[
+u:=t+x,\qquad v:=t-x.
+\]
+In continuum $(1+1)$-dimensional Minkowski space, a Lorentz boost with rapidity
+$\eta$ acts linearly as
+\begin{equation}
+u' = e^{\eta} u,\qquad v' = e^{-\eta} v,
+\label{eq:lightcone-boost}
+\end{equation}
+and transforming back to $(t,x)$ yields the standard Lorentz transformation
+\begin{equation}
+t' = \gamma (t - v_{\!L} x),\qquad x' = \gamma (x - v_{\!L} t),
+\label{eq:lorentz-tx}
+\end{equation}
+where
+\[
+\gamma=\frac{1}{\sqrt{1-v_{\!L}^2}},\qquad v_{\!L}=\tanh\eta,
+\]
+in units $c=1$. The Minkowski interval
+\begin{equation}
+\mathrm{d}s^{2}=\mathrm{d}t^{2}-\mathrm{d}x^{2}
+\label{eq:minkowski}
+\end{equation}
+is invariant under~\eqref{eq:lorentz-tx}. In this sense the step rule supplies a
+discrete null-step kinematics, while the Dyck constraint supplies the boundary
+and return conditions selecting the Catalan ensemble. We emphasize that generic
+nontrivial boosts do not preserve the discrete Dyck lattice itself (the counts
+$u,v$ are integers), so the Lorentz discussion here is a continuum comparison
+for the embedded coordinates rather than a discrete symmetry claim.
+
+\paragraph{Computational proper time.}
+A reduction history carries an intrinsic progress parameter given by the count
+of collapse events. Let $m$ be the number of local redex contractions performed
+by an evaluation strategy up to a given stage, and define the \emph{computational
+proper time}
+\begin{equation}
+\tau := \alpha\, m,
+\label{eq:tau-discrete}
+\end{equation}
+where $\alpha>0$ is the characteristic scale associated with a single collapse.
+In continuum Minkowski space, a parametrized world-line $(t(s),x(s))$ admits a
+proper-time functional
+\begin{equation}
+\left(\frac{\mathrm{d}\tau}{\mathrm{d}s}\right)^{2}
+=
+\left(\frac{\mathrm{d}t}{\mathrm{d}s}\right)^{2}
+-
+\left(\frac{\mathrm{d}x}{\mathrm{d}s}\right)^{2},
+\label{eq:proper-time-continuum}
+\end{equation}
+which is Lorentz-invariant under~\eqref{eq:lorentz-tx}. In the present discrete
+setting, Equation~\eqref{eq:tau-discrete} is simply a well-defined event-count
+parameter; the analogy is that collapse count plays the role of a proper-time
+progress variable along a chosen computational history.
+
 \section{A Double-Slit Thought Experiment on the Catalan Light Cone}
 \label{appendix:doubleslit}
 
@@ -1580,25 +1607,11 @@ readers wishing to verify the correspondence between full binary trees,
 combinatory calculi, and rewrite dynamics.
 
 
-\begin{proposition}[Catalan Universality for Program Structure]
-	\label{prop:catalan-programs}
-	Let $\mathcal{C}$ denote the Catalan family of finite full binary trees.
-	Every program in any Turing-complete functional calculus (such as the
-	$\lambda$-calculus or SKI) admits a canonical representation as an element of
-	$\mathcal{C}$ with leaf labels drawn from a finite alphabet.  Conversely,
-	every labeled element of $\mathcal{C}$ denotes a unique program modulo surface
-	syntax.  Furthermore, standard operational semantics (including
-	$\beta$-reduction and SKI contraction) act as local rewrite rules that
-	preserve membership in $\mathcal{C}$.  Thus a program, its syntactic
-	expansions, and every admissible reduction history correspond to paths within
-	the Catalan substrate.
-\end{proposition}
-
-\begin{proof}[Proof Sketch]
-	As described in classical treatments of combinatory logic and the
-	$\lambda$-calculus \cite{CurryFeys1958,barendregt84}, application is a
-	binary operation, and every term therefore possesses a unique representation
-	as a full binary tree: internal nodes encode application, and leaves encode
+\begin{proof}[Proof Sketch (of Proposition~\ref{prop:catalan-programs})]
+		As described in classical treatments of combinatory logic and the
+		$\lambda$-calculus \cite{CurryFeys1958,barendregt84}, application is a
+		binary operation, and every term therefore possesses a unique representation
+		as a full binary tree: internal nodes encode application, and leaves encode
 	variables, constants, or combinators.  This establishes a canonical embedding
 	of programs into $\mathcal{C}$.
 
