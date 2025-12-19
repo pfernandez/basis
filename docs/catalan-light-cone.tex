@@ -239,10 +239,21 @@ depth. Equivalently, very shallow trees cannot support wide level sets, while
 trees with very large depth must concentrate most nodes away from any single
 breadth-maximizing level.
 
+\begin{remark}[Kraft equality for leaf depths]
+For the full binary tree associated to a Dyck path, if $L$ is the set of leaves
+and $d(\ell)$ denotes the depth of $\ell\in L$ (root at depth $0$), then
+\[
+\sum_{\ell\in L} 2^{-d(\ell)} = 1.
+\]
+Equivalently, the leaf depths form a complete binary prefix code. This gives a
+global constraint on allowable depth profiles beyond the crude level bound
+$r(w)\le 2^{h(w)}$.
+\end{remark}
+
 \begin{figure}[h]
-	\centering
-	\[
-		\begin{array}{ccl}
+		\centering
+		\[
+			\begin{array}{ccl}
 			((())) & \quad & (h=3,\ r=1) \\
 			(()()) &      & (h=2,\ r=2) \\
 			(())() &      & (h=2,\ r=2) \\
@@ -762,79 +773,9 @@ therefore a generic consequence of assigning complex weights to histories and
 summing coherently over coarse-grained equivalence classes before applying the
 Born rule.
 
-\subsection{Entropy of coarse-graining and collapse energy}
-\label{sec:collapse-energy}
-
-Fix a tier $t$ and an observable (deterministic coarse-graining) $f:D_t\to X$.
-For $x\in X$ write
-\[
-N(x)\;:=\;\#\{w\in D_t: f(w)=x\},
-\]
-so that $f^{-1}(x)$ is the equivalence class of histories identified as the
-same outcome.
-
-\paragraph{Multiplicity entropy.}
-Define the (microcanonical) entropy of the full ensemble at tier $t$ by
-\[
-S_t \;:=\; \log \#(D_t),
-\]
-and the conditional entropy of an outcome $x$ by
-\[
-S(x) \;:=\; \log N(x).
-\]
-The information eliminated by selecting outcome $x$ is the entropy drop
-\[
-\Delta S(x)\;:=\; S_t - S(x)
-\;=\; \log\!\Big(\frac{\#(D_t)}{N(x)}\Big).
-\]
-(Any logarithm base may be used; base $2$ yields units of bits.)
-
-\paragraph{Collapse energy as rate of possibility reduction.}
-Let $k$ denote the number of collapse events (local contractions) along a
-history, and let computational proper time be $\tau=\tau_0 k$ for a fixed scale
-$\tau_0>0$. We define the collapse energy associated with outcome $x$ to be the
-information loss per unit computational proper time,
-\[
-E(x)\;:=\;\frac{\Delta S(x)}{\tau}.
-\]
-In the simplest case of a single collapse event ($k=1$), this reduces to
-$E(x)=\Delta S(x)/\tau_0$.
-
-\begin{proposition}[Basic properties]
-\label{prop:collapse-energy-basic}
-For any observable $f:D_t\to X$:
-\begin{enumerate}[label=(\roman*)]
-\item (Nonnegativity) $\Delta S(x)\ge 0$ for all $x\in X$, with equality iff
-$N(x)=\#(D_t)$ (i.e.\ $f$ is constant on $D_t$).
-\item (Additivity under independent factorization) If $D_t$ factorizes as a
-Cartesian product $D_t \cong D_t^{(1)}\times D_t^{(2)}$ and
-$f(w_1,w_2)=(f_1(w_1),f_2(w_2))$, then
-\[
-\Delta S(x_1,x_2)=\Delta S_1(x_1)+\Delta S_2(x_2).
-\]
-\end{enumerate}
-\end{proposition}
-
-\begin{proof}
-(i) Since $1\le N(x)\le \#(D_t)$ whenever $x$ is attainable, the ratio
-$\#(D_t)/N(x)\ge 1$, hence $\Delta S(x)\ge 0$, with equality exactly when
-$N(x)=\#(D_t)$.
-(ii) Under the stated factorization, $N(x_1,x_2)=N_1(x_1)N_2(x_2)$ and
-$\#(D_t)=\#(D_t^{(1)})\#(D_t^{(2)})$, so $\Delta S$ splits as a sum.
-\end{proof}
-
-\paragraph{Gauge-invariant counting.}
-When histories admit a redundancy under commuting spacelike-separated updates,
-one may quotient $D_t$ by the induced gauge equivalence relation $\sim_g$ and
-define $\bar D_t:=D_t/\!\sim_g$.
-If $f$ is gauge-invariant (constant on $\sim_g$-orbits), define
-\[
-\bar N(x):=\#\{[w]\in \bar D_t : f(w)=x\},
-\qquad
-\bar{\Delta S}(x):=\log\!\Big(\frac{\#(\bar D_t)}{\bar N(x)}\Big),
-\]
-and use $\bar{\Delta S}$ in place of $\Delta S$. This removes overcounting due
-solely to reordering of independent collapses.
+\paragraph{Optional: coarse-graining entropy.}
+Appendix~\ref{appendix:technical-notes} records an optional entropy bookkeeping
+for coarse-grainings and collapse counts.
 
 \subsection{Path integrals and conditioned walks}
 
@@ -873,56 +814,9 @@ or curvature, provided the Dyck constraint is preserved.
 	\label{fig:dyck-walk-excursion}
 \end{figure}
 
-\subsection{Narayana stratification and structural modes}
-\label{subsec:narayana-modes}
-
-Dyck paths admit a natural finite stratification by peak count. For $w\in\mathcal
-D_t$, define its \emph{peak count} $K(w)$ as the number of indices
-$k\in\{1,\dots,2t-1\}$ at which the Dyck word has an up-step immediately followed
-by a down-step (equivalently, the number of local maxima of the height profile
-$H_w(k)$). The Narayana numbers $N(t,k)$ count the number of Dyck paths with
-$K(w)=k$, yielding the partition
-\[
-\mathcal D_t = \bigsqcup_{k=1}^{t} \mathcal D_{t,k},
-\qquad
-\mathcal D_{t,k} := \{w\in\mathcal D_t : K(w)=k\}.
-\]
-
-To make the notion of ``mode'' precise, embed each history into a finite
-inner-product space. Let
-\[
-V_t := \mathbb R^{2t+1}, \qquad
-H(w) := (H_w(0),\dots,H_w(2t)) \in V_t,
-\]
-with standard inner product
-\[
-\langle a,b\rangle := \sum_{j=0}^{2t} a_j b_j.
-\]
-Fix an orthonormal basis $\{\phi_m\}_{m=0}^{2t}$ of $V_t$ (for example, the
-discrete cosine basis or the eigenvectors of the discrete Laplacian on the path
-graph). The coefficients
-\[
-c_m(w) := \langle H(w), \phi_m\rangle
-\]
-define a spectral decomposition of the history $w$, with power spectrum
-$P_m(w):=|c_m(w)|^2$.
-
-The peak count $K(w)$ does not label a single spectral mode. Rather, it provides
-a coarse combinatorial proxy for oscillatory complexity of the height signal.
-A natural summary statistic for how a Narayana class distributes spectral weight
-is the conditional mean spectrum
-\[
-\overline{P}_m(t,k) := \mathbb E\!\left[\,P_m(w)\mid w\in\mathcal D_{t,k}\right].
-\]
-Intuitively, larger $k$ tends to shift weight toward higher spectral indices
-$m$, reflecting more frequent alternation of slopes; this heuristic may be used
-as a discrete analogue of increased high-frequency content.
-
-Finally, since the phase functional used below depends on the full height
-profile (e.g.\ $\theta(w)=\alpha A(w)$), differences in peak placement within a
-fixed Narayana class generally change $A(w)$ and hence the phases appearing in
-coherent summation. Interference therefore depends both on coarse stratification
-by $K(w)$ and on finer structural variation within each class.
+\paragraph{Optional stratifications.}
+Appendix~\ref{appendix:technical-notes} discusses Narayana stratification by
+peak count as an optional organizing tool.
 
 \subsection{Discrete path-integral formulation}
 
@@ -1086,17 +980,6 @@ line with the classical connection between diffusion and Schr\"odinger evolution
 the wave equation is inherited from the scaling limit of constrained
 combinatorial growth.
 
-\subsection{Relation to discrete quantum gravity}
-
-Similar scaling behavior appears in two-dimensional quantum gravity and random
-surface models. In particular, Causal Dynamical Triangulations (CDT) enforce a
-preferred foliation and causal constraint that parallels the prefix order of
-Dyck paths \cite{ambjorn01,ambjorn12}. In CDT, the continuum limit is taken
-after summing over causally admissible triangulations. Here the admissible
-structures are Dyck paths rather than triangulations, but the organizing
-principle—the restriction to histories that respect a causal growth rule—is
-closely analogous.
-
 \section{Locality, Commutation, and Interaction}
 \label{sec:locality}
 
@@ -1191,6 +1074,17 @@ emphasized:
 These limitations reflect a deliberate restriction of scope. The goal has been
 to isolate the minimal recursive structure common to multiple domains, not to
 provide a complete physical theory.
+
+\subsection{Relation to discrete quantum gravity}
+
+Similar scaling behavior appears in two-dimensional quantum gravity and random
+surface models. In particular, Causal Dynamical Triangulations (CDT) enforce a
+preferred foliation and causal constraint that parallels the prefix order of
+Dyck paths \cite{ambjorn01,ambjorn12}. In CDT, the continuum limit is taken
+after summing over causally admissible triangulations. Here the admissible
+structures are Dyck paths rather than triangulations, but the organizing
+principle---the restriction to histories that respect a causal growth rule---is
+closely analogous.
 
 \section{Conclusion}
 \label{sec:conclusion}
@@ -1414,6 +1308,135 @@ which is Lorentz-invariant under~\eqref{eq:lorentz-tx}. In the present discrete
 setting, Equation~\eqref{eq:tau-discrete} is simply a well-defined event-count
 parameter; the analogy is that collapse count plays the role of a proper-time
 progress variable along a chosen computational history.
+
+\section{Additional Technical Notes}
+\label{appendix:technical-notes}
+
+\subsection{Entropy of coarse-graining and information rate}
+
+Fix a tier $t$ and an observable (deterministic coarse-graining)
+$f:\mathcal D_t\to\mathcal X$. For $x\in\mathcal X$ write
+\[
+N(x)\;:=\;\#\{w\in \mathcal D_t: f(w)=x\},
+\]
+so that $f^{-1}(x)$ is the equivalence class of histories identified as the
+same outcome.
+
+\paragraph{Multiplicity entropy.}
+Define the (microcanonical) entropy of the full ensemble at tier $t$ by
+\[
+S_t \;:=\; \log \#(\mathcal D_t),
+\]
+and the conditional entropy of an outcome $x$ by
+\[
+S(x) \;:=\; \log N(x).
+\]
+The information eliminated by selecting outcome $x$ is the entropy drop
+\[
+\Delta S(x)\;:=\; S_t - S(x)
+\;=\; \log\!\Big(\frac{\#(\mathcal D_t)}{N(x)}\Big).
+\]
+(Any logarithm base may be used; base $2$ yields units of bits.)
+
+\paragraph{Information rate as rate of possibility reduction.}
+Let $k$ denote the number of selection events (local contractions) along a
+history, and let computational proper time be $\tau=\tau_0 k$ for a fixed scale
+$\tau_0>0$. We define the information rate associated with outcome $x$ to be the
+information loss per unit computational proper time,
+\[
+R(x)\;:=\;\frac{\Delta S(x)}{\tau}.
+\]
+In the simplest case of a single event ($k=1$), this reduces to
+$R(x)=\Delta S(x)/\tau_0$.
+
+\begin{proposition}[Basic properties]
+\label{prop:information-rate-basic}
+For any observable $f:\mathcal D_t\to\mathcal X$:
+\begin{enumerate}[label=(\roman*)]
+\item (Nonnegativity) $\Delta S(x)\ge 0$ for all attainable $x\in\mathcal X$,
+with equality iff $N(x)=\#(\mathcal D_t)$ (i.e.\ $f$ is constant on
+$\mathcal D_t$).
+\item (Additivity under independent factorization) If $\mathcal D_t$ factorizes
+as a Cartesian product $\mathcal D_t \cong \mathcal D_t^{(1)}\times
+\mathcal D_t^{(2)}$ and $f(w_1,w_2)=(f_1(w_1),f_2(w_2))$, then
+\[
+\Delta S(x_1,x_2)=\Delta S_1(x_1)+\Delta S_2(x_2).
+\]
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(i) Since $1\le N(x)\le \#(\mathcal D_t)$ whenever $x$ is attainable, the ratio
+$\#(\mathcal D_t)/N(x)\ge 1$, hence $\Delta S(x)\ge 0$, with equality exactly
+when $N(x)=\#(\mathcal D_t)$.
+(ii) Under the stated factorization, $N(x_1,x_2)=N_1(x_1)N_2(x_2)$ and
+$\#(\mathcal D_t)=\#(\mathcal D_t^{(1)})\#(\mathcal D_t^{(2)})$, so $\Delta S$
+splits as a sum.
+\end{proof}
+
+\paragraph{Gauge-invariant counting.}
+When histories admit a redundancy under commuting spacelike-separated updates,
+one may quotient $\mathcal D_t$ by the induced gauge equivalence relation
+$\sim_g$ and define $\bar{\mathcal D}_t:=\mathcal D_t/\!\sim_g$. If $f$ is
+gauge-invariant (constant on $\sim_g$-orbits), define
+\[
+\bar N(x):=\#\{[w]\in \bar{\mathcal D}_t : f(w)=x\},
+\qquad
+\bar{\Delta S}(x):=\log\!\Big(\frac{\#(\bar{\mathcal D}_t)}{\bar N(x)}\Big),
+\]
+and use $\bar{\Delta S}$ in place of $\Delta S$. This removes overcounting due
+solely to reordering of independent collapses.
+
+\subsection{Narayana stratification and structural modes}
+
+Dyck paths admit a natural finite stratification by peak count. For
+$w\in\mathcal D_t$, define its \emph{peak count} $K(w)$ as the number of indices
+$k\in\{1,\dots,2t-1\}$ at which the Dyck word has an up-step immediately
+followed by a down-step (equivalently, the number of local maxima of the height
+profile $H_w(k)$). The Narayana numbers $N(t,k)$ count the number of Dyck paths
+with $K(w)=k$, yielding the partition
+\[
+\mathcal D_t = \bigsqcup_{k=1}^{t} \mathcal D_{t,k},
+\qquad
+\mathcal D_{t,k} := \{w\in\mathcal D_t : K(w)=k\}.
+\]
+
+To make the notion of ``mode'' precise, embed each history into a finite
+inner-product space. Let
+\[
+V_t := \mathbb R^{2t+1}, \qquad
+H(w) := (H_w(0),\dots,H_w(2t)) \in V_t,
+\]
+with standard inner product
+\[
+\langle a,b\rangle := \sum_{j=0}^{2t} a_j b_j.
+\]
+Fix an orthonormal basis $\{\phi_m\}_{m=0}^{2t}$ of $V_t$ (for example, the
+discrete cosine basis or the eigenvectors of the discrete Laplacian on the path
+graph). The coefficients
+\[
+c_m(w) := \langle H(w), \phi_m\rangle
+\]
+define a spectral decomposition of the history $w$, with power spectrum
+$P_m(w):=|c_m(w)|^2$.
+
+The peak count $K(w)$ does not label a single spectral mode. Rather, it provides
+a coarse combinatorial proxy for oscillatory complexity of the height signal. A
+natural summary statistic for how a Narayana class distributes spectral weight
+is the conditional mean spectrum
+\[
+\overline{P}_m(t,k) := \mathbb E\!\left[\,P_m(w)\mid w\in\mathcal D_{t,k}\right].
+\]
+Intuitively, larger $k$ tends to shift weight toward higher spectral indices
+$m$, reflecting more frequent alternation of slopes; this heuristic may be used
+as a discrete analogue of increased high-frequency content.
+
+Finally, since the phase functional used in Section~\ref{sec:amplitudes} depends
+on the full height profile (e.g.\ $\theta(w)=\alpha A(w)$), differences in peak
+placement within a fixed Narayana class generally change $A(w)$ and hence the
+phases appearing in coherent summation. Interference therefore depends both on
+coarse stratification by $K(w)$ and on finer structural variation within each
+class.
 
 \section{A Double-Slit Thought Experiment on the Catalan Light Cone}
 \label{appendix:doubleslit}
