@@ -39,8 +39,8 @@ Classical results on conditioned random walks imply that, under diffusive
 scaling, Dyck ensembles converge to Brownian excursions. This provides a
 continuum comparison in which the induced evolution is governed by the heat
 operator on the half-line (with the Dyck conditioning encoded by boundary
-conditions (or, equivalently, conditioning)), and under analytic continuation one obtains the free
-Schr\"odinger equation.
+conditions, or equivalently by conditioning), and under analytic continuation one
+obtains the free Schr\"odinger equation.
 
 The same Catalan shapes also serve as unlabeled application skeletons for
 $\lambda$-calculus and SKI terms (after choosing a standard finite encoding of
@@ -114,12 +114,13 @@ the Catalan kinematics.
 
 \paragraph{Organization.}
 Section~\ref{sec:catalan_cone} establishes the discrete causal geometry of the
-Catalan lattice and its interpretation as a light cone. Section~\ref{sec:amplitudes}
-develops a discrete amplitude formalism and discusses scaling limits. The
-computational correspondence is developed in
-Section~\ref{sec:computation}.%
-\footnote{Depending on reader background, Sections~\ref{sec:amplitudes} and
-Section~\ref{sec:computation} may be read independently after the geometric
+Catalan lattice and its interpretation as a light cone. Section~\ref{sec:computation}
+develops the computational correspondence via binary application trees and pairs
+encodings. Section~\ref{sec:amplitudes} introduces a minimal amplitude
+construction and the continuum comparison to diffusion and Schr\"odinger
+dynamics.%
+\footnote{Depending on reader background, Sections~\ref{sec:computation} and
+Section~\ref{sec:amplitudes} may be read in either order after the geometric
 setup in Section~\ref{sec:catalan_cone}.}
 Locality and disjoint-commutation are discussed in Section~\ref{sec:locality}.
 Optional coordinate embeddings, technical notes, and illustrative examples are
@@ -143,16 +144,18 @@ will be called the \emph{tier} and will be interpreted as a discrete proper
 time.
 
 \subsection{Prefix order and causality}
-Dyck paths carry a natural partial order by prefix inclusion. If a Dyck word
-$u$ is a prefix of $v$, then $u$ represents a causal ancestor of $v$.
-Conversely, prefixes that diverge represent causally incompatible futures.
-This prefix order defines a discrete causal structure:
+Let $\mathcal{C}$ denote the set of \emph{Dyck prefixes}: balanced-parentheses
+prefixes that never go below height $0$. Define a partial order by extension:
+$u\preceq v$ iff $u$ is a prefix of $v$. We interpret this order as a causal
+relation: $u\preceq v$ means that $u$ lies in the causal past of $v$, while
+prefixes that diverge represent incompatible futures. This prefix order defines
+a discrete causal structure:
 \begin{itemize}
 	\item every node has a unique causal past,
 	\item multiple incompatible futures may branch from the same prefix,
 	\item cycles are prohibited by construction.
 \end{itemize}
-No additional causal axiom is required; causality is enforced combinatorially
+No additional causal axiom is introduced; causality is enforced combinatorially
 by the Dyck constraint.
 
 \subsection{Extremal configurations: chain and star}
@@ -325,7 +328,8 @@ set of all admissible continuations of $u$ forms a subtree whose shape is
 determined entirely by $h$. This subtree is canonically isomorphic to the
 Dyck-prefix tree that begins at height $h$ rather than at height $0$.
 
-Formally, if $\mathcal{C}$ denotes the infinite Dyck-prefix tree and
+Formally, let $\mathcal{C}$ denote the Dyck-prefix tree (the poset of Dyck
+prefixes under extension) and
 $\mathcal{C}_h$ denotes the Dyck-prefix tree conditioned to start at height $h$
 (i.e.\ with $H_0=h$ and $H_k\ge 0$ for all $k$), then for every prefix $u$ of
 height $h$ we have a canonical isomorphism
@@ -375,70 +379,18 @@ of the recursive structure itself.
 \subsection{Multiple Local Cones and Relational Geometry}
 \label{sec:multiplecones}
 
-The recursive self-similarity of the Catalan substrate implies that there is
-not a single distinguished light cone rooted at the global origin. Instead,
-every node of the Dyck-prefix tree induces its own local notion of past,
-future, and lightlike boundary. This section records the combinatorial
-foundations of this phenomenon and its geometric consequences.
-
-\subsubsection*{Cones rooted at arbitrary prefixes}
-
-Let $u$ be any Dyck prefix with current height $h$. As shown in
-Section~\ref{sec:selfsimilarity}, the subtree $\mathcal{C}(u)$ of admissible
-continuations of $u$ is canonically isomorphic to the Dyck-prefix tree
-$\mathcal{C}_h$ that begins at height $h$. Consequently, the structure of
-possible futures below $u$ is itself a Catalan possibility space.
-
-Define the \emph{local cone at $u$} to be the set of all Dyck extensions of $u$,
-organized by length (tier) and breadth relative to~$u$. The local chain is the
-fully nested extension of $u$, and the local star is the fully separated
-extension. These play the role of timelike and lightlike extremes for
-admissible growth below~$u$.
-
-\subsubsection*{Nested and divergent cones}
-
-Let $u$ and $v$ be Dyck prefixes.
-
+The same prefix order that defines causality also yields a family of \emph{local
+cones}: every Dyck prefix $u\in\mathcal{C}$ induces a future $\mathcal{C}(u)$ of
+admissible extensions, i.e.\ the same growth law re-centered at $u$.
+Two prefixes $u$ and $v$ relate in exactly two ways:
 \begin{enumerate}[label=(\roman*)]
-	\item \textbf{Nested cones.}
-		If $u$ is a prefix of $v$, then $\mathcal{C}(v)$ is a subtree of
-		$\mathcal{C}(u)$, and the local cone at $v$ lies strictly inside the local
-		cone at $u$. Their causal structures satisfy
-		\[
-			\mathrm{Past}(v) \subset \mathrm{Past}(u), \qquad
-			\mathrm{Future}(v) \subset \mathrm{Future}(u).
-		\]
-		Thus cones nest hierarchically along any branch of the prefix tree.
-
-	\item \textbf{Divergent cones.}
-		If neither prefix is contained in the other, then $u$ and $v$ share a common
-		ancestor but diverge at some minimal prefix $w$. Their cones therefore have a
-		shared causal past (the future of $w$ up to $u$ and $v$) but incompatible
-		futures beyond that point. Formally,
-		\[
-			\mathrm{Past}(u) \cap \mathrm{Past}(v) = \mathrm{Past}(w), \qquad
-			\mathrm{Future}(u) \cap \mathrm{Future}(v) = \varnothing.
-		\]
-		In this sense, divergent cones encode distinct branches of the Catalan
-		possibility structure.
+	\item \textbf{Nested cones.} If $u\preceq v$, then $\mathcal{C}(v)\subseteq \mathcal{C}(u)$.
+	\item \textbf{Divergent cones.} If neither prefix contains the other, then $u$
+		and $v$ share a maximal common prefix $w$ and have disjoint futures beyond $w$.
 \end{enumerate}
 
-\subsubsection*{Relational geometry}
-
-These observations establish a relational geometric structure intrinsic to the
-Catalan substrate:
-\begin{itemize}
-	\item every node induces its own local cone of admissible extensions;
-	\item cones may be re-centered without changing their internal geometry;
-	\item cones nest along causal chains and diverge after branching points;
-	\item no global origin is privileged---only prefix order determines causal
-		relationships.
-\end{itemize}
-
-This yields a family of interacting local cones, each encoding the admissible
-future relative to a chosen prefix. The Catalan light cone is therefore not a
-single global object but a \emph{relocatable geometric feature} that appears at
-every node of the recursive substrate.
+Thus the cone picture is relocatable: it appears at every node, cones nest along
+causal chains, and branching produces incompatible futures.
 
 \begin{figure}[h]
 	\centering
@@ -474,10 +426,10 @@ every node of the recursive substrate.
 		\node at (-1.5,3.5) {\small local cone at $u$};
 		\node at (1.5,3.5) {\small local cone at $v$};
 	\end{tikzpicture}
-	\caption{Two Dyck prefixes $u$ and $v$ diverging from a shared ancestor $w$.
-		Dashed regions indicate the local Catalan cones rooted at $u$ and $v$.
-		Cones nest along causal chains and diverge after branching points, producing
-	a family of local, relocatable causal geometries on the Catalan substrate.}
+		\caption{Two Dyck prefixes $u$ and $v$ diverging from a shared ancestor $w$.
+			Dashed regions indicate the local Catalan cones rooted at $u$ and $v$.
+			Cones nest along causal chains and diverge after branching points, producing
+		a family of local, relocatable causal geometries on the Catalan substrate.}
 	\label{fig:multiple-cones}
 \end{figure}
 
@@ -528,16 +480,17 @@ is therefore equivalent to selecting a path in the Catalan tree. In this sense
 the Catalan substrate uniformly encodes program syntax, program semantics, and
 the full ensemble of admissible computational histories.
 
-\begin{proposition}[Catalan Universality for Program Structure]
-	\label{prop:catalan-programs}
-	Let $\mathcal{C}$ denote the Catalan family of finite full binary trees.
-	Every program in any Turing-complete functional calculus (such as the
-	$\lambda$-calculus or SKI) admits a canonical representation as an element of
-	$\mathcal{C}$ with leaf labels drawn from a finite alphabet. Conversely,
-	every labeled element of $\mathcal{C}$ denotes a unique program modulo surface
-	syntax. Furthermore, standard operational semantics (including
-	$\beta$-reduction and SKI contraction) act as local rewrite rules that
-	preserve membership in $\mathcal{C}$. Thus a program, its syntactic
+	\begin{proposition}[Catalan Universality for Program Structure]
+		\label{prop:catalan-programs}
+		Let $\mathcal{C}$ denote the Catalan family of finite full binary trees.
+		Every program in any Turing-complete functional calculus (such as the
+		$\lambda$-calculus or SKI) admits a canonical representation as an element of
+		$\mathcal{C}$ with leaf labels drawn from a finite alphabet (after fixing a
+		standard encoding of symbols). Conversely,
+		every labeled element of $\mathcal{C}$ denotes a unique program modulo surface
+		syntax. Furthermore, standard operational semantics (including
+		$\beta$-reduction and SKI contraction) act as local rewrite rules that
+		preserve membership in $\mathcal{C}$. Thus a program, its syntactic
 	expansions, and every admissible reduction history correspond to paths within
 	the Catalan substrate.
 \end{proposition}
@@ -886,11 +839,6 @@ Interference arises precisely because the observable $f$ fails to distinguish
 between certain histories. Histories that are identified by the projection are
 summed coherently, while those distinguished by the observable are not.
 
-\item \textbf{Gauge redundancy.}
-Different Dyck paths may correspond to the same abstract computation or the same
-coarse-grained structure, differing only by the ordering of spacelike-separated
-updates. The path integral sums coherently over such gauge-equivalent histories,
-while observable probabilities depend only on the resulting amplitudes.
 \end{enumerate}
 
 From this perspective, the Catalan lattice provides a discrete realization of
@@ -964,19 +912,17 @@ Let $n\to\infty$ and rescale time and height by
 	t \mapsto n\tau, \qquad h \mapsto \sqrt{n}\,x .
 \]
 
-Under this scaling, the probability density $\rho(\tau,x)$ for conditioned walks
-converges in law to that of a Brownian excursion on $x\ge0$. At the PDE level,
-the associated continuum evolution is governed by the heat operator on the
-half-line, with the Dyck conditioning encoded by appropriate
-boundary/conditioning at $x=0$. In particular, one obtains a heat equation of
-the form
+Under this scaling, the rescaled Dyck height process converges in law to a
+Brownian excursion on $x\ge0$. At the PDE level, the diffusion part is governed
+by the heat operator on the half-line, while the Dyck constraint (nonnegativity
+and return) is implemented via conditioning and boundary data. In particular,
+on $x>0$ one has a heat equation of the form
 
 \begin{equation}
 	\partial_\tau \rho = \frac{1}{2}\,\partial_x^2 \rho,
 \end{equation}
 
-with the boundary/conditioning determined by the chosen scaling limit and
-conditioning. Full derivations may be found in \cite{le-gall05,janson07}.
+See \cite{le-gall05,janson07} for standard derivations and precise statements.
 
 \subsection{Schr\"odinger equation}
 
@@ -997,7 +943,7 @@ line with the classical connection between diffusion and Schr\"odinger evolution
 the wave equation is inherited from the scaling limit of constrained
 combinatorial growth.
 
-\section{Locality, Commutation, and Interaction}
+\section{Locality and Disjoint Commutation}
 \label{sec:locality}
 
 \subsection{Disjoint subtrees}
@@ -1006,22 +952,22 @@ Two subtrees of a Dyck tree that share no common ancestor beyond a given prefix
 are causally independent. Operations localized to one subtree do not affect the
 other. In the computational interpretation, this corresponds to independent
 reductions. In the amplitude interpretation, it corresponds to commuting
-operators acting on spacelike-separated regions. Multiple Dyck paths may
-represent the same abstract computation or the same coarse-grained geometry.
-Such redundancies may be quotiented out without changing observable
-predictions, yielding equivalence classes of histories. This redundancy plays a
-role analogous to gauge symmetry: distinct internal descriptions correspond to
-the same external behavior.
+operators acting on spacelike-separated regions (an analogue of microcausality).
+Multiple fine-grained histories may represent the same abstract computation or
+the same coarse-grained outcome, differing only in the interleaving of
+independent local updates. When such differences are unobservable (or regarded
+as irrelevant bookkeeping), one may quotient the history space by the induced
+equivalence relation, replacing many interleavings by a single equivalence
+class. This redundancy is structurally analogous to gauge: distinct internal
+descriptions correspond to the same coarse description.
 
-Operationally, gauge here means a redundancy in the description of histories.
-For a fixed initial tree, consider the class of causal histories that apply the
-same multiset of local reductions but differ only in the temporal ordering of
-reductions supported on disjoint subtrees. Such histories are gauge-equivalent:
-they represent the same physical pattern of events, and their linear orderings
-are related by commuting spacelike-separated updates. The resulting equivalence
-classes (gauge orbits) play the role of physical histories, while genuinely
-different choices of which reductions to actualize belong to distinct orbits and
-define the nontrivial branching structure of the multiway reduction graph.
+Operationally, fix an initial tree and consider histories that apply the same
+multiset of local reductions but differ only in the temporal ordering of
+reductions supported on disjoint subtrees. By Lemma~\ref{lem:causal-consistency},
+these interleavings are related by commuting diamonds. One may therefore treat
+each equivalence class as a single abstract history (a partial order of events)
+while reserving genuinely different choices of which reductions occur for the
+nontrivial branching structure of the multiway reduction graph.
 
 \begin{figure}[h]
   \centering
@@ -1049,11 +995,10 @@ define the nontrivial branching structure of the multiway reduction graph.
   applied in either order, yielding intermediate states $T_a$ and $T_b$
   but the same final state $T_{ab}=T_{ba}$. The two intermediate events
   are spacelike-separated: they share a common past ($T$) and a common
-  future ($T_{ab}$) but no causal edge between them. This expresses
-  microcausality on the Catalan substrate: local updates supported on
-  disjoint subtrees commute and differ only by a gauge choice of temporal
-  ordering.}
-  \label{fig:disjoint-subtrees}
+	  future ($T_{ab}$) but no causal edge between them. This expresses
+	  microcausality on the Catalan substrate: local updates supported on
+	  disjoint subtrees commute and differ only by temporal ordering.}
+	  \label{fig:disjoint-subtrees}
 \end{figure}
 
 (See Appendix~\ref{appendix:computational-foundations}, and in particular
@@ -1073,9 +1018,10 @@ selection. The formal development of collapse probabilities lies beyond the
 scope of this paper and is treated here only structurally.
 
 \subsection{Summary}
-Locality, commutation, and interaction emerge directly from the causal and
-recursive structure of the Catalan lattice. The same principles underlie both
-computational reduction and quantum amplitude propagation.
+Locality and disjoint commutation emerge directly from the causal and recursive
+structure of the Catalan lattice. The same principles underlie both
+computational reduction and quantum amplitude constructions on the Catalan
+history space.
 
 \section{Discussion and Limitations}
 \label{sec:discussion}
@@ -1083,11 +1029,15 @@ computational reduction and quantum amplitude propagation.
 The results presented here establish a shared structural basis for causal
 geometry, quantum dynamics, and computation. Several limitations should be
 emphasized:
-\begin{itemize}
-	\item Physical constants and interactions are not derived.
-	\item Only free (noninteracting) wave dynamics appears explicitly.
-	\item Collapse probabilities are not fixed uniquely by the structure.
-\end{itemize}
+	\begin{itemize}
+		\item Physical constants and interactions are not derived.
+		\item Only free (noninteracting) wave dynamics appears explicitly.
+		\item Collapse probabilities are not fixed uniquely by the structure.
+		\item Lorentz symmetry is discussed only via continuum embeddings; no discrete
+			boost invariance is claimed.
+		\item The choice of phase/action functional (e.g.\ Dyck area) is not shown to
+			be unique.
+	\end{itemize}
 These limitations reflect a deliberate restriction of scope. The goal has been
 to isolate the minimal recursive structure common to multiple domains, not to
 provide a complete physical theory.
@@ -1106,23 +1056,17 @@ closely analogous.
 \section{Conclusion}
 \label{sec:conclusion}
 
-This paper has examined the Catalan family of recursive structures as a common
-substrate for causal geometry, quantum amplitude propagation, and computation.
-The Dyck constraint induces a natural causal order and a discrete cone-shaped
-geometry exhibiting light-cone--like bounds. Classical invariance principles
-show that ensembles of admissible histories converge in the continuum limit to
-Brownian excursions, leading to diffusive continuum limits governed by the heat
-operator (with the Dyck conditioning encoded on the half-line) and, under
-analytic continuation, the free Schr\"odinger equation. Through the pairs expansion, the
-same structures encode universal computation via $\lambda$-calculus and SKI
-combinators. These correspondences require no additional primitives beyond
-recursive pairing and constraint.
-Spacetime-like geometry, wave dynamics, and computation emerge as complementary
-aspects of a single recursive system. Several open problems remain, including
-the incorporation of interaction terms, the determination of collapse
-probabilities, and the connection to physical constants. The results presented
-here establish a minimal and structurally unified foundation upon which such
-extensions may be explored.
+This paper treats the Catalan family---Dyck paths, full binary trees, and
+balanced-parenthesis expressions---as a single discrete history space supporting
+three complementary readings: causal geometry via the prefix order, computation
+via application trees and local rewrites, and amplitudes via coherent summation
+over coarse-grained outcomes. Classical scaling results for conditioned walks
+provide a continuum comparison in which Dyck ensembles converge to Brownian
+excursions and the diffusion limit is governed by the heat operator on the
+half-line; under analytic continuation one obtains the free Schr\"odinger
+equation. The scope is intentionally restricted to this shared structural core:
+deriving interactions, constants, or a unique collapse/measurement rule requires
+additional structure beyond what is developed here.
 
 \appendix
 
@@ -1249,17 +1193,10 @@ single history, and $m$ denotes the number of \emph{collapse events} (local rede
 contractions) performed by a chosen evaluation strategy.
 \end{remark}
 
-A Dyck history $w\in\mathcal D_n$ induces an integer-valued nearest-neighbour
-walk $(H_k)_{k=0}^{2n}$ (the height / nesting depth signal) with
-\[
-H_{k+1}=H_k\pm 1,\qquad H_0=0,\qquad H_k\ge 0,\qquad H_{2n}=0.
-\]
-Define the rescaled coordinates
-\[
-t_k:=\frac{k}{2},\qquad x_k:=\frac{H_k}{2},
-\]
-so that each parenthesis advances time by $\tfrac12$ and changes the transverse
-coordinate by $\pm\tfrac12$:
+A Dyck history $w\in\mathcal D_n$ induces the height process $H(k)$ of
+Definition~\ref{def:null-counts}. The corresponding embedded coordinates are
+$t_k=k/2$ and $x_k=H(k)/2$, so that each parenthesis advances time by $\tfrac12$
+and changes the transverse coordinate by $\pm\tfrac12$:
 \[
 \texttt{(}:\ (t,x)\mapsto (t+\tfrac12,\ x+\tfrac12),\qquad
 \texttt{)}:\ (t,x)\mapsto (t+\tfrac12,\ x-\tfrac12).
@@ -1356,14 +1293,14 @@ The information eliminated by selecting outcome $x$ is the entropy drop
 (Any logarithm base may be used; base $2$ yields units of bits.)
 
 \paragraph{Information rate as rate of possibility reduction.}
-Let $k$ denote the number of selection events (local contractions) along a
-history, and let computational proper time be $\tau=\tau_0 k$ for a fixed scale
+Let $m$ denote the number of selection events (local contractions) along a
+history, and let computational proper time be $\tau=\tau_0 m$ for a fixed scale
 $\tau_0>0$. We define the information rate associated with outcome $x$ to be the
 information loss per unit computational proper time,
 \[
 R(x)\;:=\;\frac{\Delta S(x)}{\tau}.
 \]
-In the simplest case of a single event ($k=1$), this reduces to
+In the simplest case of a single event ($m=1$), this reduces to
 $R(x)=\Delta S(x)/\tau_0$.
 
 \paragraph{Gauge-invariant counting.}
