@@ -730,18 +730,66 @@ projection rather than any imposed dynamics.
 
 A discrete analogue of an integral along a history is given by the step-sum of
 the height profile,
-\[
-	A(w) := \sum_{k=0}^{2n-1} H_w(k),
-\]
-which measures the cumulative dwell time at nonzero height. This quantity
-depends on the full distribution of height along the path, not merely on
-extrema such as maximum height or peak count.
+	\[
+		A(w) := \sum_{k=0}^{2n-1} H_w(k),
+	\]
+	which measures the cumulative dwell time at nonzero height. This quantity
+	depends on the full distribution of height along the path, not merely on
+	extrema such as maximum height or peak count.
 
-From this additive structural functional one may define a complex phase
-\[
-\theta(w) := \alpha\,A(w),
-\qquad
-\psi(w) := e^{i\theta(w)},
+	More generally, one may use any \emph{additive} functional on Dyck histories as
+	a phase source, provided it is computable online from prefix-local growth
+	information. The following proposition records the general form of such
+	functionals.
+
+	\begin{proposition}[Additive phase functionals computable along Dyck growth]
+	\label{prop:phase-classification}
+	Let $w$ be a Dyck history of semilength $n$, and let $(X_t)_{t=0}^{2n-1}$
+	denote the sequence of \emph{prefix-local} growth states along $w$ (e.g.\
+	current height and step type). For Dyck histories $u,v$ define concatenation
+	$uv$ as the concatenation of Dyck words.
+
+	A real-valued functional $\Phi(w)$ is additive under Dyck concatenation, i.e.\
+	$\Phi(uv)=\Phi(u)+\Phi(v)$, and computable online by a (possibly
+	countable-state) Markov transducer driven by $(X_t)$ with fixed initial
+	internal state $Y_0=y_\ast$ for every history, if and only if there exist an
+	internal state process $(Y_t)$ with update rule $Y_{t+1}=F(Y_t,X_t)$ and a
+	real-valued increment function $g$ such that
+	\[
+		\Phi(w) \;=\; \sum_{t=0}^{2n-1} g(Y_t,X_t).
+	\]
+
+	Equivalently, defining the augmented prefix-local state $Z_t := (X_t,Y_t)$,
+	one has
+	\[
+		\Phi(w) \;=\; \sum_{t=0}^{2n-1} \varphi(Z_t)
+	\]
+	for some function $\varphi$ on the augmented state space.
+	\end{proposition}
+
+	\begin{proof}[Proof sketch]
+	Immediate: an online additive transducer emits a per-step output $g(Y_t,X_t)$,
+	whose sum over the growth process defines $\Phi$; conversely, any such per-step
+	sum is computable by an online transducer with internal state $(Y_t)$.
+	\end{proof}
+
+	\begin{remark}
+	In the special case where the transducer carries no internal state (i.e.\
+	$Y_t$ is trivial) and the prefix-local state is taken to be the current height
+	$h_t$, the admissible phase functionals are precisely those of the form
+	\[
+		\Phi_f(w) = \sum_{t} f(h_t),
+	\]
+	for some function $f : \mathbb Z_{\ge 0} \to \mathbb R$. Allowing dependence on
+	step type yields the slightly more general form $f(h_t,\Delta h_t)$. The area
+	functional corresponds to the choice $f(h)=h$.
+	\end{remark}
+
+	Specializing to the area functional $A(w)$, one may define a complex phase
+	\[
+	\theta(w) := \alpha\,A(w),
+	\qquad
+	\psi(w) := e^{i\theta(w)},
 \]
 where $\alpha$ is a global scale parameter. No per-path phase assignment is
 introduced; distinct phases arise solely from differences in the distribution of
