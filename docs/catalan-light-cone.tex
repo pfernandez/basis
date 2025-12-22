@@ -1285,6 +1285,23 @@ diffusion term on $x>0$ is the half-line Laplacian,
 L := \frac{1}{2}\,\partial_x^2.
 \]
 
+\begin{remark}[Discrete generator]
+At the lattice level, the (unconditioned) nearest-neighbour walk has the
+finite-difference generator
+\[
+(L_{\mathrm{disc}} f)(h):=\tfrac12\bigl(f(h+1)+f(h-1)-2f(h)\bigr),
+\]
+with a boundary modification at $h=0$ if one works on $\mathbb Z_{\ge 0}$.
+Under the diffusive scaling $h=\sqrt{n}\,x$, finite differences converge to
+second derivatives, so $L=\tfrac12\partial_x^2$ is the continuum limit of this
+discrete generator.
+\par
+Moreover, on $\ell^2$ (with a corresponding choice of boundary at $h=0$ when
+working on $\mathbb Z_{\ge0}$), $-L_{\mathrm{disc}}$ is self-adjoint and thus
+generates a unitary group $e^{itL_{\mathrm{disc}}}$ solving the discrete free
+Schr\"odinger equation $i\partial_t\psi=-L_{\mathrm{disc}}\psi$.
+\end{remark}
+
 See \cite{le-gall05,janson07} for standard derivations and precise statements.
 Appendix~\ref{appendix:coordinate-charts}, Section~\ref{subsec:projection-correlation}
 records a complementary view of the same limit through the covariance structure of
