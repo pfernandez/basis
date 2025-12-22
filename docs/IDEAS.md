@@ -290,6 +290,7 @@ This admits:
 
 - a one-step transfer recursion (condition on the first step), and
 - a Chapman–Kolmogorov/semigroup composition law (split at an intermediate time),
+- an equivalent transfer-operator / matrix-power representation,
 
 and in particular the tier-$n$ area-phase partition function is
 $Z_n(\alpha)=K_\alpha^{(2n)}(0,0)=\sum_{w\in\mathcal D_n} e^{i\alpha A(w)}$.

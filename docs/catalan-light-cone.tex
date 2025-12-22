@@ -888,22 +888,39 @@ the height profile,
 		so $Z_n(0)=C_n$.
 		\end{lemma}
 
-		\begin{proof}[Proof sketch]
-		For (ii), condition on the first step from height $a$ to $a\pm 1$: the first
-		step contributes the factor $e^{i\alpha a}$, and the remaining $r$ steps are
-		counted by $K_\alpha^{(r)}(a\pm 1,b)$. The boundary convention encodes the
-		forbidden down-step at $a=0$.
+			\begin{proof}[Proof sketch]
+			For (ii), condition on the first step from height $a$ to $a\pm 1$: the first
+			step contributes the factor $e^{i\alpha a}$, and the remaining $r$ steps are
+			counted by $K_\alpha^{(r)}(a\pm 1,b)$. The boundary convention encodes the
+			forbidden down-step at $a=0$.
 
-		For (iii), split a length-$(r+s)$ path at time $r$. The area functional
-		$\sum_{t=0}^{r+s-1} h_t$ is additive under this concatenation, so the weight
-		factors as the product of the two segment weights. Summing over the
-		intermediate height $b=h_r$ yields the stated composition law.
-		\end{proof}
+			For (iii), split a length-$(r+s)$ path at time $r$. The area functional
+			$\sum_{t=0}^{r+s-1} h_t$ is additive under this concatenation, so the weight
+			factors as the product of the two segment weights. Summing over the
+			intermediate height $b=h_r$ yields the stated composition law.
+			\end{proof}
 
-		\begin{lemma}[First-return recursion for the area phase]
-		\label{lem:area-first-return}
-		Let $Z_n(\alpha):=\sum_{w\in\mathcal D_n} e^{i\alpha A(w)}$ as in
-		Lemma~\ref{lem:area-transfer}. Then $Z_0(\alpha)=1$, and for $n\ge 1$,
+			\begin{remark}[Transfer-operator form]
+			\label{rem:area-transfer-operator}
+			Define an infinite matrix $\mathcal{T}_\alpha$ on $\mathbb Z_{\ge 0}$ by
+			\[
+			(\mathcal{T}_\alpha)_{a,c}
+			:=e^{i\alpha a}\Big(\mathbf 1_{\{c=a+1\}}+\mathbf 1_{\{c=a-1\}}\Big),
+			\]
+			with the convention $\mathbf 1_{\{c=-1\}}=0$. Then the kernel in
+			Definition~\ref{def:area-weighted-bridge} is the $r$th matrix power:
+			\[
+			K_\alpha^{(r)}(a,b) = (\mathcal{T}_\alpha^r)_{a,b}.
+			\]
+			In particular, Lemma~\ref{lem:area-transfer} is the statement that
+			$\mathcal{T}_\alpha^{r+s}=\mathcal{T}_\alpha^{r}\mathcal{T}_\alpha^{s}$ and
+			$K_\alpha^{(r+1)}=\mathcal{T}_\alpha K_\alpha^{(r)}$.
+			\end{remark}
+
+			\begin{lemma}[First-return recursion for the area phase]
+			\label{lem:area-first-return}
+			Let $Z_n(\alpha):=\sum_{w\in\mathcal D_n} e^{i\alpha A(w)}$ as in
+			Lemma~\ref{lem:area-transfer}. Then $Z_0(\alpha)=1$, and for $n\ge 1$,
 		\[
 		Z_n(\alpha)
 		=
