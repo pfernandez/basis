@@ -151,12 +151,16 @@ relation: $u\preceq v$ means that $u$ lies in the causal past of $v$, while
 prefixes that diverge represent incompatible futures. This prefix order defines
 a discrete causal structure:
 \begin{itemize}
-	\item every node has a unique causal past,
-	\item multiple incompatible futures may branch from the same prefix,
-	\item cycles are prohibited by construction.
+		\item every node has a unique causal past,
+		\item multiple incompatible futures may branch from the same prefix,
+		\item cycles are prohibited by construction.
 \end{itemize}
 No additional causal axiom is introduced; causality is enforced combinatorially
 by the Dyck constraint.
+Appendix~\ref{appendix:uniqueness} records an axiomatic characterization of this
+collision-free two-move growth structure, and Appendix~\ref{appendix:unfoldings}
+extends the characterization to growth systems with merges via an explicit
+unfolding construction.
 
 \subsection{Extremal configurations: chain and star}
 At fixed tier $n$ there are many Dyck paths. Two extremal configurations play a
@@ -1151,6 +1155,600 @@ deriving interactions, constants, or a unique collapse/measurement rule requires
 additional structure beyond what is developed here.
 
 \appendix
+
+\section{A Conditional Uniqueness Theorem for the Dyck-Prefix Substrate}
+\label{appendix:uniqueness}
+
+This appendix isolates a minimal set of structural axioms under which the
+Dyck-prefix substrate is not merely an example but is determined uniquely up to
+isomorphism. The result is interpretation-neutral: it assumes no particular
+computational semantics (evaluation order, combinators, rewriting), only a
+ranked causal-growth structure with a one-sided admissibility boundary.
+
+\subsection{Ranked growth posets}
+
+\begin{definition}[Ranked growth poset]
+\label{def:ranked-growth-poset}
+A \emph{ranked growth poset} is a triple $(S,\preceq,\mathrm{rk})$ where $S$ is a
+countable set, $\preceq$ is a partial order on $S$, and
+$\mathrm{rk}:S\to\mathbb{N}$ is a rank function such that:
+\begin{enumerate}[label=(\roman*)]
+\item for every $t\in S$ the set $\{s\in S : s\preceq t\}$ is finite, and
+\item $\mathrm{rk}$ is strictly order-increasing along cover relations.
+\end{enumerate}
+Write $s\prec t$ when $s\preceq t$ and $s\neq t$, and write
+$s\lessdot t$ if $s\prec t$ and there is no $u$ with $s\prec u\prec t$
+(i.e.\ $t$ \emph{covers} $s$).
+\end{definition}
+
+\begin{definition}[Two-move height structure]
+\label{def:two-move-height}
+Let $(S,\preceq,\mathrm{rk})$ be a ranked growth poset with a distinguished root
+$s_{\emptyset}\in S$ satisfying $\mathrm{rk}(s_{\emptyset})=0$.
+A \emph{two-move height structure} on $S$ consists of a function
+$h:S\to\mathbb{Z}_{\ge 0}$ (height) with $h(s_{\emptyset})=0$ such that every
+cover relation $s\lessdot t$ satisfies
+\[
+\mathrm{rk}(t)=\mathrm{rk}(s)+1
+\qquad\text{and}\qquad
+h(t)=h(s)\pm 1.
+\]
+We call a cover with $h(t)=h(s)+1$ an \emph{up-step} and a cover with
+$h(t)=h(s)-1$ a \emph{down-step}.
+\end{definition}
+
+\subsection{Axioms for the Catalan core}
+
+The uniqueness theorem below follows from four axioms capturing: (i) discrete
+single-step growth, (ii) exactly two local move types (up/down), (iii) a
+one-sided boundary in which down-steps are disabled at height $0$, and (iv) an
+\emph{unfolded} (collision-free) history space.
+
+\begin{definition}[Catalan core axioms]
+\label{def:catalan-core-axioms}
+A ranked growth poset $(S,\preceq,\mathrm{rk})$ with root $s_{\emptyset}$ and
+two-move height structure $h$ satisfies the \emph{Catalan core axioms} if:
+\begin{enumerate}[label=(A\arabic*)]
+\item \textbf{(Ranked single-step growth)} For every cover $s\lessdot t$, one has
+$\mathrm{rk}(t)=\mathrm{rk}(s)+1$ and $h(t)=h(s)\pm 1$.
+
+\item \textbf{(Local determinism by move type)} For each $s\in S$, there exists
+\emph{at most one} up-step successor $t_{\uparrow}$ with $s\lessdot t_{\uparrow}$
+and $h(t_{\uparrow})=h(s)+1$, and \emph{at most one} down-step successor
+$t_{\downarrow}$ with $s\lessdot t_{\downarrow}$ and $h(t_{\downarrow})=h(s)-1$.
+
+\item \textbf{(One-sided boundary admissibility)} For each $s\in S$, an up-step
+successor exists, while a down-step successor exists \emph{iff} $h(s)>0$.
+
+\item \textbf{(No collisions / unique history)} Each $t\in S$ admits a unique
+saturated chain (cover chain) from the root:
+\[
+s_{\emptyset}=s_0 \lessdot s_1 \lessdot \cdots \lessdot s_{\mathrm{rk}(t)}=t.
+\]
+\end{enumerate}
+\end{definition}
+
+\subsection{Dyck-prefix poset}
+
+Let $\Sigma=\{+,-\}$. For a word $w=w_1\cdots w_n\in\Sigma^n$, define the
+partial-sum height
+\[
+H_w(k)=\sum_{j=1}^k \xi(w_j),
+\qquad
+\text{where }\xi(+)=+1,\ \xi(-)=-1.
+\]
+Call $w$ \emph{admissible} if $H_w(k)\ge 0$ for all $k$.
+Let $\mathcal{C}$ be the set of all admissible words (Dyck prefixes), partially
+ordered by prefix: $u\preceq v$ iff $u$ is a prefix of $v$. Let $\ell(w)=n$ be
+length and $H(w)=H_w(n)$ be final height.
+
+\begin{definition}[Dyck-prefix poset]
+\label{def:dyck-prefix-poset}
+The \emph{Dyck-prefix poset} is $(\mathcal{C},\preceq,\ell)$ with root
+$\varepsilon$ (the empty word).
+\end{definition}
+
+\subsection{Uniqueness theorem}
+
+\begin{theorem}[Dyck-prefix uniqueness]
+\label{thm:dyck-uniqueness}
+Let $(S,\preceq,\mathrm{rk})$ be a ranked growth poset with root $s_{\emptyset}$
+and a two-move height structure $h$. If $S$ satisfies the Catalan core axioms of
+Definition~\ref{def:catalan-core-axioms}, then there exists a unique bijection
+\[
+\pi:S\to\mathcal{C}
+\]
+such that for every $s\in S$,
+\[
+\ell(\pi(s))=\mathrm{rk}(s),
+\qquad
+H(\pi(s))=h(s),
+\]
+and $\pi$ is an order isomorphism:
+\[
+s\preceq t \quad\Longleftrightarrow\quad \pi(s)\preceq \pi(t)
+\quad\text{(prefix order).}
+\]
+In particular, $(S,\preceq,\mathrm{rk})$ is isomorphic to the Dyck-prefix poset.
+\end{theorem}
+
+\begin{proof}
+By (A4), each $s\in S$ admits a unique cover chain
+$s_{\emptyset}=s_0\lessdot\cdots\lessdot s_n=s$ where $n=\mathrm{rk}(s)$. Define
+a word $\pi(s)\in\Sigma^n$ by setting
+\[
+\pi(s)_k=
+\begin{cases}
++ & \text{if } h(s_k)=h(s_{k-1})+1,\\
+- & \text{if } h(s_k)=h(s_{k-1})-1.
+\end{cases}
+\]
+This is well-defined and has length $\ell(\pi(s))=n$. By construction, the
+partial sums of $\pi(s)$ coincide with the height along the chain,
+\[
+H_{\pi(s)}(k)=h(s_k)\ge 0 \quad\text{for all }k,
+\]
+so $\pi(s)$ is admissible and $\pi(s)\in\mathcal{C}$. Moreover
+$H(\pi(s))=H_{\pi(s)}(n)=h(s)$.
+
+We now show that $\pi$ is bijective. Given any admissible word
+$w=w_1\cdots w_n\in\mathcal{C}$, construct a chain in $S$ by starting at
+$s_0=s_{\emptyset}$ and for each $k\ge 1$ taking the successor specified by
+$w_k$:
+\[
+s_k=
+\begin{cases}
+\text{the (unique) up-step successor of } s_{k-1} & \text{if } w_k=+,\\
+\text{the (unique) down-step successor of } s_{k-1} & \text{if } w_k=-.
+\end{cases}
+\]
+Existence and uniqueness follow from (A2)--(A3); admissibility of $w$ ensures
+that a down-step is only requested when the current height is positive. Let
+$s:=s_n$ be the resulting node at rank $n$. Then $\pi(s)=w$, proving
+surjectivity. Injectivity follows from (A4): distinct nodes have distinct
+cover chains and hence distinct step sequences.
+
+Finally, $\pi$ preserves order. If $s\preceq t$, then the unique chain to $t$
+contains the chain to $s$ as an initial segment, so $\pi(s)$ is a prefix of
+$\pi(t)$. Conversely, if $\pi(s)$ is a prefix of $\pi(t)$, then the constructed
+chain for $\pi(t)$ passes through the constructed chain for $\pi(s)$, giving
+$s\preceq t$. Uniqueness of $\pi$ is immediate from (A4), since $\pi(s)$ is
+forced by the unique cover chain to~$s$.
+\end{proof}
+
+\subsection{Catalan enumeration at completion}
+
+To recover the usual Catalan counting, impose a completion boundary condition:
+completion occurs when the height returns to zero at even rank.
+
+\begin{definition}[Completed histories]
+\label{def:completed-histories}
+For $n\in\mathbb{N}$, define the set of \emph{completed histories} at rank $2n$ by
+\[
+S^{\mathrm{comp}}_{2n} := \{s\in S : \mathrm{rk}(s)=2n \text{ and } h(s)=0\}.
+\]
+\end{definition}
+
+\begin{corollary}[Catalan counting]
+\label{cor:catalan-counting}
+Under the hypotheses of Theorem~\ref{thm:dyck-uniqueness}, the number of
+completed histories satisfies
+\[
+\#\bigl(S^{\mathrm{comp}}_{2n}\bigr)=C_n
+=\frac{1}{n+1}\binom{2n}{n},
+\]
+the $n$th Catalan number.
+\end{corollary}
+
+\begin{proof}
+By Theorem~\ref{thm:dyck-uniqueness}, $S^{\mathrm{comp}}_{2n}$ is in bijection
+with admissible words of length $2n$ with final height $0$, i.e.\ Dyck words of
+semilength $n$. These are counted by the Catalan number $C_n$.
+\end{proof}
+
+\subsection{Quotients and structural sharing}
+
+The ``no collisions'' axiom (A4) asserts that $S$ is an \emph{unfolded} history
+space: each node encodes a distinct growth history. This does not preclude gauge
+equivalences or multi-way computation graphs; rather, those arise by quotienting
+$S$ by an equivalence relation.
+
+\begin{remark}[Quotients and gauge identification]
+\label{rem:gauge-quotient}
+Let $\sim$ be an equivalence relation on $S$ representing gauge or rewrite
+identifications. The quotient set $S/{\sim}$ may exhibit merges (a DAG-like
+state graph), even if $S$ is collision-free. Theorem~\ref{thm:dyck-uniqueness}
+characterizes the unfolded core; quotient structure is encoded by the choice of
+$\sim$ and acts as an identification of histories rather than a primitive
+feature of the substrate.
+\end{remark}
+
+\begin{remark}[Structural sharing vs.\ semantic collisions]
+\label{rem:sharing}
+Axiom (A4) concerns semantic identity in $S$ (distinct histories are distinct
+nodes). It is compatible with immutability and structural sharing in
+implementations (e.g.\ hash-consing), which may share representation of common
+substructures without identifying distinct history nodes.
+\end{remark}
+
+\subsection{Scope of the result}
+
+Theorem~\ref{thm:dyck-uniqueness} establishes a core uniqueness statement:
+given two local move types changing an integer height by $\pm 1$, a one-sided
+boundary disabling down-steps at height $0$, and an unfolded history space, the
+substrate is forced to be Dyck-prefix order. This statement is independent of
+additional semantic layers (program interpretations, rewriting dynamics, or
+amplitude assignments), which can be imposed on top of the substrate without
+affecting the isomorphism.
+
+\section{Unfoldings and Covers of Growth Posets}
+\label{appendix:unfoldings}
+
+Many natural representations of computation or gauge-identified state spaces
+exhibit merges: distinct growth histories may lead to the same state, producing
+a DAG-like multi-way graph rather than a tree. The core uniqueness theorem in
+Appendix~\ref{appendix:uniqueness} characterizes the \emph{unfolded} history
+space. This appendix makes that relationship explicit by defining a canonical
+unfolding (history cover) for a ranked growth poset and showing that the Catalan
+uniqueness statement applies upstairs even when merges exist downstairs.
+
+\subsection{Growth graphs}
+
+\begin{definition}[Rooted ranked growth poset]
+\label{def:rooted-ranked-growth-poset}
+A \emph{rooted ranked growth poset} is a ranked growth poset
+$(S,\preceq,\mathrm{rk})$ (Definition~\ref{def:ranked-growth-poset}) equipped
+with a distinguished root $s_{\emptyset}\in S$ such that for every $s\in S$ one
+has $s_{\emptyset}\preceq s$ (i.e.\ every node is reachable from the root).
+\end{definition}
+
+\begin{definition}[Directed growth graph]
+\label{def:directed-growth-graph}
+Let $(S,\preceq,\mathrm{rk})$ be a rooted ranked growth poset.
+Its \emph{directed growth graph} is the rooted directed graph
+$G(S)=(V,E,s_{\emptyset})$ where $V=S$ and $(s,t)\in E$ iff $s\lessdot t$
+(i.e.\ $t$ covers $s$). We regard each edge as a single-step growth move.
+\end{definition}
+
+\begin{definition}[Move type induced by height]
+\label{def:move-type}
+If $(S,\preceq,\mathrm{rk})$ carries a two-move height structure $h$
+(Definition~\ref{def:two-move-height}), then each directed edge $s\to t$ in
+$G(S)$ has a \emph{move type}
+\[
+\mathrm{type}(s\to t)\in\{+,-\}
+\quad\text{defined by}\quad
+\mathrm{type}(s\to t)=
+\begin{cases}
++ & \text{if } h(t)=h(s)+1,\\
+- & \text{if } h(t)=h(s)-1.
+\end{cases}
+\]
+\end{definition}
+
+\subsection{Rooted covers (local isomorphism in one step)}
+
+To model ``the same local growth rule everywhere'' we use a minimal notion of
+cover: a map that is locally bijective on outgoing edges from each node. This
+avoids introducing general poset coverings and suffices for the unfolding
+argument below.
+
+\begin{definition}[Rooted directed cover]
+\label{def:rooted-directed-cover}
+Let $G=(V,E,r)$ and $\widetilde{G}=(\widetilde{V},\widetilde{E},\widetilde{r})$
+be rooted directed graphs. A function $\varphi:\widetilde{V}\to V$ is a
+\emph{rooted directed cover} if:
+\begin{enumerate}[label=(\roman*)]
+\item $\varphi(\widetilde{r})=r$;
+\item for every $\widetilde{v}\in\widetilde{V}$, the map
+\[
+\varphi_*:\mathrm{Out}(\widetilde{v})\to \mathrm{Out}(\varphi(\widetilde{v})),
+\qquad
+(\widetilde{v}\to \widetilde{w})\mapsto (\varphi(\widetilde{v})\to \varphi(\widetilde{w}))
+\]
+is a bijection, where $\mathrm{Out}(x)=\{x\to y\in E\}$ denotes the set of
+outgoing edges from $x$.
+\end{enumerate}
+If edges carry move types $\{+,-\}$, we additionally require that $\varphi_*$
+preserves move type (i.e.\ the bijection matches $+$-edges to $+$-edges and
+$-$-edges to $-$-edges).
+\end{definition}
+
+\subsection{The canonical unfolding (history cover)}
+
+\begin{definition}[Unfolding as rooted path space]
+\label{def:unfolding}
+Let $(S,\preceq,\mathrm{rk})$ be a rooted ranked growth poset and let $G(S)$ be
+its directed growth graph.
+Define the \emph{unfolding} $\widetilde{S}$ to be the set of all finite directed
+paths in $G(S)$ starting at the root:
+\[
+\widetilde{S}
+:=\bigl\{
+(s_0\to s_1\to\cdots\to s_n)\ :\ s_0=s_{\emptyset},\ (s_{k-1},s_k)\in E
+\bigr\}.
+\]
+Write $\widetilde{s}=(s_0\to\cdots\to s_n)$ and define:
+\begin{enumerate}[label=(\roman*)]
+\item the \emph{endpoint} map $\varphi:\widetilde{S}\to S$ by
+$\varphi(\widetilde{s})=s_n$;
+\item the \emph{rank} $\widetilde{\mathrm{rk}}(\widetilde{s})=n$ (path length);
+\item the \emph{prefix order} on $\widetilde{S}$:
+$\widetilde{u}\preceq \widetilde{v}$ iff $\widetilde{u}$ is an initial segment
+(prefix) of $\widetilde{v}$.
+\end{enumerate}
+If $S$ has a height function $h$, define the lifted height
+$\widetilde{h}(\widetilde{s}) := h(\varphi(\widetilde{s}))$.
+\end{definition}
+
+\begin{lemma}[The unfolding is collision-free]
+\label{lem:unfolding-collision-free}
+Every element $\widetilde{s}\in\widetilde{S}$ has a unique predecessor chain
+from the root in the prefix order, i.e.\ $\widetilde{S}$ satisfies the ``no
+collisions / unique history'' property (A4) of
+Definition~\ref{def:catalan-core-axioms}.
+\end{lemma}
+
+\begin{proof}
+By construction, each $\widetilde{s}$ is itself a rooted path
+$(s_0\to\cdots\to s_n)$. Its strict prefixes are exactly the initial segments
+$(s_0\to\cdots\to s_k)$ for $0\le k<n$, and these form the unique saturated
+chain from the root to $\widetilde{s}$ under prefix inclusion.
+\end{proof}
+
+\begin{lemma}[The endpoint map is a rooted directed cover]
+\label{lem:endpoint-cover}
+Let $G(\widetilde{S})$ be the directed growth graph of the unfolding, whose
+edges append one growth step:
+\[
+(s_0\to\cdots\to s_n)\ \to\ (s_0\to\cdots\to s_n\to s_{n+1})
+\quad\text{whenever } s_n\to s_{n+1}\text{ is an edge in }G(S).
+\]
+Then the endpoint map $\varphi:\widetilde{S}\to S$ from
+Definition~\ref{def:unfolding} is a rooted directed cover in the sense of
+Definition~\ref{def:rooted-directed-cover}. If $S$ carries a two-move height
+structure, then $\varphi$ preserves move type.
+\end{lemma}
+
+\begin{proof}
+Clearly $\varphi$ maps the length-$0$ path $(s_{\emptyset})$ to $s_{\emptyset}$.
+Fix a path $\widetilde{s}=(s_0\to\cdots\to s_n)$. Outgoing edges from
+$\widetilde{s}$ in $G(\widetilde{S})$ are in bijection with outgoing edges from
+$s_n$ in $G(S)$ by appending the corresponding last step $s_n\to s_{n+1}$. Under
+$\varphi$, each appended edge maps to exactly that edge $s_n\to s_{n+1}$, giving
+a bijection on outgoing edges. If move types are present, appending an up-step
+or down-step in $\widetilde{S}$ maps to an up-step or down-step in $S$ by
+Definition~\ref{def:move-type}, so type is preserved.
+\end{proof}
+
+\subsection{Dyck-prefix structure upstairs}
+
+\begin{proposition}[Lift of the Catalan core axioms]
+\label{prop:lift-axioms}
+Suppose $(S,\preceq,\mathrm{rk})$ is a rooted ranked growth poset with a two-move
+height structure $h$ satisfying axioms (A1)--(A3) of
+Definition~\ref{def:catalan-core-axioms} (ranked single-step growth, local
+determinism by move type, and one-sided boundary admissibility), but not
+necessarily (A4). Then the unfolding $(\widetilde{S},\preceq,\widetilde{\mathrm{rk}})$
+with lifted height $\widetilde{h}$ satisfies (A1)--(A4).
+\end{proposition}
+
+\begin{proof}
+Axiom (A4) holds by Lemma~\ref{lem:unfolding-collision-free}. For (A1)--(A3),
+each cover in $\widetilde{S}$ appends exactly one edge of $G(S)$, so ranks
+increase by one and height changes by $\pm 1$ exactly as in $S$. Moreover, by
+local determinism in $S$, from any endpoint there is at most one $+$-successor
+and at most one $-$-successor; by Lemma~\ref{lem:endpoint-cover} the same holds
+in the unfolding at every path. Finally, one-sided boundary admissibility is
+preserved: a $-$-extension exists in $\widetilde{S}$ precisely when the endpoint
+height is positive.
+\end{proof}
+
+\begin{theorem}[Dyck-prefix characterization of the unfolding]
+\label{thm:dyck-unfolding}
+Under the hypotheses of Proposition~\ref{prop:lift-axioms}, the unfolding
+$\widetilde{S}$ is (canonically) order-isomorphic to the Dyck-prefix poset
+(Definition~\ref{def:dyck-prefix-poset}). In particular, completed unfolded
+histories are counted by Catalan numbers as in Corollary~\ref{cor:catalan-counting}.
+\end{theorem}
+
+\begin{proof}
+By Proposition~\ref{prop:lift-axioms}, $\widetilde{S}$ satisfies the full Catalan
+core axioms (A1)--(A4). The conclusion follows by applying
+Theorem~\ref{thm:dyck-uniqueness} to $\widetilde{S}$.
+\end{proof}
+
+\begin{remark}[Canonical quotient and ``collisions'']
+\label{rem:canonical-quotient}
+The unfolding comes with a canonical surjection $\varphi:\widetilde{S}\to S$
+(the endpoint map). Collisions/merges in $S$ correspond exactly to
+identifications of distinct unfolded histories:
+\[
+\widetilde{u}\sim_{\varphi}\widetilde{v}
+\quad\Longleftrightarrow\quad
+\varphi(\widetilde{u})=\varphi(\widetilde{v}).
+\]
+Thus, as a set of states reachable from the root, $S$ is naturally identified
+with the quotient $\widetilde{S}\big/\!\sim_{\varphi}$.
+For the distinction between semantic identification and structural sharing in
+implementations, see Remark~\ref{rem:sharing}.
+\end{remark}
+
+\subsection{A Reduction-Theoretic ``Full Uniqueness'' Statement}
+\label{subsec:full-uniqueness}
+
+The core uniqueness theorem (Theorem~\ref{thm:dyck-uniqueness}) shows that a
+collision-free two-move growth system with a one-sided boundary is forced to be
+Dyck-prefix order. This subsection records a complementary reduction statement:
+if a canonical notion of \emph{intrinsic state} (defined by future-cone
+isomorphism) is already a minimal one-counter system, and if the projection to
+intrinsic state is locally bijective on labeled moves, then the Catalan core is
+forced as the unfolded normal form.
+
+\subsubsection{Future cones and intrinsic-state equivalence}
+
+\begin{definition}[Future cone as a rooted directed graph]
+\label{def:future-cone}
+Let $(S,\preceq,\mathrm{rk})$ be a rooted ranked growth poset with directed
+growth graph $G(S)=(S,E,s_{\emptyset})$ (Definition~\ref{def:directed-growth-graph}).
+For $s\in S$, define the \emph{future cone} at $s$ to be the rooted directed
+subgraph
+\[
+\mathrm{Cone}(s)\ :=\ \bigl(S_s,E_s,s\bigr),
+\]
+where $S_s=\{t\in S:\ s\preceq t\}$ and $E_s=\{(u,v)\in E:\ u,v\in S_s\}$. If
+edges in $G(S)$ are labeled by a finite move alphabet (in particular $\{+,-\}$),
+we regard $\mathrm{Cone}(s)$ as an edge-labeled rooted directed graph.
+\end{definition}
+
+\begin{definition}[Cone isomorphism and intrinsic-state equivalence]
+\label{def:cone-iso}
+Assume edges are labeled by move type in $\{+,-\}$. For $s,t\in S$, write
+$s\equiv t$ if there exists a rooted directed graph isomorphism
+\[
+\psi:\mathrm{Cone}(s)\ \cong\ \mathrm{Cone}(t)
+\]
+sending root to root and preserving move labels. This defines an equivalence
+relation $\equiv$ on $S$, called \emph{intrinsic-state equivalence}. Let
+$M:=S/{\equiv}$ be the set of equivalence classes, with root
+$m(s_{\emptyset})\in M$, and write
+\[
+m:S\to M,\qquad m(s)=[s]_{\equiv}
+\]
+for the canonical projection.
+\end{definition}
+
+\begin{remark}[Relocatable futures]
+\label{rem:relocatable}
+The equivalence relation $\equiv$ captures a precise form of relocatability:
+states are indistinguishable if and only if their reachable futures are
+isomorphic as rooted labeled growth graphs. The quotient $M=S/{\equiv}$ is a
+canonical ``coarsest'' state descriptor that preserves the full future growth
+structure.
+\end{remark}
+
+\subsubsection{Intrinsic dynamics and the cover hypothesis}
+
+\begin{definition}[Intrinsic transition graph]
+\label{def:intrinsic-transition}
+Let $G(S)$ be labeled by $\{+,-\}$. Define a rooted labeled directed graph
+$G(M)$ on $M$ by declaring a labeled edge $x\to_{\pm} y$ to exist if there are
+$s,t\in S$ such that $s\lessdot t$ is a $\pm$-labeled edge of $G(S)$ and
+$m(s)=x$, $m(t)=y$.
+\end{definition}
+
+\begin{definition}[One-counter intrinsic dynamics]
+\label{def:one-counter-dynamics}
+We say $(S,\preceq,\mathrm{rk})$ has \emph{one-counter intrinsic dynamics} if
+there exists a bijection
+\[
+\iota: M \ \to\ \mathbb{Z}_{\ge 0}
+\]
+with $\iota(m(s_{\emptyset}))=0$ such that, for every intrinsic state $x\in M$
+with $\iota(x)=k$:
+\begin{enumerate}[label=(\roman*)]
+\item (\textbf{Two primitive moves}) there exists exactly one $+$-successor
+$y_{+}$ of $x$ in $G(M)$ with $\iota(y_{+})=k+1$;
+\item (\textbf{One-sided boundary}) there exists a $-$-successor $y_{-}$ of $x$
+in $G(M)$ iff $k>0$, and in that case $\iota(y_{-})=k-1$;
+\item (\textbf{No other intrinsic moves}) $x$ has no other outgoing edges in
+$G(M)$ besides $x\to_{+}y_{+}$ and (when $k>0$) $x\to_{-}y_{-}$.
+\end{enumerate}
+Equivalently, $G(M)$ is isomorphic (as a rooted labeled graph) to the standard
+one-counter graph on $\mathbb{Z}_{\ge 0}$ with edges $k\to_{+} k+1$ for all $k$
+and edges $k\to_{-} k-1$ for $k>0$.
+\end{definition}
+
+\begin{remark}[Minimality content]
+\label{rem:minimality-content}
+Definition~\ref{def:one-counter-dynamics} should be read as a minimality
+hypothesis: the intrinsic descriptor $M=S/{\equiv}$ is already a single
+nonnegative integer, and it admits exactly two primitive move types with a
+one-sided boundary at~$0$.
+\end{remark}
+
+\begin{definition}[Cover-consistency of the intrinsic projection]
+\label{def:intrinsic-cover}
+Assume edges are labeled by $\{+,-\}$. We say the intrinsic projection
+$m:S\to M$ is \emph{cover-consistent} if it is a rooted directed cover
+(Definition~\ref{def:rooted-directed-cover}) from the labeled growth graph
+$G(S)$ to the intrinsic graph $G(M)$ (Definition~\ref{def:intrinsic-transition}),
+i.e.\ for every $s\in S$ the induced map on outgoing edges
+$\mathrm{Out}(s)\to\mathrm{Out}(m(s))$ is a label-preserving bijection.
+\end{definition}
+
+\begin{remark}
+Under the one-counter identification $\iota:M\to\mathbb{Z}_{\ge 0}$ of
+Definition~\ref{def:one-counter-dynamics}, cover-consistency of $m$ is
+equivalent to requiring that the composite $h:=\iota\circ m:S\to\mathbb{Z}_{\ge 0}$
+is a rooted directed cover from $G(S)$ to the standard one-counter graph on
+$\mathbb{Z}_{\ge 0}$.
+\end{remark}
+
+\subsubsection{Reduction to the Dyck-prefix normal form}
+
+\begin{theorem}[Reduction to a Dyck-prefix cover]
+\label{thm:full-uniqueness-reduction}
+Let $(S,\preceq,\mathrm{rk})$ be a rooted ranked growth poset whose directed
+growth graph $G(S)$ is labeled by move type in $\{+,-\}$. Assume:
+\begin{enumerate}[label=(H\arabic*)]
+\item \textbf{(Intrinsic-state quotient)} intrinsic-state equivalence $\equiv$ is
+defined by label-preserving cone isomorphism as in Definition~\ref{def:cone-iso},
+with quotient $m:S\to M$;
+\item \textbf{(One-counter intrinsic dynamics)} $S$ satisfies
+Definition~\ref{def:one-counter-dynamics};
+\item \textbf{(Cover consistency)} the intrinsic projection $m$ is a rooted
+directed cover as in Definition~\ref{def:intrinsic-cover};
+\item \textbf{(Tiered single-step growth)} for every cover $s\lessdot t$,
+$\mathrm{rk}(t)=\mathrm{rk}(s)+1$.
+\end{enumerate}
+Let $\widetilde{S}$ be the unfolding (history cover) of $S$ (Definition~\ref{def:unfolding})
+with endpoint map $\varphi:\widetilde{S}\to S$. Then $\widetilde{S}$ is
+(canonically) order-isomorphic to the Dyck-prefix poset (Definition~\ref{def:dyck-prefix-poset}),
+and hence $S$ is a quotient (folding) of a Dyck-prefix cover via~$\varphi$
+(Remark~\ref{rem:canonical-quotient}).
+\end{theorem}
+
+\begin{proof}
+Define a height function on $S$ by composing the intrinsic-state projection with
+the one-counter identification,
+\[
+h(s)\;:=\;\iota(m(s))\in\mathbb{Z}_{\ge 0}.
+\]
+By cover consistency (Definition~\ref{def:intrinsic-cover}) and one-counter
+intrinsic dynamics (Definition~\ref{def:one-counter-dynamics}), each $s\in S$
+has exactly one outgoing $+$-edge, and it has an outgoing $-$-edge iff $h(s)>0$.
+Moreover, because $m$ is label-preserving and $\iota$ identifies $G(M)$ with the
+standard one-counter graph, along any cover edge $s\lessdot t$ one has
+$h(t)=h(s)+1$ for a $+$-edge and $h(t)=h(s)-1$ for a $-$-edge. Together with the
+tier assumption $\mathrm{rk}(t)=\mathrm{rk}(s)+1$, this shows that $S$ admits a
+two-move height structure satisfying axioms (A1)--(A3) of
+Definition~\ref{def:catalan-core-axioms}.
+
+Applying Theorem~\ref{thm:dyck-unfolding} now yields that the unfolding
+$\widetilde{S}$ is Dyck-prefix order-isomorphic. The quotient statement for $S$
+is then exactly Remark~\ref{rem:canonical-quotient}.
+\end{proof}
+
+\begin{remark}[What is and is not proved]
+\label{rem:what-is-not-proved}
+Theorem~\ref{thm:full-uniqueness-reduction} is a ``full uniqueness'' statement
+in the reduction sense: once relocatable futures are formalized via cone
+isomorphism and the intrinsic state space is assumed to be a one-counter with
+two primitive moves, together with the cover-consistency hypothesis (no hidden
+multiplicity in the projection $m$), the Catalan substrate is forced as the
+unfolded normal form. What is not claimed is that all reasonable substrates
+satisfy these minimality hypotheses; establishing that requires separate
+domain-specific arguments.
+\end{remark}
+
+\subsection{Interpretive takeaway}
+
+Theorems~\ref{thm:dyck-uniqueness} and~\ref{thm:dyck-unfolding} together support
+the following robust core statement: whenever a ranked two-move growth system
+with a one-sided boundary is present, the unfolded history space is forced to be
+Dyck-prefix order, and any merged multi-way representation is a quotient of that
+Catalan cover.
 
 \section{Coordinate Charts and Continuum Comparisons}
 \label{appendix:coordinate-charts}
