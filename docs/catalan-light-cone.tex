@@ -2026,6 +2026,42 @@ $p \in \mathcal D_n$ corresponds uniquely to a sample path
 \]
 drawn from this conditioned law.
 
+\begin{lemma}[Conditioned transition probabilities]
+\label{lem:dyck-conditioned-kernel}
+For integers $r\ge 0$ and $h\ge 0$, let $B(r,h)$ denote the number of
+nonnegative $\pm 1$ paths of length $r$ that start at height $h$ and end at $0$
+(so $B(r,h)=0$ unless $r\ge h$ and $r\equiv h\ (\mathrm{mod}\ 2)$). Then the Dyck
+conditioning above yields a time-inhomogeneous Markov chain. Writing
+\[
+\mathcal{E}:=\{H_s\ge 0\text{ for all }s\le T,\; H_T=0\},
+\]
+its one-step transition probabilities are, for $0\le t<T$ and $h\ge 0$ with
+$B(T-t,h)>0$,
+\[
+\mathbb P(H_{t+1}=h+1 \mid H_t=h,\; \mathcal{E})
+\;=\;
+\frac{B(T-t-1,h+1)}{B(T-t,h)},
+\]
+\[
+\mathbb P(H_{t+1}=h-1 \mid H_t=h,\; \mathcal{E})
+\;=\;
+\frac{B(T-t-1,h-1)}{B(T-t,h)},
+\]
+with the convention $B(\cdot,-1)=0$ (so the down-step probability is $0$ at
+$h=0$). Moreover, $B(r,h)$ is given explicitly by the ballot-number formula of
+Lemma~\ref{lem:ballot-completions} (taking $r$ as the remaining step budget).
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+Because the base walk is simple symmetric, all length-$T$ paths have equal
+probability $2^{-T}$, so conditioning yields the uniform distribution on
+admissible paths. Given $H_t=h$, the conditional probability of an up step is
+proportional to the number of admissible completions from height $h+1$ in the
+remaining $T-t-1$ steps, and similarly for a down step; normalizing gives the
+stated ratios. The explicit binomial difference for $B(r,h)$ follows from the
+reflection principle / ballot theorem \cite{stanley-catalan}.
+\end{proof}
+
 \paragraph{Correlation structure.}
 Consider the ensemble of height paths of fixed length $T$, distributed
 according to the Dyck-conditioned law. Define the mean and covariance functions
