@@ -947,14 +947,33 @@ the height profile,
 		\[
 		C(q;z)-1
 		= \sum_{k,m\ge 0} q^k\,C_k(q)\,C_m(q)\,z^{k+m+1}
-		= z\,C(q;qz)\,C(q;z).
-		\]
-		\end{proof}
+			= z\,C(q;qz)\,C(q;z).
+			\]
+			\end{proof}
 
-		\begin{remark}
-		Equivalently, define $Z(\alpha;z):=\sum_{n\ge 0} Z_n(\alpha)\,z^n$. Since
-		$Z_n(\alpha)=e^{i\alpha n}C_n(e^{2i\alpha})$, one has
-		\[
+			\begin{corollary}[Stieltjes continued fraction]
+			\label{cor:q-catalan-continued-fraction}
+			As a formal power series in $z$, the solution $C(q;z)$ of
+			Corollary~\ref{cor:q-catalan-functional-equation} admits the continued-fraction
+			expansion
+			\[
+			C(q;z)
+			=
+			\cfrac{1}{1-\cfrac{z}{1-\cfrac{qz}{1-\cfrac{q^{2}z}{1-\ddots}}}}.
+			\]
+			\end{corollary}
+
+			\begin{proof}[Proof sketch]
+			Rearranging Corollary~\ref{cor:q-catalan-functional-equation} gives
+			$C(q;z)=1/(1-z\,C(q;qz))$. Applying the same identity with $z$ replaced by
+			$qz$ yields $C(q;qz)=1/(1-qz\,C(q;q^2z))$, and iterating produces the stated
+			continued fraction.
+			\end{proof}
+
+			\begin{remark}
+			Equivalently, define $Z(\alpha;z):=\sum_{n\ge 0} Z_n(\alpha)\,z^n$. Since
+			$Z_n(\alpha)=e^{i\alpha n}C_n(e^{2i\alpha})$, one has
+			\[
 		Z(\alpha;z)=C(e^{2i\alpha};e^{i\alpha}z),
 		\]
 		and therefore $Z(\alpha;z)$ satisfies
@@ -2310,6 +2329,29 @@ and remain nonnegative throughout. In particular, the completion counts in
 Lemma~\ref{lem:dyck-conditioned-kernel} are $B(r,h)=B(r;h\!\to\!0)$.
 \end{definition}
 
+\begin{lemma}[Ballot-number bridge count]
+\label{lem:ballot-bridge}
+For $r\ge 0$ and $a,b\in\mathbb Z_{\ge 0}$,
+\[
+B(r; a\!\to\! b)
+=
+\binom{r}{\frac{r+b-a}{2}}
+\;-\;
+\binom{r}{\frac{r+b+a}{2}+1},
+\]
+with the convention $\binom{r}{k}=0$ when $k\notin\{0,1,\dots,r\}$ or $k$ is not
+an integer. In particular, $B(r,h)=B(r;h\!\to\!0)$ agrees with the completion
+count of Lemma~\ref{lem:ballot-completions}.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+Count all length-$r$ $\pm 1$ paths from $a$ to $b$ and subtract those that ever
+hit $-1$. Reflect the initial segment up to the first visit to $-1$; this gives
+a bijection between paths from $a$ to $b$ that hit $-1$ and unconstrained paths
+from $-a-2$ to $b$. Evaluating both counts yields the stated binomial difference;
+see \cite{stanley-catalan}.
+\end{proof}
+
 \begin{lemma}[Two-time height marginal]
 \label{lem:two-time-height-marginal}
 Let $T=2n$ and consider the uniform measure on Dyck paths of semilength $n$.
@@ -2356,6 +2398,8 @@ By Lemma~\ref{lem:two-time-height-marginal},
 \frac{B(s;0\!\to\! a)\,B(t-s;a\!\to\! b)\,B(T-t;b\!\to\! 0)}{C_n},
 \]
 and hence $C(s,t)=\mathbb E[H_s H_t]-\mu_s\mu_t$.
+All bridge counts $B(\cdot;\cdot\!\to\!\cdot)$ admit explicit binomial
+expressions by Lemma~\ref{lem:ballot-bridge}.
 \end{remark}
 The covariance kernel $C$ is a symmetric positive operator on the finite-dimensional
 space $\mathbb R^{T+1}$ and captures the second-order temporal structure induced

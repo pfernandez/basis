@@ -315,6 +315,11 @@ functional equation
 
 $$C(q;z)=1+z\,C(q;z)\,C(q;qz).$$
 
+Equivalently (as a formal power series), $C(q;z)$ admits the Stieltjes continued
+fraction
+
+$$C(q;z)=\cfrac{1}{1-\cfrac{z}{1-\cfrac{qz}{1-\cfrac{q^2z}{1-\ddots}}}}.$$
+
 #### Toward a discrete action on collapse-decorated worldlines (interpretive → speculative) **[IDEA ONLY]**
 
 A collapse-decorated Catalan history can be treated as
@@ -411,9 +416,10 @@ as the unique consistent measure under Gleason/Dutch-book–style assumptions (t
 
 **Paper:** `docs/catalan-light-cone.tex` (height-projection covariance + Karhunen--Lo\`eve modes; mode-wise phase discussion in Schr\"odinger subsection). Shift-operator/Fourier-basis and tree-Laplacian programs remain here.
 
-The paper now also records explicit ballot-number formulas for the height mean and
-two-time covariance via the Catalan-triangle factorization (so the correlation
-kernel is not just abstractly defined; it is explicitly computable).
+The paper now also records explicit ballot-number formulas for the nonnegative
+bridge counts $B(r;a\!\to\!b)$ and hence for the height mean and two-time covariance
+via the Catalan-triangle factorization (so the correlation kernel is not just
+abstractly defined; it is explicitly computable).
 
 This dossier collects ways to treat the Catalan tiers as a state space for dynamics, and how continuum PDEs emerge.
 
