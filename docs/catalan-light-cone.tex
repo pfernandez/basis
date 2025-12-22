@@ -386,6 +386,32 @@ nonnegative ones are $\binom{r}{m}-\binom{r}{m-1}$, which yields the stated
 forms; see \cite{stanley-catalan}.
 \end{proof}
 
+\begin{lemma}[Future cones classified by height]
+\label{lem:cone-iso-height}
+Let $u,v\in\mathcal{C}$ be Dyck prefixes with heights $h(u),h(v)$. Regard the
+future cones $\mathcal{C}(u)$ and $\mathcal{C}(v)$ as rooted directed graphs
+whose edges are the admissible one-step extensions labeled by
+\texttt{(} (up) and \texttt{)} (down). Then $\mathcal{C}(u)$ and $\mathcal{C}(v)$
+are isomorphic as rooted edge-labeled directed graphs if and only if
+$h(u)=h(v)$. In that case, the canonical isomorphism maps each extension
+sequence of parentheses appended to $u$ to the same extension sequence appended
+to $v$.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+If $h(u)=h(v)=h$, then admissibility of an extension depends only on the running
+height above $0$, so an extension word $s$ is admissible after $u$ if and only if
+it is admissible after $v$. Mapping $u s\mapsto v s$ is therefore a bijection on
+nodes that preserves the labeled extension edges.
+
+Conversely, in $\mathcal{C}(u)$ a node has no \texttt{)}-successor if and only if
+its height is $0$. Starting from height $h(u)$, the minimal directed distance
+from the root $u$ to such a boundary node is exactly $h(u)$ (follow $h(u)$
+consecutive \texttt{)} moves). This distance is an invariant of rooted
+edge-labeled graph isomorphism, hence $h(u)=h(v)$ whenever
+$\mathcal{C}(u)\cong \mathcal{C}(v)$.
+\end{proof}
+
 Thus every node of the global Catalan possibility tree is the root of a scaled
 copy of the entire admissible-future structure, with scaling determined solely
 by local height. The recursive decomposition of full binary trees,
@@ -2060,6 +2086,51 @@ proportional to the number of admissible completions from height $h+1$ in the
 remaining $T-t-1$ steps, and similarly for a down step; normalizing gives the
 stated ratios. The explicit binomial difference for $B(r,h)$ follows from the
 reflection principle / ballot theorem \cite{stanley-catalan}.
+\end{proof}
+
+\begin{lemma}[Recurrence for completion counts]
+\label{lem:ballot-recurrence}
+The completion counts $B(r,h)$ satisfy
+\[
+B(0,0)=1,\qquad B(0,h)=0\ \text{for }h>0,
+\]
+and for $r\ge 1$ and $h\ge 0$,
+\[
+B(r,h)=B(r-1,h-1)+B(r-1,h+1),
+\]
+with the convention $B(r,-1):=0$.
+\end{lemma}
+
+\begin{proof}
+Decompose a nonnegative length-$r$ path from height $h$ to $0$ by its first
+step. After a down step (to $h-1$) or up step (to $h+1$), there remain $r-1$
+steps to reach $0$ without crossing below $0$. Summing these disjoint cases
+gives the recurrence; the boundary convention accounts for the forbidden down
+step at height $0$.
+\end{proof}
+
+\begin{lemma}[Catalan-triangle height marginal]
+\label{lem:height-marginal}
+Let $T=2n$ and consider the uniform measure on Dyck paths of semilength $n$.
+For $0\le t\le T$ and $h\ge 0$, the number of Dyck paths with $H_t=h$ factors as
+\[
+\#\{w\in\mathcal D_n : H_w(t)=h\}
+= B(t,h)\,B(T-t,h),
+\]
+and hence
+\[
+\mathbb P(H_t=h)=\frac{B(t,h)\,B(T-t,h)}{C_n},
+\qquad C_n=B(T,0).
+\]
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+Split a Dyck path at time $t$. The prefix from $0$ to $h$ of length $t$ and the
+suffix from $h$ to $0$ of length $T-t$ must both stay nonnegative. By time
+reversal, the number of admissible prefixes from $0$ to $h$ of length $t$ equals
+$B(t,h)$, and admissible suffixes are counted by $B(T-t,h)$. Concatenating a
+prefix and suffix yields a Dyck path with $H_t=h$, and this factorization is
+bijective.
 \end{proof}
 
 \paragraph{Correlation structure.}
