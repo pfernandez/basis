@@ -262,7 +262,7 @@ Once reentry edges are allowed, the structure is a directed graph, not a planar 
 
 ### 5) Amplitudes: structural action, Born-like measures, and Catalan path integrals **[PARTIAL]**
 
-**Paper:** `docs/catalan-light-cone.tex` (formal Catalan amplitude model definition; amplitudes from additive phase functionals; coherent summation + squaring; Dyck area scaling and diffusion/Schr\"odinger limits; $q$-Catalan/area-refinement remark; transfer-kernel recursion/semigroup property for the area phase; worked double-slit appendix). Any derivation/uniqueness of a Born rule remains open.
+**Paper:** `docs/catalan-light-cone.tex` (formal Catalan amplitude model definition; coherent summation + squaring; explicit remark contrasting counting ($N(x)$) vs coherent aggregation ($P\propto N(x)^2$ when phase factors through the observable); amplitudes from additive phase functionals; Dyck area scaling and diffusion/Schr\"odinger limits; $q$-Catalan/area-refinement remark; transfer-kernel recursion/semigroup/operator forms for the area phase; worked double-slit appendix). Any derivation/uniqueness of a Born rule remains open.
 
 This dossier collects the “global sum over histories” side: assign actions/amplitudes to Dyck histories (and/or collapse-decorated histories) to recover continuum dynamics and probability rules.
 
