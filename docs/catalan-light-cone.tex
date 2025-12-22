@@ -95,10 +95,11 @@ The paper isolates a common structural core shared by three domains:
 \begin{enumerate}[label=(\roman*)]
 	\item \textbf{Causal geometry:} the prefix order on Dyck prefixes induces a
 		discrete causal structure and a cone-shaped envelope with sharp extremals.
-	\item \textbf{Continuum comparison:} classical conditioned-walk results yield a
-		diffusion limit (Brownian excursion, heat equation on the half-line), and an
-		analytic-continuation bridge to the free Schr\"odinger equation
-		\cite{le-gall05,janson07,feynman-hibbs65,kac49}.
+		\item \textbf{Continuum comparison:} classical conditioned-walk results yield a
+			diffusion limit (Brownian excursion; the half-line heat operator as a base
+			diffusion generator with the conditioning encoded by a Doob transform), and an
+			analytic-continuation bridge to the free Schr\"odinger equation
+			\cite{le-gall05,janson07,feynman-hibbs65,kac49}.
 		\item \textbf{Computation:} Catalan tree shapes provide unlabeled application
 			skeletons for standard Turing-complete functional calculi (after choosing a
 			finite encoding of symbols), and local reductions remain internal to the same
@@ -913,10 +914,10 @@ the height profile,
 		\end{lemma}
 
 			\begin{proof}[Proof sketch]
-			For (ii), condition on the first step from height $a$ to $a\pm 1$: the first
-			step contributes the factor $e^{i\alpha a}$, and the remaining $r$ steps are
-			counted by $K_\alpha^{(r)}(a\pm 1,b)$. The boundary convention encodes the
-			forbidden down-step at $a=0$.
+				For (ii), condition on the first step from height $a$ to $a\pm 1$: the first
+				step contributes the factor $e^{i\alpha a}$, and the remaining $r$ steps are
+				counted by $K_\alpha^{(r)}(a\pm 1,b)$. The boundary convention encodes the
+				nonnegativity constraint via $K_\alpha^{(r)}(-1,b)=0$.
 
 			For (iii), split a length-$(r+s)$ path at time $r$. The area functional
 			$\sum_{t=0}^{r+s-1} h_t$ is additive under this concatenation, so the weight
@@ -1320,16 +1321,16 @@ $e^{-ik^{2}t/2}$. In this sense, analytic continuation replaces diffusive decay 
 unit-modulus phase rotation of modal coefficients, making coherent cancellation and
 reinforcement stable under time evolution.
 
-Boundary conditions at $x=0$ are carried over from the diffusive regime (e.g.\
-reflecting or absorbing), and the choice of boundary does not affect the
-existence of the continuum limit itself. Thus, quantum wave dynamics arises here
-from the same Laplacian generator by passing from a dissipative semigroup to a
-unitary group; mode-wise, this is the replacement $\tau\mapsto it$ in the spectral
-representation. This is in line with the classical connection between diffusion
-and Schr\"odinger evolution
-\cite{feynman-hibbs65,kac49}. No separate quantization procedure is required;
-the wave equation is inherited from the scaling limit of constrained
-combinatorial growth.
+	Boundary conditions at $x=0$ are carried over from the diffusive regime (e.g.\
+	reflecting or absorbing), and the choice of boundary does not affect the
+	existence of the continuum limit itself. Thus, quantum wave dynamics arises here
+	from the same Laplacian generator by passing from a dissipative semigroup to a
+	unitary group; mode-wise, this is the replacement $\tau\mapsto it$ in the spectral
+	representation. This is in line with the classical connection between diffusion
+	and Schr\"odinger evolution
+	\cite{feynman-hibbs65,kac49}. No separate quantization procedure is required at
+	this level: the same scaling-limit Laplacian that governs diffusion also
+	generates unitary Schr\"odinger evolution under analytic continuation.
 
 \section{Locality and Disjoint Commutation}
 \label{sec:locality}
@@ -2369,11 +2370,13 @@ the term $-X_\tau/(2-\tau)$ encodes the bridge-to-$0$ constraint.
 
 \begin{remark}[Doob transform and completion weighting]
 \label{rem:dyck-conditioned-kernel-doob}
-Let $P$ be the simple random-walk kernel on $\mathbb Z_{\ge 0}$ with a forbidden
-down-step at $0$ (equivalently, the walk killed upon hitting $-1$). Writing again
-$r:=T-t$, the function $h_r(h):=B(r,h)$ is the number of admissible completions
-from height $h$ in $r$ remaining steps and satisfies the backward recursion of
-Lemma~\ref{lem:ballot-recurrence}. The conditioned chain in
+Let $P$ be the kernel of the simple symmetric walk killed upon attempting to step
+from $0$ to $-1$. Equivalently, adjoin a cemetery state $\dagger$ and take
+$P(0,1)=P(0,\dagger)=1/2$ and $P(h,h\pm 1)=1/2$ for $h>0$, then restrict to
+$\mathbb Z_{\ge 0}$ (so $P$ is sub-Markov at $0$).
+Writing again $r:=T-t$, the function $h_r(h):=B(r,h)$ is the number of admissible
+completions from height $h$ in $r$ remaining steps and satisfies the backward
+recursion of Lemma~\ref{lem:ballot-recurrence}. The conditioned chain in
 Lemma~\ref{lem:dyck-conditioned-kernel} is exactly the time-inhomogeneous Doob
 $h$-transform of $P$ with $h_r$:
 \[
@@ -2412,8 +2415,8 @@ with the convention $B(r,-1):=0$.
 Decompose a nonnegative length-$r$ path from height $h$ to $0$ by its first
 step. After a down step (to $h-1$) or up step (to $h+1$), there remain $r-1$
 steps to reach $0$ without crossing below $0$. Summing these disjoint cases
-gives the recurrence; the boundary convention accounts for the forbidden down
-step at height $0$.
+gives the recurrence; the boundary convention $B(r,-1)=0$ enforces the
+nonnegativity constraint.
 \end{proof}
 
 \begin{lemma}[Catalan-triangle height marginal]
