@@ -2742,6 +2742,73 @@ $\arg\max\{U(L),U(R)\}$), then the drop is $1+\min\{U(L),U(R)\}$.
 Immediate from the defining recursion $U(\bullet(L,R))=1+U(L)+U(R)$.
 \end{proof}
 
+\subsection{Operators on tier slices (optional)}
+\label{subsec:tier-operators}
+
+The main text emphasizes two dynamics on the Catalan substrate: tier growth
+(prefix extension) and coherent summation over histories. Independently, one may
+also consider \emph{slice dynamics} on a fixed tier by endowing the finite set
+$\mathcal D_n$ with an auxiliary adjacency graph. This subsection records the
+standard operator framework for such constructions.
+
+\paragraph{Fields on a tier.}
+Fix $n$ and consider the Hilbert space $\ell^2(\mathcal D_n)$ of complex-valued
+functions on $\mathcal D_n$ with inner product
+\[
+\langle \psi,\phi\rangle := \sum_{w\in\mathcal D_n} \overline{\psi(w)}\,\phi(w).
+\]
+Vectors $\psi\in \ell^2(\mathcal D_n)$ may be interpreted as ``fields on a tier''
+or as amplitude assignments on completed histories.
+
+\paragraph{Adjacency graphs.}
+Let $G_n=(\mathcal D_n,E_n)$ be any finite undirected graph on $\mathcal D_n$.
+The choice of $G_n$ is additional structure: different graphs induce different
+notions of locality on the tier. A canonical example is the rotation graph (the
+associahedron adjacency) on full binary trees, where edges correspond to single
+associativity rotations \cite{stanley-catalan}.
+
+\paragraph{Adjacency and Laplacian.}
+Define the adjacency operator $A_{G_n}$ and the degree operator $D_{G_n}$ on
+$\ell^2(\mathcal D_n)$ by
+\[
+(A_{G_n}\psi)(w) := \sum_{w'\sim w} \psi(w'),
+\qquad
+(D_{G_n}\psi)(w) := \deg(w)\,\psi(w),
+\]
+where $w'\sim w$ denotes adjacency in $G_n$. The (combinatorial) graph Laplacian is
+\[
+\Delta_{G_n} := D_{G_n}-A_{G_n},
+\]
+and the associated diffusion generator is
+\[
+L_{G_n} := -\Delta_{G_n}.
+\]
+Then $\Delta_{G_n}$ is self-adjoint and positive semidefinite, while $L_{G_n}$ is
+self-adjoint and negative semidefinite.
+
+\paragraph{Discrete heat and Schr\"odinger equations.}
+The heat equation on the tier graph is the linear ODE
+\[
+\partial_\tau u = L_{G_n}u,
+\]
+with solution $u(\tau)=e^{\tau L_{G_n}}u(0)$. Because $-\Delta_{G_n}$ is
+self-adjoint and nonpositive, $e^{\tau L_{G_n}}$ is a contraction semigroup.
+The corresponding unitary ``free'' Schr\"odinger evolution is
+\[
+i\,\partial_t \psi = -L_{G_n}\psi = \Delta_{G_n}\psi,
+\]
+with solution $\psi(t)=e^{-it\Delta_{G_n}}\psi(0)$.
+
+\begin{remark}
+This optional tier-graph framework does not fix a preferred choice of adjacency
+$G_n$ and is not used elsewhere in the paper. Its purpose is to make explicit
+that, once a tier-local notion of neighbourhood is specified, discrete diffusion
+and Schr\"odinger-type evolutions on the Catalan state space follow by standard
+graph-Laplacian constructions (compare Remark~\ref{rem:dyck-conditioned-drift-scaling}
+and Remark~\ref{rem:dyck-conditioned-kernel-doob} for the tier-growth Markov
+structure induced by Dyck conditioning).
+\end{remark}
+
 \section{A Double-Slit Thought Experiment on the Catalan Light Cone}
 \label{appendix:doubleslit}
 

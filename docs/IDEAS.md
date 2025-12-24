@@ -608,7 +608,9 @@ In the continuum limit, tier-growth dynamics give rise to **Brownian excursion
 
 ---
 
-### 21.4. Tree Laplacians and discrete heat/Schrödinger equations **[IDEA ONLY]**
+### 21.4. Tree Laplacians and discrete heat/Schrödinger equations **[PARTIAL]**
+
+**Paper:** `docs/catalan-light-cone.tex` (optional tier-slice operator framework: adjacency/Laplacian on a chosen graph on $\mathcal D_n$, plus discrete heat and Schr\"odinger evolution; see Appendix “Additional Technical Notes”, subsection “Operators on tier slices (optional)”).
 
 Given a Dyck tree $T(w)$ with node set $V$ and edges $E$, define a discrete
 **tree Laplacian** $L_T$ acting on node fields $\phi_w : V \to \mathbb{C}$ by
@@ -665,9 +667,9 @@ In large-$n$ limits:
 
 **Status**
 
-* **Solid (discrete operators).** The definition of $L_T$ and the discrete
-  heat/Schr equations on trees and prefix graphs is standard spectral graph
-  theory.
+* **Solid (discrete operators).** Graph Laplacians and the induced heat/Schr
+  evolutions are standard; the paper now records the tier-slice version on
+  $\ell^2(\mathcal D_n)$ given a chosen adjacency graph.
 * **Speculative.** The precise continuum limit of these operators on random
   Dyck trees, and the identification of the limiting PDEs with physical field
   equations, is a research program rather than a completed derivation.
