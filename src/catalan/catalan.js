@@ -23,7 +23,9 @@ export function pairs(n) {
   if (n === 0) return ['()'];
   const result = [];
 
-  for (let i = 0; i < n; i++) {
+  // Enumerate from left-heavy (chain) to right-heavy (star) to match `dyck(n)`
+  // under the `dyckToTree` / `renderTree` bijection.
+  for (let i = n - 1; i >= 0; i--) {
     const left = pairs(i);
     const right = pairs(n - 1 - i);
 

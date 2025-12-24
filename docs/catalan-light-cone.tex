@@ -364,26 +364,26 @@ only on the current height.
 \label{lem:ballot-completions}
 Let $u$ be a Dyck prefix of length $k$ with height $h\ge 0$, and fix a target
 semilength $n$ with $2n\ge k$ for which $u$ admits at least one completion
-(equivalently $h\le 2n-k$). Let $r:=2n-k$ be the remaining number of steps. Then
+(equivalently $h\le 2n-k$). Let $s:=2n-k$ be the remaining number of steps. Then
 the number of Dyck words $w\in\mathcal D_n$ having prefix $u$ is
 \[
 \#\{w\in\mathcal D_n : u\preceq w\}
 =
-\binom{r}{\frac{r-h}{2}}-\binom{r}{\frac{r-h}{2}-1}
+\binom{s}{\frac{s-h}{2}}-\binom{s}{\frac{s-h}{2}-1}
 =
-\frac{h+1}{\frac{r+h}{2}+1}\binom{r}{\frac{r-h}{2}}.
+\frac{h+1}{\frac{s+h}{2}+1}\binom{s}{\frac{s-h}{2}}.
 \]
 For $h=0$ (i.e.\ $u$ is itself a Dyck prefix rooted at the axis), this reduces
 to the Catalan number $C_{n-k/2}$.
 \end{lemma}
 
 \begin{proof}[Proof sketch]
-The completion corresponds to a length-$r$ path of $\pm 1$ steps starting at
-height $h$ and ending at $0$ while staying nonnegative. Writing $r=2m+h$
-(so $m=(r-h)/2$), there are $\binom{r}{m}$ unconstrained sequences with $m$ up
+The completion corresponds to a length-$s$ path of $\pm 1$ steps starting at
+height $h$ and ending at $0$ while staying nonnegative. Writing $s=2m+h$
+(so $m=(s-h)/2$), there are $\binom{s}{m}$ unconstrained sequences with $m$ up
 steps and $m+h$ down steps. By the reflection principle / Bertrand ballot
-theorem, the sequences that ever hit $-1$ are counted by $\binom{r}{m-1}$, so the
-nonnegative ones are $\binom{r}{m}-\binom{r}{m-1}$, which yields the stated
+theorem, the sequences that ever hit $-1$ are counted by $\binom{s}{m-1}$, so the
+nonnegative ones are $\binom{s}{m}-\binom{s}{m-1}$, which yields the stated
 forms; see \cite{stanley-catalan}.
 \end{proof}
 
@@ -401,8 +401,8 @@ to $v$.
 
 \begin{proof}[Proof sketch]
 If $h(u)=h(v)=h$, then admissibility of an extension depends only on the running
-height above $0$, so an extension word $s$ is admissible after $u$ if and only if
-it is admissible after $v$. Mapping $u s\mapsto v s$ is therefore a bijection on
+height above $0$, so an extension word $\sigma$ is admissible after $u$ if and only if
+it is admissible after $v$. Mapping $u\sigma\mapsto v\sigma$ is therefore a bijection on
 nodes that preserves the labeled extension edges.
 
 Conversely, in $\mathcal{C}(u)$ a node has no \texttt{)}-successor if and only if
@@ -570,15 +570,15 @@ the full ensemble of admissible computational histories.
 
 	\begin{proposition}[Catalan Universality for Program Structure]
 		\label{prop:catalan-programs}
-		Let $\mathcal{C}$ denote the Catalan family of finite full binary trees.
+		Let $\mathcal{T}$ denote the Catalan family of finite full binary trees.
 		Every program in any Turing-complete functional calculus (such as the
 		$\lambda$-calculus or SKI) admits a canonical representation as an element of
-		$\mathcal{C}$ with leaf labels drawn from a finite alphabet (after fixing a
+		$\mathcal{T}$ with leaf labels drawn from a finite alphabet (after fixing a
 		standard encoding of symbols). Conversely,
-		every labeled element of $\mathcal{C}$ denotes a unique program modulo surface
+		every labeled element of $\mathcal{T}$ denotes a unique program modulo surface
 		syntax. Furthermore, standard operational semantics (including
 		$\beta$-reduction and SKI contraction) act as local rewrite rules that
-		preserve membership in $\mathcal{C}$. Thus a program, its syntactic
+		preserve membership in $\mathcal{T}$. Thus a program, its syntactic
 	expansions, and every admissible reduction history correspond to paths within
 	the Catalan substrate.
 \end{proposition}
@@ -941,19 +941,19 @@ the height profile,
 
 			\begin{remark}[Transfer-operator form]
 			\label{rem:area-transfer-operator}
-			Define an infinite matrix $\mathcal{T}_\alpha$ on $\mathbb Z_{\ge 0}$ by
+			Define an infinite matrix $\mathcal{M}_\alpha$ on $\mathbb Z_{\ge 0}$ by
 			\[
-			(\mathcal{T}_\alpha)_{a,c}
+			(\mathcal{M}_\alpha)_{a,c}
 			:=e^{i\alpha a}\Big(\mathbf 1_{\{c=a+1\}}+\mathbf 1_{\{c=a-1\}}\Big),
 			\]
 			with the convention $\mathbf 1_{\{c=-1\}}=0$. Then the kernel in
 			Definition~\ref{def:area-weighted-bridge} is the $r$th matrix power:
 			\[
-			K_\alpha^{(r)}(a,b) = (\mathcal{T}_\alpha^r)_{a,b}.
+			K_\alpha^{(r)}(a,b) = (\mathcal{M}_\alpha^r)_{a,b}.
 			\]
 			In particular, Lemma~\ref{lem:area-transfer} is the statement that
-			$\mathcal{T}_\alpha^{r+s}=\mathcal{T}_\alpha^{r}\mathcal{T}_\alpha^{s}$ and
-			$K_\alpha^{(r+1)}=\mathcal{T}_\alpha K_\alpha^{(r)}$.
+			$\mathcal{M}_\alpha^{r+s}=\mathcal{M}_\alpha^{r}\mathcal{M}_\alpha^{s}$ and
+			$K_\alpha^{(r+1)}=\mathcal{M}_\alpha K_\alpha^{(r)}$.
 			\end{remark}
 
 			\begin{lemma}[First-return recursion for the area phase]
@@ -2129,11 +2129,12 @@ these constructions.
 
 \begin{remark}[Notation hygiene]
 \label{rem:notation-hygiene}
-To avoid collisions, the \emph{tier} (semilength) of a completed history is
-denoted by $n$. A \emph{prefix length} is denoted by $k\in\{0,1,\dots,2n\}$.
-Within this subsection only, the symbols $(t_k,x_k)$ denote an \emph{embedded}
-spacetime chart derived from cumulative counts (Definition~\ref{def:null-counts}),
-and should not be confused with the tier index $n$ used elsewhere.
+Throughout, the \emph{tier} (semilength) of a completed history is denoted by
+$n$, and a \emph{step index} (prefix length) is denoted by
+$k\in\{0,1,\dots,2n\}$. Within this subsection, the symbols $(t_k,x_k)$ denote
+the embedded coordinates derived from cumulative counts
+(Definition~\ref{def:null-counts}); when comparing to continuum formulas we also
+write $(t,x)$ for real coordinates.
 \end{remark}
 
 \paragraph{The Catalan cone as the master object.}
@@ -2705,7 +2706,7 @@ M_n(u)\;:=\;\#\{w\in \mathcal D_n : u\preceq w\},
 \]
 the number of completed histories at tier $n$ consistent with the partial
 history $u$. This is the finite-tier size of the local cone rooted at $u$.
-It depends only on the remaining step budget $r:=2n-k$ and the current height
+It depends only on the remaining step budget $s:=2n-k$ and the current height
 $h$, and admits the explicit ballot-number formula of
 Lemma~\ref{lem:ballot-completions}. The associated future-cone entropy is
 \[
@@ -2793,10 +2794,10 @@ The associated Hilbert space is $\ell^2(\mathcal D_n)$ with inner product
 \]
 
 \paragraph{Fields on prefixes (the full cone).}
-Let $\mathcal P$ denote the set of Dyck prefixes (admissible partial histories).
-A prefix field is a function $\Phi:\mathcal P\to\mathbb{C}$, which may be
-restricted to a fixed length (tier) slice $\mathcal P_k:=\{p\in\mathcal P:
-|p|=k\}$ when needed.
+Let $\mathcal{C}$ denote the set of Dyck prefixes (admissible partial histories).
+A prefix field is a function $\Phi:\mathcal{C}\to\mathbb{C}$, which may be
+restricted to a fixed length slice
+$\mathcal{C}^{(k)}:=\{p\in\mathcal{C}: |p|=k\}$ when needed.
 
 \paragraph{Fields on nodes of a fixed tree.}
 Given $w\in\mathcal D_n$, let $T(w)$ be its associated full binary tree. A
@@ -2926,7 +2927,7 @@ Let $G_n=(\mathcal D_n,E_n)$ be any finite undirected graph on $\mathcal D_n$.
 The choice of $G_n$ is additional structure: different graphs induce different
 notions of locality on the tier. A canonical example is the rotation graph (the
 associahedron adjacency) on full binary trees, where edges correspond to single
-associativity rotations \cite{cheneviere2022linear}.
+associativity rotations \cite{stanley-catalan,cheneviere2022linear}.
 
 \paragraph{Associahedra and planar tree amplitudes (scattering-amplitude tie-in).}
 The associahedron adjacency on $\mathcal D_n$ is also natural from the
@@ -3128,9 +3129,9 @@ v1, extended examples and additional formal development are omitted.
 Let $\Sigma$ be a finite (or countable) alphabet of atomic symbols, and consider
 finite applicative terms over $\Sigma$ (binary application with atoms). There
 is an injective encoding of such labeled application trees into the Catalan
-family $\mathcal{C}$ of unlabeled full binary trees. One explicit construction
-fixes two distinct tag trees $A,B\in\mathcal{C}$, assigns each
-$\sigma\in\Sigma$ a distinct motif $S_\sigma\in\mathcal{C}\setminus\{A,B\}$, and
+family $\mathcal{T}$ of unlabeled full binary trees. One explicit construction
+fixes two distinct tag trees $A,B\in\mathcal{T}$, assigns each
+$\sigma\in\Sigma$ a distinct motif $S_\sigma\in\mathcal{T}\setminus\{A,B\}$, and
 defines
 \[
 	E(\sigma)\;:=\;\bullet(A,S_\sigma),\qquad
@@ -3148,7 +3149,7 @@ so $E$ is recursively decodable and therefore injective.
 		binary operation, and every term therefore possesses a unique representation
 		as a full binary tree: internal nodes encode application, and leaves encode
 	variables, constants, or combinators.  This establishes a canonical embedding
-	of programs into $\mathcal{C}$.
+	of programs into $\mathcal{T}$.
 
 	Conversely, any full binary tree with labeled leaves may be interpreted as a
 	well-formed program term by reading internal nodes as applications and leaves
@@ -3158,7 +3159,7 @@ so $E$ is recursively decodable and therefore injective.
 	$(\lambda x.M)\,N$ contracts by replacing the parent application with
 	$M[x:=N]$; SKI reductions replace specific subtrees according to fixed
 	patterns.  In each case, the output remains a full binary tree, so evaluation
-	never leaves $\mathcal{C}$.  Because nondeterministic redex choices correspond
+	never leaves $\mathcal{T}$.  Because nondeterministic redex choices correspond
 	to branching in the space of trees, each complete reduction sequence is a path
 	through the Catalan possibility space, completing the correspondence.
 \end{proof}
