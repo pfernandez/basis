@@ -91,9 +91,13 @@ make locality and computation transparent; and pairs encodings make uniform
 syntax convenient.
 
 \paragraph{Pairs-only locality discipline.}
-Throughout, the Catalan object itself is the only dynamical state: apart from an
-optional finite leaf-label encoding when representing programs, we do not
-introduce independent labels, fields, or global degrees of freedom.
+Throughout, the Catalan object itself is the only combinatorial configuration
+(state): apart from an optional finite leaf-label encoding when representing
+programs, we do not attach independent labels, fields, or global degrees of
+freedom to the substrate.
+When we introduce observables, weights, phases, or amplitudes, these are
+functions of the Catalan object (or of local update events), not additional
+state variables.
 Single-step dynamics are specified by local subtree rewrites (finite patterns),
 and global-looking weights or statistics are introduced together with explicit
 decompositions as step-additive functionals along Dyck growth or as recursive
@@ -135,8 +139,11 @@ dynamics.%
 Section~\ref{sec:amplitudes} may be read in either order after the geometric
 setup in Section~\ref{sec:catalan_cone}.}
 Locality and disjoint-commutation are discussed in Section~\ref{sec:locality}.
-Optional coordinate embeddings, technical notes, and illustrative examples are
-collected in appendices, separate from the main formal development.
+Sections~\ref{sec:discussion}--\ref{sec:conclusion} provide contextual discussion
+and summarize scope and limitations.
+Appendices collect supporting axioms and constructions (including optional
+coordinate charts such as the Lorentz/proper-time embedding), technical notes,
+and illustrative examples, separate from the main formal development.
 
 \section{The Catalan Light Cone as a Discrete Causal Geometry}
 \label{sec:catalan_cone}
@@ -226,20 +233,20 @@ k(w):=\sum_{j=1}^{2n-1}\mathbf{1}\{(w_j,w_{j+1})=(\texttt{(},\texttt{)})\}.
 		\foreach \y in {1,2,3} {
 			\draw[dashed] (0.25*\y,\y) -- (0.85*\y,\y);
 		}
-		% labels
-		\node[left] at (0,3.6) {timelike chain};
-		\node[above right] at (3.5,3.5) {lightlike envelope (star)};
-		\node at (1.1,2.2) {\small Dyck layer};
-		\end{tikzpicture}
-		\caption{The Catalan light cone.
-			Tier $n$ (the number of Dyck units) plays the role of proper time, while
-			breadth $r$ measures spatial radius. All Dyck configurations at fixed tier
-			lie between the fully nested chain (timelike extreme) and the fully separated
-			star (lightlike envelope).
-			Discrete Dyck layers approximate constant-time hypersurfaces, and the bound
-		$r \le n$ is enforced combinatorially.}
-		\label{fig:catalan-cone}
-\end{figure}
+			% labels
+			\node[left] at (0,3.6) {timelike chain};
+			\node[above right] at (3.5,3.5) {lightlike envelope (star)};
+			\node at (1.1,2.2) {\small Dyck layer};
+			\end{tikzpicture}
+			\caption{The Catalan light cone.
+				Tier $n$ (the number of Dyck units) plays the role of a discrete time
+				coordinate, while breadth $r$ measures lateral spread.
+				All Dyck configurations at fixed tier lie between the fully nested chain
+				(timelike extreme) and the fully separated star (lightlike envelope).
+				Discrete Dyck layers approximate constant-time hypersurfaces, and the bound
+			$r \le n$ is enforced combinatorially.}
+			\label{fig:catalan-cone}
+	\end{figure}
 
 \subsection{Breadth as spatial extent}
 Define the \emph{breadth} $r(w)$ of a Dyck path $w$ to be the size of a
@@ -312,24 +319,24 @@ Thus narrow configurations (small $r$) must be deep, while wide configurations
 (large $r$) may be shallow; the chain and star saturate this bound.
 
 \begin{figure}[h]
-		\centering
-		\[
-			\begin{array}{ccl}
+			\centering
+			\[
+				\begin{array}{ccl}
 			((())) & \quad & (h=3,\ r=1) \\
 			(()()) &      & (h=2,\ r=2) \\
 			(())() &      & (h=2,\ r=2) \\
 			()(()) &      & (h=2,\ r=2) \\
 			()()() &      & (h=1,\ r=3)
-		\end{array}
+			\end{array}
 	\]
-	\caption{All Dyck words of tier $n=3$, ordered from maximal nesting (chain)
-		to maximal separation (star). These five configurations exhaust the discrete
-		causal possibilities at fixed proper time.
-		Depth $h$ and breadth $r$ interpolate between the two extremes, illustrating
-		the intrinsic tradeoff enforced by the Dyck constraint.
-	Higher tiers replicate this structure at larger scale.}
-	\label{fig:dyck-n3}
-\end{figure}
+		\caption{All Dyck words of tier $n=3$, ordered from maximal nesting (chain)
+			to maximal separation (star). These five configurations exhaust the discrete
+			causal possibilities at fixed tier.
+			Depth $h$ and breadth $r$ interpolate between the two extremes, illustrating
+			the intrinsic tradeoff enforced by the Dyck constraint.
+		Higher tiers replicate this structure at larger scale.}
+		\label{fig:dyck-n3}
+	\end{figure}
 
 \subsection{Cone structure}
 Organizing Dyck paths by tier $n$ and breadth $r$ yields a discrete cone:
@@ -347,7 +354,9 @@ tier $n$ have height and breadth of order $\sqrt{n}$
 \cite{le-gall05,janson07,addario-berry13}. Extremal configurations saturate
 the linear bound $r\le n$, while typical configurations lie deep within the
 cone. This separation between extremal and typical behavior mirrors the role of
-null, timelike, and spacelike trajectories in relativistic geometry.
+null, timelike, and spacelike trajectories in relativistic geometry, and we
+use this terminology only as a mnemonic: the statements here are purely
+combinatorial (see also Remark~\ref{rem:no-lattice-boost}).
 
 \begin{theorem}[Discrete light-cone bound and scaling]
 	Let $w$ be a Dyck word of semilength $n$ and breadth $r(w)$ as above. Then
@@ -2247,6 +2256,12 @@ prefix. Define
 u(k)\;:=\;\#\{\texttt{(}\text{ in }w[1\!:\!k]\},\qquad
 v(k)\;:=\;\#\{\texttt{)}\text{ in }w[1\!:\!k]\}.
 \]
+Equivalently, writing $w=w_1\cdots w_{2n}$,
+\[
+u(k)=\sum_{j=1}^k \mathbf{1}\{w_j=\texttt{(}\},\qquad
+v(k)=\sum_{j=1}^k \mathbf{1}\{w_j=\texttt{)}\},
+\]
+so $(u(k),v(k))$ evolves by unit steps and is step-additive along the prefix.
 The Dyck admissibility constraint is $u(k)\ge v(k)$ for all $k$, and completion
 is $u(2n)=v(2n)=n$. Define the height (frontier) process
 \[
@@ -2746,6 +2761,10 @@ and their scaling limits are invariant under such re-rootings.
 
 \section{Additional Technical Notes}
 \label{appendix:technical-notes}
+
+\noindent
+This appendix collects optional bookkeeping and auxiliary constructions. It is
+separate from the main formal development and may be skipped on first reading.
 
 \subsection{Entropy of coarse-graining and information rate}
 
