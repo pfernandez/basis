@@ -90,6 +90,17 @@ structure: Dyck paths make causal order and scaling limits transparent; trees
 make locality and computation transparent; and pairs encodings make uniform
 syntax convenient.
 
+\paragraph{Pairs-only locality discipline.}
+Throughout, the Catalan object itself is the only dynamical state: apart from an
+optional finite leaf-label encoding when representing programs, we do not
+introduce independent labels, fields, or global degrees of freedom.
+Single-step dynamics are specified by local subtree rewrites (finite patterns),
+and global-looking weights or statistics are introduced together with explicit
+decompositions as step-additive functionals along Dyck growth or as recursive
+folds on the pairing tree (see
+Proposition~\ref{prop:phase-classification} and
+Lemma~\ref{lem:additive-gauge-invariant}).
+
 \paragraph{Contributions and scope.}
 The paper isolates a common structural core shared by three domains:
 \begin{enumerate}[label=(\roman*)]
@@ -194,6 +205,11 @@ N(n,k)=\frac{1}{n}\binom{n}{k}\binom{n}{k-1},\qquad 1\le k\le n,
 with $\sum_{k=1}^{n} N(n,k)=C_n$ \cite{stanley-catalan}. The chain has one peak
 ($k=1$) and the star has $n$ peaks ($k=n$). This gives a natural stratification
 of the tier into $k$-sectors that interpolate between the two extremes.
+\par
+The peak count is a local pattern statistic: for $w=w_1\cdots w_{2n}$ define
+\[
+k(w):=\sum_{j=1}^{2n-1}\mathbf{1}\{(w_j,w_{j+1})=(\texttt{(},\texttt{)})\}.
+\]
 \end{remark}
 
 \begin{figure}[h]
@@ -227,13 +243,13 @@ of the tier into $k$-sectors that interpolate between the two extremes.
 
 \subsection{Breadth as spatial extent}
 Define the \emph{breadth} $r(w)$ of a Dyck path $w$ to be the size of a
-largest level set in the associated full binary tree:
+largest level set in the nesting-depth decomposition of matched pairs:
 \[
-	r(w) := \max_{\ell} \{\text{number of nodes at depth } \ell\}.
+	r(w) := \max_{\ell} \{\text{number of matched pairs at nesting depth } \ell\}.
 \]
 Equivalently, $r(w)$ is the maximal number of non-overlapping pairs at a common
-nesting depth. For a Dyck word of tier $n$ there are $n$ matched pairs in
-total, so
+nesting depth. For a Dyck word of tier $n$ there are $n$ matched pairs in total,
+so
 \[
 	1 \le r(w) \le n,
 \]
@@ -246,38 +262,54 @@ is enforced purely by the recursive constraint. It is the discrete analogue of
 the relativistic light-cone bound $|\Delta x| \le \Delta t$ (in units with
 $c=1$).
 
+\begin{remark}[Breadth as a recursive fold]
+\label{rem:breadth-fold}
+Although $r(w)$ is a statistic of a completed history, it is computed by a
+recursive fold on the standard Catalan decomposition. For each Dyck word $w$,
+let $L_w(\ell)$ be the number of matched pairs of $w$ at nesting depth $\ell$, so
+$r(w)=\max_{\ell} L_w(\ell)$ and $L_\varepsilon(\ell)=0$ for the empty word. If
+$w=\texttt{(}u\texttt{)}v$ with $u,v$ Dyck words, then
+\[
+	L_w(1)=1+L_v(1),
+	\qquad
+	L_w(\ell+1)=L_u(\ell)+L_v(\ell+1)\quad(\ell\ge 1).
+\]
+Equivalently, if $w=w_1\cdots w_{2n}$ has height process $(H_k)_{k=0}^{2n}$, then
+each opening symbol $w_k=\texttt{(}$ opens a pair at nesting depth $H_k$, so
+\[
+L_w(\ell)=\sum_{k=1}^{2n}\mathbf{1}\{w_k=\texttt{(},\ H_k=\ell\}.
+\]
+\end{remark}
+
 \subsection{Depth--breadth tradeoff}
 Let $h(w)$ denote the maximum height of a Dyck path, i.e.\ the maximum nesting
-depth of its associated full binary tree (root at depth $0$). Recall that the
-breadth $r(w)$ is the maximum number of nodes occurring at any fixed depth
-level:
+depth. Recall that the breadth $r(w)$ is the maximum number of matched pairs
+occurring at any fixed nesting depth:
 \[
-r(w):=\max_{\ell}{\text{number of nodes at depth }\ell}.
+	r(w):=\max_{\ell}{\text{number of matched pairs at nesting depth }\ell}.
 \]
-Depth and breadth are not independent. In any full binary tree, the number of
-nodes at depth $\ell$ is at most $2^{\ell}$ (each level can at most double from
-its parent level). Hence, if the maximum level set size $r(w)$ occurs at depth
-$\ell_\ast$, then
-\[
-r(w)\le 2^{\ell_\ast}\le 2^{h(w)}
-\quad\Rightarrow\quad
-h(w)\ge \log_2 r(w).
-\]
-Thus configurations with large breadth necessarily have logarithmically large
-depth. Equivalently, very shallow trees cannot support wide level sets, while
-trees with very large depth must concentrate most nodes away from any single
-breadth-maximizing level.
 
-\begin{remark}[Kraft equality for leaf depths]
-For the full binary tree associated to a Dyck path, if $L$ is the set of leaves
-and $d(\ell)$ denotes the depth of $\ell\in L$ (root at depth $0$), then
+\begin{remark}[Height as a recursive fold]
+\label{rem:height-fold}
+If $w$ has height process $(H_k)_{k=0}^{2n}$, then
 \[
-\sum_{\ell\in L} 2^{-d(\ell)} = 1.
+	h(w)=\max_{0\le k\le 2n} H_k,
+		\]
+		and this is computable online. Equivalently, writing the standard Catalan
+		decomposition $w=\texttt{(}u\texttt{)}v$, one has $h(\varepsilon)=0$ and
+		\[
+			h\bigl(\texttt{(}u\texttt{)}v\bigr)=\max\{1+h(u),\,h(v)\}.
+		\]
+		\end{remark}
+	Depth and breadth are not independent: since $n=\sum_{\ell=1}^{h(w)} L_w(\ell)$
+	and $L_w(\ell)\le r(w)$ for all $\ell$, one has
+\[
+	n=\sum_{\ell=1}^{h(w)} L_w(\ell)\le h(w)\,r(w)
+	\quad\Rightarrow\quad
+	h(w)\ge \frac{n}{r(w)}.
 \]
-Equivalently, the leaf depths form a complete binary prefix code. This gives a
-global constraint on allowable depth profiles beyond the crude level bound
-$r(w)\le 2^{h(w)}$; see \cite{cover-thomas}.
-\end{remark}
+Thus narrow configurations (small $r$) must be deep, while wide configurations
+(large $r$) may be shallow; the chain and star saturate this bound.
 
 \begin{figure}[h]
 		\centering
@@ -327,7 +359,7 @@ null, timelike, and spacelike trajectories in relativistic geometry.
 \end{theorem}
 \noindent
 The first statement follows from the definition of $r(w)$ and the fact that
-there are $n$ internal nodes, while the scaling behavior is a consequence of
+there are $n$ matched pairs, while the scaling behavior is a consequence of
 invariance-principle results for conditioned random walks
 \cite{le-gall05,janson07,addario-berry13}.
 
@@ -837,6 +869,15 @@ therefore the pushforward of the uniform counting measure,
 \[
 	N(x) := \#\{w\in\mathcal D_n : f(w)=x\}.
 \]
+\begin{remark}[Local observables and counting recursions]
+\label{rem:local-observables}
+For pairs-only models, one typically restricts attention to coarse-grainings $f$
+that are computable online from bounded prefix-local data along Dyck growth (for
+example, by a finite-state transducer driven by the current height and step
+type). For such $f$, the multiplicities $N(x)$ may be computed by transfer-matrix
+recursions on the induced state space. We keep $f$ arbitrary here for
+generality.
+\end{remark}
 \begin{remark}[Coherent vs.\ counting aggregation]
 In the uniform counting baseline, the probability of an outcome is proportional
 to $N(x)$. In the Catalan amplitude model (Definition~\ref{def:catalan-amplitude-model})
@@ -867,17 +908,23 @@ projection rather than any imposed dynamics.
 
 A discrete analogue of an integral along a history is given by the step-sum of
 the height profile,
-		\[
-			A(w) := \sum_{k=0}^{2n-1} H_w(k),
-		\]
-		which measures the cumulative dwell time at nonzero height. This quantity
-		depends on the full distribution of height along the path, not merely on
-		extrema such as maximum height or peak count.
+			\[
+				A(w) := \sum_{k=0}^{2n-1} H_w(k),
+			\]
+			which measures the cumulative dwell time at nonzero height. This quantity
+			depends on the full distribution of height along the path, not merely on
+			extrema such as maximum height or peak count.
 
-		\begin{remark}[Area refinement and $q$-Catalan weights]
-		Under the standard identification of Dyck paths with lattice paths from
-		$(0,0)$ to $(n,n)$ staying above the diagonal, the usual \emph{area} statistic
-		$\mathrm{area}(w)$ (counting unit squares between the path and the diagonal)
+\begin{remark}[Area as a step-additive functional]
+The functional $A(w)$ is computed online by maintaining the current height and
+accumulating it, and is therefore of the step-additive form of
+Proposition~\ref{prop:phase-classification}.
+\end{remark}
+
+			\begin{remark}[Area refinement and $q$-Catalan weights]
+			Under the standard identification of Dyck paths with lattice paths from
+			$(0,0)$ to $(n,n)$ staying above the diagonal, the usual \emph{area} statistic
+			$\mathrm{area}(w)$ (counting unit squares between the path and the diagonal)
 		satisfies $\mathrm{area}(w)=(A(w)-n)/2$, i.e.\ $A(w)=n+2\,\mathrm{area}(w)$.
 		Consequently, the weighted sum of the area phase is a specialization of the
 		area-refined Catalan generating function:
@@ -2709,6 +2756,8 @@ N(x)\;:=\;\#\{w\in \mathcal D_n: f(w)=x\},
 \]
 so that $f^{-1}(x)$ is the equivalence class of histories identified as the
 same outcome.
+If $f$ is prefix-local in the sense of Remark~\ref{rem:local-observables}, then
+the multiplicities $N(x)$ admit transfer recursions on the induced state space.
 
 \paragraph{Multiplicity entropy.}
 Define the (microcanonical) entropy of the full ensemble at tier $n$ by
