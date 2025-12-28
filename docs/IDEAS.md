@@ -469,7 +469,7 @@ This realizes each tier as a finite-dimensional Hilbert space with a unitary
 
 ---
 
-#### Fields on words, prefixes, and nodes (solid definitions) **[IN PAPER]**
+#### Fields on words, prefixes, and nodes (solid definitions) **[IDEA ONLY]**
 
 ### 21.1. Fields on words, prefixes, and nodes
 
@@ -510,14 +510,14 @@ below uses the third, but is compatible with the first two.
 
 **Status**
 
-* **In paper.** `docs/catalan-light-cone.tex` (Appendix “Additional Technical Notes”, subsection “Fields on words, prefixes, and nodes (optional)”).
+* **Not in paper (v1).** Preserved in `docs/supplemental-operators.tex` (extracted from the Appendix “Additional Technical Notes”).
 * **Solid (definitions).** All three views are straightforward structures on the Catalan objects already in use.
 * **Speculative.** Identifying these fields with physical fields (e.g. scalar,
   gauge) is an interpretive layer, not derived.
 
 ---
 
-### 21.2. Subtree modes as a multiscale basis **[PARTIAL]**
+### 21.2. Subtree modes as a multiscale basis **[IDEA ONLY]**
 
 Every Dyck tree $T(w)$ admits a canonical hierarchy of subtrees:
 
@@ -559,7 +559,7 @@ ecology).
 
 **Status**
 
-* **Partial in paper.** `docs/catalan-light-cone.tex` (Appendix “Additional Technical Notes”, subsection “Subtree indicators as a multiscale spanning family (optional)”, Lemma “Subtree indicators form a basis”, and Corollary “Explicit inversion”).
+* **Not in paper (v1).** Preserved in `docs/supplemental-operators.tex` (subsection “Subtree indicators as a multiscale spanning family (optional)”, Lemma “Subtree indicators form a basis”, and Corollary “Explicit inversion”).
 * **Solid (structural).** The hierarchy of subtrees and the basis/spanning facts are exact combinatorial statements.
 * **Speculative.** The particular choice of mode family $\{\psi_v\}$ or
   $\{\psi_\alpha\}$, and any claim of uniqueness, is model-dependent.
@@ -608,9 +608,9 @@ In the continuum limit, tier-growth dynamics give rise to **Brownian excursion
 
 ---
 
-### 21.4. Tree Laplacians and discrete heat/Schrödinger equations **[PARTIAL]**
+### 21.4. Tree Laplacians and discrete heat/Schrödinger equations **[IDEA ONLY]**
 
-**Paper:** `docs/catalan-light-cone.tex` (optional operator frameworks: (i) within-history node operators on $\mathrm{Int}(T(w))$ for a fixed $w\in\mathcal D_n$ and (ii) tier-slice operators on $\mathcal D_n$ via a chosen adjacency graph; both give Laplacian-based heat/Schr\"odinger evolutions. The tier-slice subsection also records Catalan-poset adjacency choices (Tamari/Dyck/alt-Tamari) and a short associahedron/scattering-amplitude motivation.)
+**Supplement:** `docs/supplemental-operators.tex` (optional operator frameworks: (i) within-history node operators on $\mathrm{Int}(T(w))$ for a fixed $w\in\mathcal D_n$ and (ii) tier-slice operators on $\mathcal D_n$ via a chosen adjacency graph; both give Laplacian-based heat/Schr\"odinger evolutions. The tier-slice subsection also records Catalan-poset adjacency choices (Tamari/Dyck/alt-Tamari) and a short associahedron/scattering-amplitude motivation.)
 
 Given a Dyck tree $T(w)$ with node set $V$ and edges $E$, define a discrete
 **tree Laplacian** $L_T$ acting on node fields $\phi_w : V \to \mathbb{C}$ by
@@ -668,8 +668,8 @@ In large-$n$ limits:
 **Status**
 
 * **Solid (discrete operators).** Graph Laplacians and the induced heat/Schr
-  evolutions are standard; the paper now records the tier-slice version on
-  $\ell^2(\mathcal D_n)$ given a chosen adjacency graph.
+  evolutions are standard; a short Catalan-tier/tree framing is preserved in
+  `docs/supplemental-operators.tex` (not included in the arXiv v1 PDF).
 * **Speculative.** The precise continuum limit of these operators on random
   Dyck trees, and the identification of the limiting PDEs with physical field
   equations, is a research program rather than a completed derivation.
@@ -1283,7 +1283,7 @@ If a consistent continuum limit exists, it may resemble a toy model of **quantum
 
 - **Core combinatorics (solid):**
   - Dyck/tree/S-expr equivalences; Catalan counts; Narayana refinement by peak count (**[IN PAPER]**).
-  - Depth–breadth (including Kraft equality) (**[IN PAPER]**).
+  - Depth–breadth tradeoff (**[IN PAPER]**); Kraft-equality/coding analogy (**[IDEA ONLY]**).
   - Dyck cone geometry and Brownian-excursion scaling (**[IN PAPER]**).
   - Hilbert-space state space over tiers (basis/superpositions in paper; shift-operator program is **[IDEA ONLY]**).
   - Size bookkeeping $U(T)$ and subtree-selection drops (**[PARTIAL]**); $F_{\text{app}}$, $aw$, chronons remain **[IDEA ONLY]**.
