@@ -219,7 +219,7 @@ k(w):=\sum_{j=1}^{2n-1}\mathbf{1}\{(w_j,w_{j+1})=(\texttt{(},\texttt{)})\}.
 \]
 \end{remark}
 
-\begin{figure}[h]
+\begin{figure}[ht]
 		\centering
 		% Placeholder: schematic light-cone diagram
 		\begin{tikzpicture}[scale=1.1]
@@ -318,7 +318,7 @@ If $w$ has height process $(H_k)_{k=0}^{2n}$, then
 Thus narrow configurations (small $r$) must be deep, while wide configurations
 (large $r$) may be shallow; the chain and star saturate this bound.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 			\centering
 			\[
 				\begin{array}{ccl}
@@ -428,16 +428,15 @@ nonnegative ones are $\binom{s}{m}-\binom{s}{m-1}$, which yields the stated
 forms; see \cite{stanley-catalan}.
 \end{proof}
 
-\begin{lemma}[Future cones classified by height]
+\begin{lemma}[Future cones by height]
 \label{lem:cone-iso-height}
-Let $u,v\in\mathcal{C}$ be Dyck prefixes with heights $h(u),h(v)$. Regard the
-future cones $\mathcal{C}(u)$ and $\mathcal{C}(v)$ as rooted directed graphs
-whose edges are the admissible one-step extensions labeled by
-\texttt{(} (up) and \texttt{)} (down). Then $\mathcal{C}(u)$ and $\mathcal{C}(v)$
-are isomorphic as rooted edge-labeled directed graphs if and only if
-$h(u)=h(v)$. In that case, the canonical isomorphism maps each extension
-sequence of parentheses appended to $u$ to the same extension sequence appended
-to $v$.
+Let $u,v\in\mathcal{C}$ be Dyck prefixes with heights $h(u),h(v)$. View each
+future cone $\mathcal{C}(u)$ as a rooted directed graph whose edges are the
+admissible one-step extensions labeled by \texttt{(} and \texttt{)}. Then
+$\mathcal{C}(u)$ and $\mathcal{C}(v)$ are isomorphic as rooted edge-labeled
+digraphs if and only if $h(u)=h(v)$. In that case, the canonical isomorphism
+maps each extension word appended to $u$ to the same extension word appended to
+$v$.
 \end{lemma}
 
 \begin{proof}[Proof sketch]
@@ -508,7 +507,7 @@ Two prefixes $u$ and $v$ relate in exactly two ways:
 Thus the cone picture is relocatable: it appears at every node, cones nest along
 causal chains, and branching produces incompatible futures.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 	\centering
 	\begin{tikzpicture}[scale=1.0, every node/.style={inner sep=1pt}]
 		% Common causal past
@@ -627,9 +626,8 @@ the full ensemble of admissible computational histories.
 A proof sketch is provided in
 Appendix~\ref{appendix:computational-foundations}.
 
-\paragraph{Two canonical parenthesis encodings.}
-There are (at least) two particularly useful parenthesis-only encodings of a
-full binary tree:
+\paragraph{Two parenthesis encodings.}
+Two particularly useful parenthesis-only encodings of a full binary tree are:
 
 \begin{itemize}
   \item \textbf{Dyck encoding} (``walk'' view): balanced parentheses of length
@@ -1190,7 +1188,7 @@ More general amplitude assignments may depend on other prefix-local features
 (e.g.\ height, step type, or other additive functionals), provided the Dyck
 constraint is preserved.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 	\centering
 	\begin{tikzpicture}[scale=0.7]
 		% axes
@@ -1514,7 +1512,7 @@ genuinely different causal dependency patterns. The prevalence of linear
 intervals---and their invariance across the Tamari, Dyck, and alt-Tamari posets
 at fixed tier---is analyzed in detail by Chenevi\`ere \cite{cheneviere2022linear}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \centering
   \begin{tikzpicture}[>=stealth]
     % nodes
@@ -3175,7 +3173,7 @@ f(w) := H_w(6)\in\{0,2\}.
 This is a discrete analogue of recording transverse displacement at a detector
 time without access to which slit was taken.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \begin{tabular}{llll}
 \hline
@@ -3327,11 +3325,6 @@ so $E$ is recursively decodable and therefore injective.
 	A.~Church.
 	\newblock A set of postulates for the foundation of logic.
 	\newblock {\em Annals of Mathematics}, 34:839--864, 1933.
-
-	\bibitem{cover-thomas}
-	T.~M. Cover and J.~A. Thomas.
-	\newblock {\em Elements of Information Theory}.
-	\newblock 2nd edition, John Wiley \& Sons, 2006.
 
 		\bibitem{CurryFeys1958}
 		H.~B. Curry and R.~Feys.
