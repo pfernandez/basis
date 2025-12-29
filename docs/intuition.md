@@ -451,7 +451,176 @@ contributing coherently.
 
 ---
 
-## 5. Why phase belongs to “return” and “obligation” (in the simplest model)
+## 5. Relativity: cones, frames, and the symmetries you actually have
+
+You’re right to feel that the relativistic piece is missing from the intuition
+draft so far.
+
+The arXiv paper uses “light cone” language, but in a careful way: as a mnemonic
+for a *constraint*, not as a claim of exact Lorentz symmetry on the Dyck lattice.
+
+This section is the place to make that feel natural rather than evasive.
+
+### 5.1 The one rigid ingredient: a speed limit
+
+Einstein’s move (in one sentence) was: treat the observed speed of light as a
+hard constraint that all observers agree on, and then rebuild the geometry
+around that.
+
+In the Catalan engine, the “speed of light” analogue is almost embarrassingly
+simple.
+
+In the within-history `(t,x)` picture:
+
+- `t` is the step index (one tick per parenthesis),
+- `x` is the current height (how many opens are unresolved),
+- every tick changes `x` by `±1`,
+- and you are never allowed to go below `0`.
+
+So there is a built-in maximum slope. You cannot change the position-like
+coordinate faster than one unit per tick.
+
+> **FACT** — The cone here is an envelope enforced by an allowed-moves rule.
+> It is not “derived from a metric” the way the Minkowski light cone is; it is
+> derived from “what steps are permitted”.
+
+### 5.2 The symmetry you already *do* have: causal order survives, serialization does not
+
+In special relativity (SR), different observers can disagree about the time
+order of two spacelike-separated events, but they cannot disagree about what is
+causally possible.
+
+In the Catalan engine, the clean analogue is the difference between:
+
+- a **causal partial order** (“this must happen before that”), and
+- a **serialization** (a particular step-by-step ordering you chose when you
+  simulated or evaluated).
+
+Your commutation lemma is the key fact:
+
+> **FACT** — Two disjoint local reductions commute. If neither reduction depends
+> on the other (they touch disjoint subtrees), then swapping their order does
+> not change the final tree.
+
+That’s a real symmetry: you can quotient by it. It’s the same move as “different
+linear extensions represent the same partial order”.
+
+> **INTERPRETATION** — “A choice of evaluation order” is like “a choice of
+> reference frame”: it is a way of listing events that are not causally forced
+> into a unique global order.
+
+This is also where your intuition about “instantaneous collapse of
+probabilities” can get untangled: re-ordering independent computation steps is
+not the same thing as projection/conditioning. One is a symmetry of description;
+the other is a genuine information update that changes which alternatives remain
+indistinguishable.
+
+### 5.3 Null coordinates: the cleanest bridge between Dyck and Minkowski pictures
+
+Let’s keep the same 1+1 “spacetime diagram” view:
+
+- `t` = step index,
+- `x` = height.
+
+Allowed moves are:
+
+- `(t,x) → (t+1, x+1)` (open),
+- `(t,x) → (t+1, x-1)` (close, if `x>0`).
+
+Now define the **null coordinates**:
+
+```
+u = t + x
+v = t - x
+```
+
+In SR, these coordinates run along the light-cone directions.
+In the Dyck walk, something even more concrete happens:
+
+- an upstep increases `u` by `2` and leaves `v` unchanged,
+- a downstep increases `v` by `2` and leaves `u` unchanged.
+
+So `u/2` is literally “how many opens have occurred so far” and `v/2` is
+literally “how many closes have occurred so far”.
+
+> **FACT** — In this model, null coordinates are not abstract geometry. They
+> are just “open-count” and “close-count”.
+
+### 5.4 What Lorentz symmetry would mean here (and why it isn’t automatic)
+
+In SR, a Lorentz transformation is a change of coordinates between inertial
+frames that preserves the interval (equivalently: preserves the light cones).
+
+In 1+1 dimensions, boosts look especially simple in null coordinates: they are
+just rescalings,
+
+```
+u' = e^{η} u
+v' = e^{-η} v
+```
+
+which preserve the product `u v` (another way to write `t^2 - x^2`).
+
+Now the crucial point:
+
+Our Dyck lattice is discrete, has a boundary (`x≥0`), and often includes a
+return condition (`x` returns to `0` at the end of a history).
+
+So even though the **cone picture** is real, the full **Lorentz symmetry group**
+is not sitting there waiting to be used. Most boosts would send lattice points
+to non-lattice points, and the boundary condition breaks homogeneity.
+
+> **FACT** — “Having a cone” does not imply “having Lorentz invariance”.
+> The cone can be a property of constraints without being a property of an
+> invariant metric.
+
+So what do you get, honestly?
+
+- an exact causal structure (a partial order),
+- an exact gauge freedom to reorder independent events,
+- Lorentz-flavored coordinates (like `u,v`) that let you *read* the same history
+  in a different way,
+- but not a theorem saying “all inertial frames are equivalent” in the strong
+  SR sense.
+
+> **OPEN** — If we want genuine Lorentz invariance to emerge, we need an
+> additional ingredient: either a different large-scale limit, or a different
+> dynamics on the lattice whose dominant behavior is invariant under a
+> Lorentz-like group. The Brownian/diffusion scaling in the current paper is
+> nonrelativistic.
+
+### 5.5 When “I can’t choose” is a hint that you’ve found a symmetry
+
+Your instinct here is excellent: sometimes “I don’t know which version is
+right” is your mind noticing that the difference is not physical.
+
+A practical rule of thumb:
+
+> **FACT** — If two descriptions lead to the same predictions for every
+> observable you’ve defined, then the difference between them is a symmetry (or
+> gauge freedom). If they lead to different predictions, then you have a real
+> model choice that must be fixed by principle or by observation.
+
+Examples you already have:
+
+- “phase accrues continuously while open” vs “phase is paid at closure” is (for
+  the area functional) the **same accounting**, hence a symmetry of description.
+- “evaluate left independent subtree first” vs “evaluate right independent
+  subtree first” is (when they are truly independent) a commutation symmetry.
+- “Dyck vs tree vs pairs” is a bijection: a pure translation.
+
+But:
+
+- “area phase” vs “some other phase functional” is a different model.
+- “counting measure” vs “coherent phase sum” is a different model.
+- “one-history selection dynamics exists” vs “only the measure on histories is
+  fundamental” is a different model.
+
+That’s the line between “equally valid symmetry” and “a fork in theory space”.
+
+---
+
+## 6. Why phase belongs to “return” and “obligation” (in the simplest model)
 
 At this point, we’ve described the mechanism of interference but not the source
 of phase. Where do those complex factors come from?
@@ -502,7 +671,7 @@ quantity; you can tell two different stories about how it is paid.
 
 ---
 
-## 6. Where computation lives (and why unlabeled S-expressions are not a sideshow)
+## 7. Where computation lives (and why unlabeled S-expressions are not a sideshow)
 
 Your `\iffalse` appendix block is pointing at something deep:
 
@@ -549,7 +718,7 @@ structure of pure associations” as a concrete research direction, not a mood.
 > does rhyme with attention. It’s a powerful analogy—but it belongs in the
 > interpretation layer, not in the arXiv claims.
 
-### 6.1 Gödel numbering, but for shapes
+### 7.1 Gödel numbering, but for shapes
 
 Gödel’s move was: treat “a formula” as “a number” by choosing an encoding. The
 details don’t matter here; what matters is the viewpoint:
@@ -576,7 +745,7 @@ to: it’s an enumerable set of finite objects.
 
 ---
 
-## 7. Attractors instead of “one true history”
+## 8. Attractors instead of “one true history”
 
 You’ve said something I think is crucial: a “specific history” doesn’t exist any
 more than a concept does. Instead, we have local attractors.
@@ -616,7 +785,7 @@ pattern, not a single micro-history.
 
 ---
 
-## 8. Occam, Solomonoff, and “choose the simplest until observation demands more”
+## 9. Occam, Solomonoff, and “choose the simplest until observation demands more”
 
 Occam’s razor is not a law of nature; it’s a strategy for surviving ignorance:
 prefer the simplest explanation that fits what you’ve seen.
@@ -642,7 +811,7 @@ The Catalan engine flirts with that philosophy in a very literal way:
 
 ---
 
-## 9. Energy, curvature, and the “only moves are expansion and return” thesis
+## 10. Energy, curvature, and the “only moves are expansion and return” thesis
 
 Now we return to your deepest instinct:
 
@@ -692,7 +861,7 @@ of histories is no longer “flat”: it has a built-in bias field.
 
 ---
 
-## 10. What you already have, and what it would mean to “tighten the picture”
+## 11. What you already have, and what it would mean to “tighten the picture”
 
 Here’s the state of play in the simplest honest phrasing I can give:
 
