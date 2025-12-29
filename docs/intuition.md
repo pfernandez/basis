@@ -618,6 +618,113 @@ But:
 
 That’s the line between “equally valid symmetry” and “a fork in theory space”.
 
+### 5.6 Chronons, proper time, and time dilation (as a model choice)
+
+Now we can talk about the “chronon budget” picture you’ve carried for a long
+time, but in a way that doesn’t pretend we’ve already derived relativity.
+
+First, we need one new word.
+
+> **MODEL CHOICE** — A *chronon* is one unit of update budget. It is the
+> smallest indivisible “tick” in which the engine can do a bounded amount of
+> local work.
+
+The budget can be spent in two qualitatively different ways:
+
+1. **Motion / rearrangement.** You move the focus (the “place you are acting”)
+   to a neighboring location in the tree, or you perform a local rotation that
+   changes how a subtree is bracketed without changing its “content”. Think:
+   shifting attention, changing parentheses, re-associating application.
+
+2. **Return / collapse.** You actually discharge an obligation—one of the
+   irreversible “return” events that reduces unresolved structure (in whatever
+   collapse rule you have in mind).
+
+In this picture, “space” is not a pre-existing stage. “Space” is the adjacency
+graph of places the focus could be, i.e. how far (in edges) you are from where
+you were.
+
+So the most basic locality constraint you can impose is:
+
+> **MODEL CHOICE** — In one chronon, the focus can move by at most one edge.
+
+This immediately implies a speed limit:
+
+> **FACT** — If `Δt` is the number of chronons elapsed and `Δx` is the number of
+> edges of net focus drift, then `|Δx| ≤ Δt`. No matter what else the model is,
+> you cannot “propagate influence” faster than one edge per tick.
+
+So far, this is just the same cone constraint again, now stated in “focus space”.
+
+#### Proper time as “how many real returns happened”
+
+In relativity, *proper time* is the time measured by a clock riding along with a
+process. A moving clock accumulates less proper time between two coordinate-time
+events than a stationary one.
+
+In the Catalan engine, the most natural internal clock you’ve pointed at is:
+
+> **MODEL CHOICE** — Define proper time `τ` to be proportional to the number of
+> irreversible return/collapse events experienced along a process.
+
+This fits your intuition: return is the fundamental “it happened” move. It’s
+the irreversible act of discharging an obligation.
+
+Now the time-dilation story becomes a budget tradeoff:
+
+- If you spend chronons moving the focus around, you have fewer chronons left to
+  spend on collapse/return.
+- So a fast-moving process accumulates fewer collapse events “per unit of
+  external time”.
+
+> **INTERPRETATION** — Proper time is “how much actual irreversible work got
+> done”, not “how many coordinate ticks elapsed”. Motion burns budget that could
+> have gone into returns, so motion dilates proper time.
+
+You can make this concrete in two ways:
+
+1. **A literal discrete budget accounting.**
+   If each chronon must be spent either moving or collapsing (one or the other),
+   then
+   - `Δt` = number of chronons,
+   - `Δx` ≈ number of moves (in the fastest case),
+   - `Δτ` = number of collapses,
+   so `Δτ` is approximately “whatever is left over” after motion:
+   `Δτ ≈ Δt - (#moves)`.
+   This already has the right qualitative shape: at rest, you “age” fastest; at
+   the speed limit, you do no collapse work.
+
+2. **A Lorentz-flavored scalar (if you want boosts).**
+   If you want a single number built from `(Δt,Δx)` that matches the familiar SR
+   form in a continuum limit, you can *choose* the Minkowski-style combination:
+   `Δτ := sqrt(Δt^2 - Δx^2)`.
+   This is exactly the quantity that stays fixed under the continuous Lorentz
+   boost rescalings `u' = e^{η}u`, `v' = e^{-η}v` (where `u=t+x`, `v=t-x`).
+
+   > **MODEL CHOICE** — Use `Δτ = sqrt(Δt^2 - Δx^2)` as the proper-time
+   > functional. This does not follow from the Dyck constraint alone; it is the
+   > simplest bridge to the Lorentz-symmetric continuum story.
+
+   > **FACT** — In null coordinates, this is `Δτ = sqrt(Δu Δv)`. In the Dyck walk,
+   > `Δu/2` and `Δv/2` are just open-count and close-count, so `sqrt(ΔuΔv)` is the
+   > geometric mean of those two counts (scaled). That’s a striking way the “SR
+   > algebra” echoes your open/return bookkeeping.
+
+#### Where the symmetry question lands
+
+This is exactly the kind of place where your “maybe I can’t choose because it’s
+really a symmetry” instinct can guide you:
+
+- The **speed limit** `|Δx|≤Δt` is forced by locality. That part is not a choice.
+- The **definition of proper time** is a modeling move: you decide what the
+  clock reads (collapse count, or a quadratic form, or something else).
+
+> **OPEN** — If nature really behaves like this, the “right” proper-time
+> functional should not just be aesthetically Lorentz-like; it should be forced
+> by a deeper invariance or by comparison with observation. Right now, in the
+> Catalan engine, Lorentz invariance is an aspiration for an emergent limit, not
+> an established symmetry of the discrete substrate.
+
 ---
 
 ## 6. Why phase belongs to “return” and “obligation” (in the simplest model)
