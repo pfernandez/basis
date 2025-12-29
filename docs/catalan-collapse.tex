@@ -1,0 +1,637 @@
+\documentclass[11pt]{article}
+
+% ---------------------------------------------------------
+% Packages
+% ---------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{geometry}
+\usepackage[numbers]{natbib}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{enumitem}
+
+\geometry{margin=1in}
+
+\title{Collapse and Actualization on a Catalan Substrate\\[4pt]
+\large Computation, Gravitation, and Time in a Discrete Universe}
+\author{Paul Fernandez}
+\date{\today}
+
+% ---------------------------------------------------------
+% Environments
+% ---------------------------------------------------------
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We develop a discrete physics/computation model whose global state space is fixed once and for all as the Catalan family of rooted, ordered, finite binary trees (Dyck words). At each chronon the universe presents a finite set of admissible \emph{local} futures---wrap, branch, or rotation. Reality advances when \emph{exactly one} such possibility is selected. The substrate already has a causal-cone geometry (height grows at one unit per step) and a built-in depth--breadth duality.
+
+We start from a simple size-based \emph{collapse rule} that always keeps the more structured side of a focused pair. This single local rule already admits two readings: (i) as computation, where a focused pair is function application and the reduction \((()\,x)\to x\) emerges without being postulated; and (ii) as gravitation, where structure ``falls'' down a local potential gradient and proper time literally counts irreversible collapse work. Imposing a locality constraint of one edge per chronon induces a Lorentz-like kinematics with invariant interval \(s^2=\Delta t^2-\Delta x^2\).
+
+Naive size bias, however, can be beaten by a late but very wide expansion. We resolve this by introducing \emph{actualization-weighted collapse}: earlier, already-collapsed structure dominates merely large, syntactic newcomers. With this single change, identity, a K-like choice, S-like sharing, and even Y-like self-reentry all follow from two primitive actions---expansion into possibility and contraction into actuality---without installing SKI as axioms. Choosing the edge length to match a physical cavity scale maps the model's fundamental collapse force to the Casimir force up to the familiar \(\pi^{2}/240\) factor, providing an SI anchor.
+
+This local mechanism is intended to sit alongside a companion manuscript, \emph{The Geometry of Possibility: From Binary Roots to Complex Phase}, which develops the global, spectral view over fixed Catalan tiers. Here we focus on the local energetic rule that explains how one history becomes actual.
+\end{abstract}
+
+\section{Introduction}
+
+Discrete physics programs---causal set theory, rewrite-based models, and, most visibly in recent years, multicomputational approaches such as the Wolfram Physics Project~\citep{wolfram2020}---start with (i) a combinatorial substrate, (ii) a set of local update rules, and (iii) the claim that both relativity and quantum behavior emerge from the multiway/causal structure of those rules. That line of work has produced a large amount of evidence, but almost always leaves two things underspecified:
+\begin{enumerate}[label=(\alph*)]
+  \item the choice of substrate (hypergraphs, strings, multigraphs, etc.), and
+  \item the direction of causation (why this update order rather than another?).
+\end{enumerate}
+
+Here we take the opposite route. We:
+
+\begin{itemize}
+  \item fix the substrate tightly as the \emph{Catalan family}: rooted, ordered, finite binary trees, equivalently Dyck words, whose combinatorics are well-understood~\citep{stanley2015};
+  \item exploit the causal-cone structure already present in Dyck paths to obtain a discrete light-cone bound and a depth--breadth duality;
+  \item introduce a single local selection rule---collapse at a binary node---and show that it admits both a computational and a gravitational reading;
+  \item refine collapse to be \emph{actualization-weighted}, so that earlier, already-real structure dominates later, merely wide structure;
+  \item impose a one-edge-per-chronon locality bound, which induces a Lorentz-like kinematics in which proper time counts irreversible collapse work;
+  \item and calibrate the model to SI units by matching its fundamental collapse force to the Casimir force~\citep{casimir1948} up to the expected geometric factor.
+\end{itemize}
+
+A companion manuscript, \emph{The Geometry of Possibility: From Binary Roots to Complex Phase}~\citep{fernandez_geometry}, works at the global level of ``all admissible Catalan histories'' at fixed length and studies phase-like operations and continuum limits on that space. The present paper provides the \emph{local} dynamics: from those many admissible futures, how is a single next step chosen?
+
+\section{The Catalan substrate and causal cone}
+\label{sec:substrate}
+
+\begin{definition}[State space]
+A \emph{state} is a rooted, ordered, finite binary tree
+\[
+  T ::= () \;\mid\; (T_1\;T_2),
+\]
+parsed exactly like a Dyck word. We identify trees up to structural equality. The empty pair \(()\) is the \emph{unit} tree.
+\end{definition}
+
+At fixed size \(n\) (Dyck words of length \(2n\)) the states form the $n$th Catalan tier of cardinality
+\[
+  C_n = \frac{1}{n+1} \binom{2n}{n}.
+\]
+
+Two constructive moves are sufficient to build the whole family:
+
+\paragraph{Wrap / deepen.} For any subtree \(x\), define
+\[
+  x \mapsto (()\,x).
+\]
+This adds exactly one internal pair above \(x\).
+
+\paragraph{Branch / widen.} For any subtrees \(x,y\), define
+\[
+  (x,y) \mapsto (x\,y).
+\]
+This adds exactly one internal pair with \(x\) as left and \(y\) as right.
+
+In practice we also allow \textbf{local rotations} of adjacent subtrees (associahedron moves) that preserve the number of pairs and simply enumerate ``neighboring'' configurations. Intuitively, wrap and branch \emph{expand} possibility; rotations \emph{explore} it.
+
+\subsection*{Causal-cone bound}
+
+A Dyck path can be viewed as a walk \(x_t\) obeying
+\[
+  x_{t+1} = x_t \pm 1,\quad x_t \ge 0,\quad x_0 = x_{2n} = 0.
+\]
+The breadth \(x_t\) counts the number of currently open contexts at step \(t\). Because each step changes $x$ by \(\pm 1\), we have the bound
+\[
+  0 \le x_t \le \min\{t,\,2n-t\}.
+\]
+This is the discrete analogue of a light cone: no causal influence can propagate faster than one level per tick. In the companion global manuscript this cone is studied in more detail; here we use it mainly to justify speaking of ``depth'' (time-like) and ``breadth'' (space-like) directions.
+
+\subsection*{Illustrative early tiers}
+\label{sec:walkthrough}
+
+To see how structure appears almost immediately, it is helpful to list the first few Dyck tiers explicitly and view them both as strings and as trees. Recall that tier $n$ corresponds to Dyck words of length $2n$ and cardinality $C_n$.
+
+\paragraph{Tier $n=0$ ($C_0=1$).}
+The Dyck word is the empty word $\varepsilon$. In the tree picture this corresponds to the unit tree $()$ with no internal pairs:
+\[
+  \varepsilon \;\longleftrightarrow\; ().
+\]
+This is the ``empty universe'': no choices, $U=0$.
+
+\paragraph{Tier $n=1$ ($C_1=1$).}
+There is a single Dyck word
+\[
+  ().
+\]
+As a tree, this is one internal pair with two empty leaves:
+\[
+  () \;\longleftrightarrow\; (()).
+\]
+This is the ``first oscillation'' or first wrapper around nothing: pure depth, no alternatives.
+
+\paragraph{Tier $n=2$ ($C_2=2$).}
+The two Dyck words are
+\[
+  (()), \qquad ()().
+\]
+As trees, these correspond to:
+\begin{itemize}
+  \item a \emph{chain} (nested pair) with depth concentrated in one place:
+  \[
+    (()) \;\longleftrightarrow\; ((())) ,
+  \]
+  \item a \emph{split} into two independent events:
+  \[
+    ()() \;\longleftrightarrow\; (()()) \quad \text{(two siblings at the same depth).}
+  \]
+\end{itemize}
+Already at $n=2$ we can distinguish ``concentrated depth'' from ``separated breadth.''
+
+\paragraph{Tier $n=3$ ($C_3=5$).}
+A standard list of Dyck words is
+\[
+  ((())),\quad (()()),\quad (())(),\quad ()(()),\quad ()()().
+\]
+These capture several distinct motifs:
+\begin{itemize}
+  \item \textbf{Deep-left chain}: $((()))$ has maximal nesting and minimal branching.
+  \item \textbf{Balanced}: $(()())$ splits depth more symmetrically.
+  \item \textbf{Left-with-tail}: $(())()$ is a concentrated piece with a right-hand tail.
+  \item \textbf{Right-with-tail}: $()(())$ is the mirror situation.
+  \item \textbf{Fully separated}: $()()()$ maximizes breadth at minimal depth.
+\end{itemize}
+Up to harmless rebracketing in the tree view, these are exactly the shapes we will refer to informally as
+\[
+  (),\quad (()),\quad (()()),\quad \text{``with tail''},\quad ()()().
+\]
+They are the first clear instances of the depth/breadth tradeoff that becomes continuous in larger tiers.
+
+\subsection*{Why binary / pairwise is not a restriction}
+
+Any $k$-ary operation can be written as a left spine of binary applications:
+\[
+  f(x_1,\dots,x_k) \equiv (((f\,x_1)\,x_2)\dots x_k).
+\]
+Our substrate $(T_1\,T_2)$ is already of that shape. Moreover, Church encoding shows that ordered pairs are sufficient to represent all finite data, and the Catalan family is exactly the class of well-formed nestings of such pairs. Describing possibility space in binary is therefore not a restriction but a normal form: a Catalan universe is a universal possibility universe, expressed in the minimal language of binary distinction.
+
+\section{Structural potential and naive collapse}
+\label{sec:naive}
+
+To compare subtrees structurally we assign a simple potential.
+
+\begin{definition}[Structural potential]
+For any tree \(T\), define
+\[
+  U(T) := \text{number of internal pairs in } T.
+\]
+\end{definition}
+
+This is invariant under local rotations, increases by 1 under wrap or branch, and is always nonnegative. For a focused pair \((L,R)\) we can define a structural ``force''
+\[
+  F_{\mathrm{app}}(L,R) := |U(L) - U(R)|,
+\]
+which is large when the two sides are strongly unbalanced and zero when they are equal.
+
+\subsection*{Naive size-based collapse}
+
+Given a focus at \((L,R)\), the simplest possible selection rule is:
+\begin{equation}
+  \label{eq:naive-collapse}
+  \mathrm{collapse}(L,R) =
+  \begin{cases}
+    L, & U(L) \ge U(R),\\
+    R, & U(R) > U(L).
+  \end{cases}
+\end{equation}
+After selection we drop the parent pair, so the total potential decreases by
+\[
+  \Delta U
+  = \big(1 + U(L) + U(R)\big) - \max\{U(L),U(R)\}
+  = 1 + \min\{U(L),U(R)\}
+  > 0.
+\]
+Collapse is therefore irreversible: it always performs nonzero structural work.
+
+\subsection*{Computational reading}
+
+In a computational reading, \((L,R)\) is an application site: the left branch is the operator, the right branch the operand. A neutral operator is simply the empty tree on the left:
+\[
+  (()\,x) = ((),x).
+\]
+Since \(U(())=0 \le U(x)\), the rule~\eqref{eq:naive-collapse} keeps \(x\):
+\begin{equation}
+  (()\,x) \;\longrightarrow\; x.
+\end{equation}
+Thus the identity combinator emerges from collapse; it does not need to be postulated. More complex operator trees can, by re-association, present a pair in which the desired branch is heavier at the moment of collapse, yielding selector-like (K) and distributor-like (S) behaviors. In this sense, collapse is the local, structural analogue of $\beta$-reduction: among many admissible rewrites, pick the one that actually advances evaluation.
+
+\subsection*{Gravitational reading}
+
+In a gravitational reading, \(U\) is a mass or energy functional on structure. At \((L,R)\) we have two ``masses'' \(U(L)\) and \(U(R)\); the rule~\eqref{eq:naive-collapse} says that the \emph{lighter} one is absorbed into the \emph{heavier} one, and the heavier branch defines the local geometry thereafter. The energy drop \(\Delta U\) is exactly the work done by this local fall. With this interpretation, the structural force
+\[
+  F_{\mathrm{coll}} := |U(L)-U(R)|
+\]
+is the analogue of a force as a gradient: the greater the imbalance, the more decisive the collapse. Computation and gravitation are therefore two readings of the \emph{same} local event.
+
+\subsection*{The problem: late but wide}
+
+Pure size bias has an obvious failure mode: a late, very wide branch can outweigh an earlier, semantically important branch. If we want the arrow of causation to be ``earlier structure interprets later structure'', this is exactly the wrong priority. The next section addresses this by changing what we count.
+
+\medskip
+In what follows we will repeatedly exploit this duality: every local collapse event can be read simultaneously as a computational step (application / reduction) and as a gravitational step (falling down a structural potential), without changing the underlying rule.
+
+\section{Locality and induced kinematics}
+\label{sec:kinematics}
+
+The collapse rule specifies what happens \emph{at} a focused pair; we also need to bound how fast the focus can move.
+
+We impose a single locality constraint:
+\begin{quote}
+In one update cycle (chronon), the focus may move by at most one edge in the tree.
+\end{quote}
+A chronon consists of zero or more rotations (which do not change \(U\)) followed by one collapse step. The constraint means that in one chronon we can affect only nodes at graph distance \(1\) from the current focus.
+
+This immediately defines a maximal speed
+\[
+  c := \frac{\text{1 edge}}{\text{1 chronon}}.
+\]
+We take \(c=1\) as a natural unit.
+
+Consider two collapse events on the same evolving tree, separated by \(\Delta t\) chronons, during which the focus has drifted by \(\Delta x\) edges. By locality, \(|\Delta x| \le \Delta t\). Define the discrete interval
+\[
+  s^2 := \Delta t^2 - \Delta x^2.
+\]
+This is the \(1{+}1\)-dimensional Minkowski form with \(c=1\). Events with \(|\Delta x|=\Delta t\) lie on the light cone: all of the update budget was spent on motion, none on collapse. Events with \(|\Delta x|<\Delta t\) are timelike: some budget was spent on actual structural work.
+
+We can thus define a proper time accumulated by a process:
+\[
+  \Delta \tau := \sqrt{\Delta t^2 - \Delta x^2}
+  = \frac{\Delta t}{\sqrt{1 - v^2}},\qquad
+  v = \frac{\Delta x}{\Delta t}.
+\]
+Since collapse is the only operation that reduces \(U\), proper time \(\Delta\tau\) literally measures how much computation/gravitational work has been done along a worldline. Processes that move quickly (large \(|v|\)) perform fewer collapses per chronon; processes at rest (\(v=0\)) collapse every chronon and ``age'' fastest. The same locality that makes the substrate look like spacetime also bounds the rate of computation.
+
+\section{Actualization-weighted collapse}
+\label{sec:actualization}
+
+The fix to the ``late but wide'' problem is conceptually small but structurally significant: we bias collapse by \emph{actualization}, not by size alone.
+
+\begin{definition}[Actualization weight]
+Every tree \(T\) carries a non-negative integer \(\mathrm{aw}(T)\), its \emph{actualization weight}.
+\begin{enumerate}[label=(\alph*)]
+  \item The unit tree has \(\mathrm{aw}(()):=0\).
+  \item When a collapse of \((L,R)\) selects \(L\), the resulting tree inherits \(L\) and sets
+  \[
+    \mathrm{aw}(\mathrm{result}) = \mathrm{aw}(L) + 1.
+  \]
+  \item Symmetrically if collapse selects \(R\).
+  \item Freshly expanded subtrees start with \(\mathrm{aw}=0\).
+\end{enumerate}
+\end{definition}
+
+\begin{definition}[Actualization-weighted collapse]
+\label{def:aw-collapse}
+Given a focused pair \((L,R)\),
+\[
+  (L,R) \;\rightsquigarrow\;
+  \begin{cases}
+    L, & \mathrm{aw}(L) > \mathrm{aw}(R),\\
+    R, & \mathrm{aw}(R) > \mathrm{aw}(L),\\
+    \text{freeze}, & \mathrm{aw}(L) = \mathrm{aw}(R).
+  \end{cases}
+\]
+\end{definition}
+
+In this paper we will treat the $\mathrm{aw}(L)=\mathrm{aw}(R)$ case using the ``freeze balanced'' convention, which behaves as an entanglement analogue: equally actual branches are forced to propagate together until a later interaction resolves them. One could instead introduce an explicit symmetry-breaking mechanism (e.g.\ a probabilistic choice); we leave that extension for future work.
+
+Actualization-weighted collapse cannot be defeated by a late, wide newcomer: earlier branches accrue weight each time they win. A large but freshly expanded subtree has \(\mathrm{aw}=0\) and will lose to a smaller but already actual branch.
+
+\section{Emergent combinators and direction of causation}
+\label{sec:combinators}
+
+Several consequences follow from the actualization-weighted rule.
+
+\paragraph{Identity remains foundational.} As before, \((()\,x)\to x\), and \(\mathrm{aw}(x)\) increases. The empty operator is the pure actualizer.
+
+\paragraph{K-like choice.} Let \(A\) be actualized (weight \(\ge 1\)) and \(B\) be fresh (weight \(0\)). Then \((A\,B)\) collapses to \(A\) and increments its weight. This behaves like the K combinator: \(KAB = A\), but arises from ``earlier beats later'' rather than being postulated.
+
+\paragraph{Reusable K.} If we package \(A\) into a context \(K_A := (A\,())\), then \((K_A\,C)\) still collapses to \(A\), because \(K_A\) carries more actualization than the fresh branch containing \(C\). We recover a reusable choice operator.
+
+\paragraph{S-like sharing.} When two later re-entries both point to a common earlier piece, that common piece carries higher \(\mathrm{aw}\). Balancing and rebalancing around such shared structure leads to distributor-like behavior: information about the earlier branch is propagated to multiple later contexts, as in the S combinator.
+
+\paragraph{Y-like self-reentry.} A pattern that, once it wins, recreates the same ``needs to win again'' situation is a fixed point in this dynamics. Such self-referential motifs behave like Y combinators: once actualized, they continually feed their own structure back into the substrate.
+
+\paragraph{Causal direction is internal.} We can now justify the convention ``left applies to right'' in more physical terms: the left side of a focused pair is, in general, the \emph{earlier} one, the part of the tree that has already collapsed more often and therefore has permission to interpret the right. Mirroring the applicative direction would give the later thing power over the earlier, i.e.\ retrocausality. In this model the arrow of causation is not enforced from outside; it is already present in the actualization bookkeeping.
+
+\section{The Two Axes of Catalan Structure: Time and Possibility}
+
+A subtle but essential point is that a single Catalan object carries \emph{two} independent forms of structure. These two axes correspond to two different physical roles in the model: the asymmetry of causal time and the symmetry of branching possibility. Much of the apparent tension between ``left application'' and ``50/50 binary choice'' is resolved by recognizing that these refer to different directions within the same Catalan geometry.
+
+\subsection{The Vertical Axis: The Applicative Left Spine (Causal Time)}
+
+Every binary tree has a unique leftmost path---the \emph{left spine}. In the Catalan substrate this spine is not an artifact of notation. Its nodes represent the order in which open parentheses are introduced, making the spine a natural encoding of \textbf{temporal precedence}:
+
+\begin{itemize}
+  \item ``left'' means \emph{opened earlier},  
+  \item ``right'' means \emph{opened later},  
+  \item collapse work accumulates along the spine,  
+  \item proper time is proportional to the depth of this spine.
+\end{itemize}
+
+It is along this spine that SKI-like and Y-like behavior emerges without postulation. The collapse rule must therefore propagate \emph{from earlier to later}, following the orientation of the spine. Actualization weighting---introduced to resolve the ``late but wide'' counterexample---relies entirely on this temporal ordering.
+
+\subsection{The Horizontal Axis: Binary Branching (Possibility Space)}
+
+Each internal node of a Catalan tree also has two children. These represent a \textbf{symmetric} branching of the future: a 50/50 split of conditional structure. This horizontal axis encodes:
+
+\begin{itemize}
+  \item alternative local futures,
+  \item the ``breadth'' or spatial extent of the causal cone,
+  \item the combinatorial amplitudes associated with each future,
+  \item Dyck-height oscillations interpretable as discrete phases.
+\end{itemize}
+
+This axis is not temporal. It is a \emph{configuration space}: the ensemble of possible ways the universe might continue from a given point.
+
+\subsection{Orthogonality of the Axes}
+
+The two axes are therefore orthogonal:
+
+\[
+\text{Vertical (spine)} \;\;=\;\; \text{asymmetric, temporal, applicative}
+\]
+\[
+\text{Horizontal (branches)} \;\;=\;\; \text{symmetric, probabilistic, configurational}
+\]
+
+The collapse rule follows the vertical direction, preserving causal precedence.  
+The probabilistic weighting arises from the horizontal combinatorics.
+
+Thus a Catalan object is simultaneously:
+
+\begin{enumerate}
+  \item a \textbf{directed computation} (via the left spine), and  
+  \item a \textbf{space of symmetric possibilities} (via horizontal branching).
+\end{enumerate}
+
+This dual structure is not imposed. It is a natural consequence of the Catalan grammar itself. The interplay of these axes is what produces the model's computational, gravitational, and quantum-like behavior within a single discrete substrate.
+
+\section{Global / spectral view and relation to phase}
+\label{sec:global}
+
+At the global level, we can fix a Catalan tier \(n\) and consider the set of all admissible histories (Dyck paths) of that length. These can be arranged in a cyclic order along the ``rim'' of the causal cone. A shift operator \(S\) that advances one step around this rim acts as
+\[
+  S\,|w_j\rangle = |w_{j+1}\rangle,\qquad S^{C_n} = I.
+\]
+The eigenvectors of \(S\) form a discrete Fourier basis,
+\[
+  |\tilde{k}\rangle = \frac{1}{\sqrt{C_n}}\sum_{j} e^{2\pi i jk/C_n}|w_j\rangle,
+\]
+with eigenvalues \(e^{-i2\pi k/C_n}\). In that basis, time evolution generated by repeated application of \(S\) is diagonal:
+\[
+  S\,|\tilde{k}\rangle = e^{-iE_k\Delta/\hbar}|\tilde{k}\rangle
+\]
+for suitable effective energies \(E_k\) and time step \(\Delta\). This is directly analogous to a unitary time step in quantum mechanics.
+
+The companion manuscript \emph{The Geometry of Possibility: From Binary Roots to Complex Phase}~\citep{fernandez_geometry} develops this spectral picture in more detail: Dyck tiers as discrete wavefronts, phase assignments via structural actions, and continuum limits leading to Schrödinger-like wave equations. The present work complements that picture by explaining why, at each chronon, exactly one of the admissible local moves is realized: actualization-weighted collapse chooses an update order consistent with the causal arrow ``earlier interprets later.''
+
+In short:
+\[
+  \text{global} = \text{distribution of possibilities},\quad
+  \text{local} = \text{actualization mechanism}.
+\]
+
+\section{Minimal Embedding Dimension for Reentrant Structure}
+\label{sec:embedding}
+
+\paragraph{Primitive stance.}
+The substrate has no intrinsic geometry. $()$ is void; $(())$ is the first self-oscillation. All content is combinatorial. Updates are only \emph{legal} local moves (one wrap or branch per chronon) with actualization-weighted collapse. There are no wires and no metric.
+
+\paragraph{Time and breadth from causality.}
+Chronon count provides temporal ordering. At fixed chronon $t$, the Dyck-tier boundary provides a natural breadth coordinate indexing simultaneous histories. Together these give a $(1+1)$-dimensional causal substrate: one timelike direction (chronon sequence) and one spacelike direction (breadth across the cone).
+
+\paragraph{The reentry problem.}
+Actualization introduces \emph{structural sharing}: reusable $K$ (choice), $S$ (distribution), and Y-like (self-reentry) patterns. These create reference relations from later structures back to earlier ones. When we serialize or traverse the Catalan tree, distinct references will generically cross in the $(t,x)$ plane.
+
+\emph{Critical distinction}: Some crossings represent genuine interactions (references that meet); others are merely accidental (references passing nearby in the substrate without touching). To preserve the topological identity of reentrant patterns, we must distinguish these cases.
+
+\paragraph{Graph embedding and non-planarity.}
+The reentrant Catalan tree with actualization-weighted references forms a directed graph $G = (V,E)$ where vertices are tree nodes and edges include both parent-child links and backward references. The question becomes: \emph{What is the minimal dimension needed to embed $G$ without false crossings?}
+
+For generic reentrant patterns:
+\begin{itemize}
+  \item \textbf{2D is insufficient.} Consider three early actualized structures $A_1, A_2, A_3$ at distinct breadth positions, and three later structures $B_1, B_2, B_3$ where:
+  \begin{itemize}
+    \item $B_1$ references $A_2$ and $A_3$
+    \item $B_2$ references $A_1$ and $A_3$
+    \item $B_3$ references $A_1$ and $A_2$
+  \end{itemize}
+  These six reference edges form $K_{3,3}$ (complete bipartite graph), which is non-planar by Kuratovsky's theorem. Any 2D embedding must have false crossings.
+  
+  \item \textbf{3D is sufficient.} Most finite graphs embed in $\mathbb{R}^3$ without crossings. The additional dimension provides ``room'' for references to route around each other.
+  
+  \item \textbf{3D is necessary.} Self-referential patterns like the Y combinator create loops that thread through themselves. In 2D, such loops cannot avoid self-intersection. In 3D, they form stable knot topology.
+\end{itemize}
+
+\paragraph{Topological stability and knot theory.}
+The dimensionality requirement is sharpened by considering topological invariants:
+\begin{itemize}
+  \item In $D=2$: All knots are trivial (can be unknotted by moving over/under).
+  \item In $D=3$: Rich knot theory exists. Reentrant structures have non-trivial linking and can maintain topological identity.
+  \item In $D \ge 4$: Knots become trivial again (too much room to slip through); topological structure cannot be stably maintained.
+\end{itemize}
+
+If actualized patterns derive their identity from topological linking—from \emph{how} earlier structure is referenced by later structure—then $D=3$ is both necessary and sufficient.
+
+\paragraph{Routing labels as embedding coordinates.}
+To implement this embedding, we attach to each backward reference two independent \emph{routing labels} $(\ell_y, \ell_z) \in \mathbb{Z}^2$. These specify which transverse path the reference takes through the embedding space. The labels are pure bookkeeping: physics is invariant under any relabeling (coordinate gauge symmetry).
+
+The state at chronon $t$ is:
+\[
+\text{Catalan tree} \;\;+\;\; \text{finite set of references labeled } (\ell_y,\ell_z)\in\mathbb{Z}^2.
+\]
+
+\paragraph{From discrete labels to effective geometry.}
+Consider the legal-move adjacency operator $L$ on states (wrap/branch/rotation subject to actualization/locality). The low-frequency spectrum of the Markov semigroup generated by $L$ determines effective diffusion behavior. Because:
+\begin{enumerate}
+  \item The breadth coordinate $x$ contributes $\partial_x^2$,
+  \item The label fiber $\mathbb{Z}^2$ contributes two gauge-equivalent directions,
+  \item The low-frequency spectrum of the discrete Laplacian on $\mathbb{Z}^2$ is rotationally invariant,
+\end{enumerate}
+the coarse-grained diffusion operator factorizes as:
+\[
+\mathcal{D}_{\text{eff}} \;\sim\; \partial_{x}^2 \;+\; \partial_{y}^2 \;+\; \partial_{z}^2,
+\]
+where $(y,z)$ are continuum limits of the discrete labels. Thus:
+\[
+\boxed{
+\text{chronon order (time)} \;+\; \text{breadth} \;+\; \text{two embedding labels} \;\Longrightarrow\; 1{+}3\ \text{effective spacetime}
+}
+\]
+
+\paragraph{Physical interpretation.}
+The two transverse dimensions are not ad hoc: they are the \emph{minimal geometric space required for reentrant Catalan topology to be well-defined}. Coordinates are gauges for routing serialized references, not primitive geometric objects. Observable physics depends only on gauge-invariant functionals: actualization spectra, motif statistics, causal distances, and spectral properties of $L$.
+
+\paragraph{Consistency checks.}
+Several independent arguments support $D=3$ spatial dimensions:
+\begin{enumerate}[label=(\roman*)]
+  \item \textbf{Huygens principle.} Exact light-cone propagation (sharp wavefronts) holds for the wave equation only in odd spatial $D \ge 3$; minimal case is $D=3$.
+  \item \textbf{Knot stability.} Non-trivial, stable link invariants exist minimally in $D=3$ (trivial in $D=2$, unstable in $D\ge 4$).
+  \item \textbf{Vector calculus.} An associative cross product (needed for circulation/angular momentum) exists only in $D=3$, consistent with our associahedral substrate.
+\end{enumerate}
+
+\paragraph{Consequence for calibration.}
+Confined degrees of freedom (Section~\ref{sec:calibration}) correspond to boundary conditions along one spatial axis with two transverse label-directions. The regulated spectral difference produces the Casimir pressure law $P \propto \hbar c/a^4$ with geometric coefficient $\pi^2/240$, as expected for parallel plates in $3D$.
+
+\section{Physical calibration via Casimir}
+\label{sec:calibration}
+
+To speak in SI units we need a length and a time scale.  
+Let a fundamental edge length $\ell_0$ correspond to a physical length in meters, and let a chronon $\tau$ correspond to a physical time in seconds.  
+We set
+\[
+  c := \frac{\ell_0}{\tau} = 2.99792458\times 10^8\ \text{m/s}.
+\]
+If each irreversible collapse corresponds to an energy quantum
+\[
+  \varepsilon_0 = \frac{\hbar}{\tau} = \frac{\hbar c}{\ell_0},
+\]
+then the corresponding \emph{collapse force} per unit cell is
+\[
+  F_{\text{collapse}} := \frac{\varepsilon_0}{\ell_0} = \frac{\hbar c}{\ell_0^2}.
+\]
+
+For a cavity of separation $a$, the regulated difference between the discrete and continuum spectra of any harmonic degree of freedom confined by ideal parallel boundaries yields a pressure
+\[
+  P(a) = \kappa_{\text{geom}}\frac{\hbar c}{a^4},\qquad
+  \kappa_{\text{geom}}=\frac{\pi^2}{240}.
+\]
+Multiplying by the area of a unit cell $a^2$ gives
+\[
+  F_{\text{cell}} = P(a)\,a^2
+  = \kappa_{\text{geom}}\frac{\hbar c}{a^2}.
+\]
+Setting $a=\ell_0$ identifies the geometric coefficient of our cell force:
+\[
+  F_{\text{cell}} = \kappa_{\text{geom}}\,F_{\text{collapse}},\qquad
+  \kappa_{\text{geom}}=\frac{\pi^2}{240}.
+\]
+
+This factor $\kappa_{\text{geom}}$ encodes the spectral geometry of ideal parallel boundaries—essentially the zeta-regularized difference between confined and free spectra of any harmonic mode.  
+No electromagnetic assumption is required: the numerical constant reflects only boundary geometry.  
+If spacetime implements actualization-weighted collapse on discrete cells of size $\ell_0$, the observed Casimir pressure is consistent with the model’s fundamental collapse scale up to this standard geometric factor.  
+Choosing $\ell_0$ (e.g.\ $100\,\text{nm}$) fixes all remaining units.
+
+\section{Implementation and motif experiments}
+\label{sec:implementation}
+
+The structural claims above can be explored experimentally with a small public implementation.
+
+\subsection*{Setup}
+
+All related code for this model and its exploratory scripts is maintained in a single public repository:
+\begin{center}
+  \texttt{https://github.com/pfernandez/basis}
+\end{center}
+
+The repository README documents how to run the motif and collapse experiments.
+
+\subsection*{What the scripts do}
+
+The motif–exploration scripts stochastically traverse the Catalan cone using the primitives of Section~\ref{sec:substrate}, logging which motifs (small trees) appear most frequently under the chosen options. Typical flags enable:
+\begin{itemize}
+  \item ``freeze balanced'' behavior: treat equally actual branches as entangled (do not collapse them immediately);
+  \item normalization of syntactic variations so that structurally equivalent motifs are counted together.
+\end{itemize}
+Runs consistently reveal:
+\begin{itemize}
+  \item persistent small motifs that reappear with high frequency;
+  \item balanced pairs that resist collapse when \(\mathrm{aw}(L)=\mathrm{aw}(R)\);
+  \item recurrent branching shapes suggestive of applicative structure.
+\end{itemize}
+These empirical patterns correspond to the minimal combinatory motifs discussed in Section~\ref{sec:combinators}.
+
+
+\subsection*{Why this matters}
+
+For readers accustomed to continuous field theories, the present model may seem heavily combinatorial. The implementation serves as ``supplementary material'': it shows that one does not have to \emph{postulate} SKI-like combinators. They appear as recurrent motifs because earlier structure keeps winning under actualization-weighted collapse. The discrete causal cone and the combinatorial multiplicities of Catalan tiers drive the statistics; collapse shapes the realized histories.
+
+\section{Relation to other discrete programs}
+\label{sec:related}
+
+Because this model is discrete, local, and multicomputational in spirit, it lives near Wolfram's program for a fundamental theory of physics~\citep{wolfram2020}. The overlap is genuine:
+\begin{itemize}
+  \item both start from small, local updates on discrete objects;
+  \item both produce a causal graph and speak of update-order issues;
+  \item both interpret branching structure as the root of quantum-like behavior.
+\end{itemize}
+
+Two differences are decisive:
+
+\begin{enumerate}[label=(\roman*)]
+  \item \textbf{Fixed substrate.} We do not search rule space. The universe is fixed to the Catalan/Dyck family and we exploit its internal combinatorics (Narayana counts, depth--breadth duality, built-in cone). This makes the model tighter but more opinionated.
+  \item \textbf{Privileged direction.} We do not aim for complete update-order invariance. We explicitly privilege the earlier/left/applicative side via actualization weight. This forbids retrocausality and lets the same local event be read as both computation and gravitation.
+\end{enumerate}
+
+A reader familiar with other discrete approaches will recognize the territory, but the key ingredient here---a \emph{fixed} Catalan substrate with \emph{actualization-weighted} selection---is specific to this model.
+
+\section{Limitations and outlook}
+\label{sec:limitations}
+
+This presentation is intended as an accessible but technically precise introduction to the local dynamics on a Catalan substrate. Several aspects remain underdeveloped and are natural directions for further work:
+
+\begin{itemize}
+  \item The spectral/phase view of Catalan tiers and the detailed derivation of Schrödinger-like dynamics from discrete shifts are treated in outline only; a full account requires extending the companion global manuscript.
+  \item The comparison with continuum quantum field theory, including renormalization and internal symmetries beyond the simple combinatorial ones of binary trees, has not been attempted.
+  \item The minimal embedding dimension argument (Section~\ref{sec:embedding}) provides a topological lower bound but does not yet constitute a rigorous proof. A complete characterization of graph classes arising from actualization-weighted collapse and their embedding properties remains open.
+  \item Cosmological and black-hole applications, while suggested by the Casimir anchor and by depth--breadth duality, are not worked out and will require connecting this discrete model to observational scales.
+  \item The implementation in the \texttt{basis} repository is a research tool, not a production simulator. Reproducibility depends on recording versions, configuration, and random seeds as documented there.
+  \item A fuller survey of related discrete approaches (beyond the brief comparison to Wolfram-style multicomputation) remains to be written.
+\end{itemize}
+
+Readers should therefore treat this as an early but self-contained exposition of a proposal: a fixed Catalan substrate with actualization-weighted collapse as the mechanism that unifies computation, gravitation, and phase-like behavior in a single local rule.
+
+\section{Conclusion}
+
+Starting only from Dyck words and the requirement that reality advance by choosing one local future per chronon, we obtained:
+
+\begin{enumerate}[label=(\alph*)]
+  \item an irreversible, one-edge-per-step causal cone, providing the discrete ``geometry of possibility'';
+  \item a single size-based collapse rule that admits both a computational and a gravitational reading;
+  \item a refinement---actualization-weighted collapse---that resolves the ``late but wide'' counterexample by privileging earlier structure;
+  \item emergent SKI-like and Y-like behavior without postulating combinators;
+  \item a Lorentz-like kinematics in which proper time counts irreversible collapse work;
+  \item a clean physical anchor via the Casimir force;
+  \item and a public, reproducible implementation demonstrating the combinatorial motifs in practice.
+\end{enumerate}
+
+Together with the global/spectral analysis of the companion \emph{Geometry of Possibility} manuscript, this suggests a compact claim: a fixed Catalan substrate, equipped with expansion into possibility and actualization-weighted collapse, may already contain the essential ingredients needed to model spacetime, computation, and quantum-like phase in a single discrete framework.
+
+\section*{Acknowledgments}
+
+The author thanks Shellie Fernandez for ongoing partnership and for insistence on making the physical and computational intuitions concrete before abstraction.
+
+\bibliographystyle{unsrtnat}
+\begin{thebibliography}{9}
+
+\bibitem{wolfram2020}
+Stephen Wolfram.
+\newblock \emph{A Class of Models with the Potential to Represent Fundamental Physics}.
+\newblock 2020. (and subsequent updates in the Wolfram Physics Project).
+
+\bibitem{stanley2015}
+Richard P. Stanley.
+\newblock \emph{Catalan Numbers}.
+\newblock Cambridge University Press, 2015.
+
+\bibitem{casimir1948}
+H.~B.~G. Casimir.
+\newblock On the attraction between two perfectly conducting plates.
+\newblock \emph{Proc. K. Ned. Akad. Wet.}, 51:793--795, 1948.
+
+\bibitem{fernandez_geometry}
+P.~Fernandez.
+\newblock The Geometry of Possibility: From Binary Roots to Complex Phase.
+\newblock Preprint, 2025.
+
+\end{thebibliography}
+
+\end{document}
+

@@ -1,0 +1,728 @@
+# The Catalan Engine (Intuition Draft)
+
+This is not the arXiv paper.
+
+It’s the version written for you: the one that tries to keep the picture alive
+while still staying honest about what is definition, what is choice, what is
+interpretation, and what is still open.
+
+Throughout, I’ll use inline callouts like these:
+
+> **FACT** — something that is true in ordinary math/combinatorics, or a direct,
+> checkable consequence of the definitions.
+
+> **MODEL CHOICE** — a place where we decide “this is the rule” or “this is the
+> weighting” because we are building a model, not proving a theorem.
+
+> **INTERPRETATION** — a way of *reading* the model in physical/semantic terms.
+
+> **OPEN** — an unresolved gap, or a fork in the road.
+
+If a sentence ever feels like it’s claiming too much, it should probably be
+inside one of these blocks.
+
+---
+
+## 1. Why Dyck shows up at all (and why it’s not “just branching”)
+
+You started with cons-pairs. That matters.
+
+A cons-pair is the smallest nontrivial piece of structure: not a value, not a
+label, not a number, but a *relationship*: a left thing and a right thing held
+together as a unit.
+
+If you allow yourself only that operation—“make a pair”—you can generate
+infinite shape. But you can’t yet generate *process*. You can build, but
+building by itself has no intrinsic notion of being “done”.
+
+The moment you insist on *return*—on closure, on coming back—you introduce the
+smallest possible notion of a completed act.
+
+In parenthesis language, return is “every open must close”.
+In stack language, return is “every push must eventually pop”.
+In your language, return is “every created context must eventually discharge”.
+
+That is the extra constraint that turns “the set of all binary choices” into
+“the set of all well-formed nested choices”.
+
+> **FACT** — If you take arbitrary binary strings, you get a huge space:
+> everything in `{0,1}^*`. If you take well-bracketed strings, you get a much
+> smaller, much more structured space: the Dyck language. Dyck is the free
+> language of balanced parentheses: it is the minimal formal system that has
+> “open/close” and forbids closing before opening.
+
+This is the first unifying point:
+
+Binary branching is *too big* to be a self-contained universe of completed
+events. Dyck is what you get when you demand that events come with a built-in
+notion of completion.
+
+And once you have completion, you can talk about:
+
+- “a history” (a finished parenthesis string),
+- “a partial history” (a prefix that hasn’t returned yet),
+- “how many unfinished obligations exist right now” (stack height),
+- “how much unfinishedness accumulated over time” (area under the height curve).
+
+Those last two are where your “potential of unresolved structure” starts to
+become precise.
+
+---
+
+## 2. One object, three coordinate systems (and why this is not handwaving)
+
+The arXiv draft repeats “these are just coordinate changes”, but it’s easy to
+feel like we’re cheating: a Dyck path looks geometric; a tree looks like syntax;
+a parenthesis string looks like code. Why should they be the same thing?
+
+Before we do an example, one small vocabulary pin:
+
+> **FACT** — A *bijection* is a perfect reversible dictionary between two ways
+> of writing the same information. If you have a bijection, you are not “adding
+> a model assumption” by switching representations; you are just translating.
+
+Let’s do it slowly with a single, concrete example.
+
+Take the Dyck word:
+
+```
+w = (())
+```
+
+### 2.1 The “walk” (Dyck path) view
+
+Scan left to right. Every `(` means “open”; every `)` means “close”.
+Track the running difference (opens minus closes as you scan):
+
+```
+symbols:  (  (  )  )
+height :  1  2  1  0
+```
+
+That running height is the Dyck walk. It never goes negative (you never close
+before opening), and it ends at zero (everything you opened is closed).
+
+> **FACT** — The “height” at each step is literally “how many opens are still
+> waiting to be matched”. This is not a metaphor; it’s exactly what the counter
+> computes.
+
+### 2.2 The “tree” view
+
+Every Dyck word has a canonical parse as a full binary tree:
+
+- the outermost pair is the root,
+- inside it, you split the remaining substring into two balanced blocks: left
+  subtree and right subtree,
+- and you repeat.
+
+For `w=(())`, the corresponding full binary tree is the “left-nested chain”
+shape: a root whose left child is itself a node, and whose right child is a
+leaf.
+
+If you like an ASCII picture, it’s this:
+
+```
+      •
+     / \
+    •   ()
+   / \
+  () ()
+```
+
+This is why the Catalan numbers appear: counting Dyck words is the same as
+counting these full binary trees.
+
+> **FACT** — The “tree” isn’t an extra structure you added. It’s the unique
+> recursive decomposition of the balanced string itself. The string *already
+> contains* the tree; the tree view just makes the recursion explicit.
+
+### 2.3 The “pairs / S-expression” view
+
+Now comes the move that is closest to your origin story.
+
+You can read the same tree as an S-expression where the *only* constructor is
+pairing. If you erase labels (no atoms), what remains is still a valid
+expression: just parentheses.
+
+But here’s the subtlety that makes the “unity of bijections” feel slippery at
+first:
+
+The Dyck word `w=(())` is *not* the same parenthesis string as the tree’s
+S-expression serialization.
+
+Under the standard Dyck→tree bijection (the one used in the repo), the tree for
+`w=(())` serializes as:
+
+```
+((()())())
+```
+
+This longer string is “the same object” seen through the tree/pairs coordinate
+system:
+
+- in the **Dyck/walk** coordinate system, parentheses are *time steps* (`(` = up,
+  `)` = down),
+- in the **pairs/S-expr** coordinate system, parentheses are *structure* (`()` =
+  a leaf, and `(LR)` = a node whose children are `L` and `R`).
+
+Even so, the same “stack depth” intuition survives: if you scan *either*
+parenthesis string from left to right, you can compute a prefix depth. It just
+means slightly different things depending on which coordinate system you’re in.
+
+So a safer way to say it is:
+
+> **FACT** — There are *two* relevant “heights” you can compute:
+> (i) the Dyck walk height (opens minus closes, treating each parenthesis as a
+> time step), and (ii) the parse depth / nesting depth of the underlying tree.
+> They are related because they come from the same structure, but they are not
+> literally the same sequence on the page.
+
+This is the unity you’ve been feeling: it’s not that we glued geometry onto
+computation. It’s that the *same combinatorial object* has multiple natural
+projections:
+
+- the walk projection makes time-like structure visible,
+- the tree projection makes locality and substructure visible,
+- the S-expression projection makes “program-ness” visible.
+
+---
+
+## 3. Return as “obligation”, and why height really does behave like potential
+
+Let’s say “obligation” carefully.
+
+When you read a Dyck word as a history, each `(` is an opening of something that
+must eventually be closed. Until it closes, it is unresolved. It is “in the
+air”. It is a commitment that has been made but not discharged.
+
+At a given scan step, the height is the number of unresolved opens.
+
+So if you want a scalar that says “how much unresolved structure exists *right
+now*”, the height is the first thing you can write down.
+
+> **MODEL CHOICE** — Interpret Dyck height `h` as “structural potential”: the
+> amount of unresolved structure currently present.
+
+Now take the next step:
+
+If height is instantaneous unresolved-ness, then the simplest “total unresolved
+work over a whole history” is to add it up over time:
+
+```
+A(w) = (height at step 1) + (height at step 2) + ... + (height at last step)
+```
+
+That is Dyck area. In the arXiv draft it’s introduced as a convenient additive
+functional. In your own language it is:
+
+> **INTERPRETATION** — Area is “how long obligations stayed open, summed over
+> all obligations”.
+
+Here’s the key “same accounting” fact in plain terms:
+
+- You can “charge” an obligation continuously while it remains open (height per
+  tick).
+- Or you can wait until the obligation closes and then charge its whole
+  lifetime all at once.
+
+Those are the same total bill.
+
+> **FACT** — The sum of heights over time equals the sum over matched pairs of
+> their open-duration. This is just double-counting: each open pair contributes
+> `+1` to height at each tick until it closes.
+
+This is important because it gives you a reason why “area” is not a random
+choice: it’s what you get if you accept “unresolved structure is the primitive
+thing” and then ask for the simplest extensive (additive) global tally.
+
+---
+
+## 4. What a “dot on the screen” is, combinatorially
+
+You asked a very direct question: a dot on the screen has a position in
+spacetime. What is that, from the lattice’s point of view? How do we compute
+it?
+
+In this framework there are two layers:
+
+1. the underlying history space (the Catalan substrate),
+2. a chosen *observation map* from that space to whatever we call “outcomes”.
+
+The arXiv draft names this map `f`. Here’s the intuition without symbols.
+
+### 4.1 The lattice is bigger than the picture you draw
+
+When we draw the Dyck cone as a picture with axes, we are projecting a very rich
+object down to two coordinates:
+
+- step index (“time along the growth”), and
+- height (“how many opens are live”).
+
+But many different prefixes share the same `(time, height)`.
+They differ in *how* they got there: the internal arrangement of nested opens
+and closes.
+
+So the right mental model is:
+
+> **FACT** — The cone diagram is a *shadow*. Each point `(k,h)` in the diagram
+> represents a whole finite set of distinct Catalan prefixes whose height is
+> `h` after `k` steps.
+
+In physics terms: the plotted cone is a coarse coordinate chart; it forgets
+internal degrees of freedom.
+
+### 4.1.1 A small but important clarification: there’s more than one “cone picture”
+
+You’ve been carrying (at least) two geometric pictures at once, and it’s worth
+making them explicit so they stop competing in your head.
+
+1. **The within-history cone (prefix time vs Dyck height).**
+   This is the `(k,h)` picture in this section: as a history grows step by step,
+   the height changes by `±1` and stays nonnegative. This is the picture that
+   naturally supports “screen plane at time `k`”.
+
+2. **The across-histories cone (tier vs breadth statistic).**
+   This is the `(n,r)` picture in the arXiv paper: once a full history is
+   complete (tier `n`), you can summarize its *shape* by a single breadth number
+   `r(w)` (for example: the maximum number of pairs at a common nesting depth).
+
+They are both honest, but they are not the same axis labels.
+
+> **FACT** — `(k,h)` is a coordinate system on *prefixes of a single history*.
+> `(n,r)` is a coordinate system on *the set of completed histories*, where `r`
+> is a global summary of the whole shape.
+
+The reason they still feel like “the same light cone” is that they both express
+the same underlying constraint: local growth can only change the relevant
+coordinate by one unit per step, so there is a speed limit.
+
+> **INTERPRETATION** — If you want an Einstein-like analogy, the speed limit is
+> the only truly rigid thing in the picture: “you can only change one unit of
+> open structure per tick”. The cone is just the envelope that constraint
+> enforces.
+
+### 4.2 An “event” is an observation of a coarse feature of a prefix
+
+In this framework, “an event happened” means: you chose a time slice, and you
+asked a question about the structure on that slice.
+
+The important shift is that we are not forced to identify “a physical event” with
+“the entire Dyck word”. A completed Dyck word is a whole *closed* history. But an
+experiment (like double-slit) has moments inside it: emission, passing an
+aperture, arriving at a screen, being recorded.
+
+Those are naturally modeled by *prefixes* of a Dyck history.
+
+A prefix is just the beginning of the parenthesis string before it has fully
+returned.
+
+So, to talk about a dot on a screen, you do something like:
+
+1. pick a slice time (a prefix length) that represents “the screen plane”, and
+2. define a rule that maps the prefix on that slice to a “screen coordinate”.
+
+That mapping is what the paper calls an “observable”. Here’s what that means in
+model-language:
+
+> **FACT** — An “observable” is just a function that throws away detail. It
+> takes a complicated Catalan object (a history, or a prefix) and returns a
+> simpler label like “left vs right”, or “screen pixel 17”, or “height = 5”.
+
+### 4.3 The simplest “screen coordinate” you can read off the lattice
+
+If we stay in 1+1 dimensions (which is where the Dyck walk picture lives), the
+most direct “position-like” coordinate is the height itself.
+
+At a fixed slice time `k`, the height is a nonnegative integer `h`.
+
+So a toy “screen” is:
+
+- the plane `k = k_screen` (a fixed step/time),
+- with pixels labeled by `h = 0,1,2,...`.
+
+In this picture, a dot on the screen at pixel `h` means:
+
+> **MODEL CHOICE** — “Position on the screen” is the height of the history at
+> the observation slice.
+
+Is that *the* physical position? Not necessarily. It is the cleanest internal
+coordinate the lattice gives you for free. If later you want a different
+mapping—something that uses breadth, leaf index, or a richer embedding—you can
+replace the observable. The mechanism stays the same.
+
+### 4.4 How the dot distribution is computed (combinatorially, not metaphorically)
+
+Now we can say what the “probability distribution on the wall” is in Catalan
+terms.
+
+You do not predict a dot by picking a single history. You predict it by
+aggregating over *all histories consistent with what you didn’t observe*.
+
+Here is the minimal recipe:
+
+1. Decide what you count as “the same outcome” (i.e. define your observable).
+2. For each possible outcome label, sum the complex contributions of all
+   histories that map to it.
+3. Turn the resulting complex number into a nonnegative weight (square
+   magnitude).
+
+If you want this in one sentence:
+
+> **FACT** — An *amplitude* is just a complex accumulator attached to an outcome
+> label. A *probability* is proportional to the squared magnitude `|amplitude|^2`
+> after you normalize across all outcomes.
+
+This is the part that quantum mechanics forces on you: adding alternatives
+*before* squaring is where interference lives.
+
+> **FACT** — If you add first and square later, you get cross-terms:
+> `|A+B|^2 = |A|^2 + |B|^2 + 2 Re(A·conj(B))`. Those cross-terms are literally
+> “interference”.
+
+In the Catalan engine, the “alternatives” are just different admissible
+prefixes/histories that your observable refuses to distinguish.
+
+And the computation is genuinely combinatorial: it’s a recursion on a lattice.
+
+You can picture it as a dynamic programming table:
+
+- time index `k` goes left-to-right,
+- height `h` goes up-and-down,
+- each step moves from `(k,h)` to `(k+1,h±1)` (with the nonnegativity constraint),
+- and you carry a complex amplitude at each reachable `(k,h)`.
+
+If you like “how exactly is it computed?” in almost-code, it’s this kind of
+update:
+
+```
+amp[0][0] = 1
+for each time k:
+  for each height h:
+    amp[k+1][h+1] += stepWeight(k,h, up)   * amp[k][h]
+    if h > 0:
+      amp[k+1][h-1] += stepWeight(k,h, down) * amp[k][h]
+```
+
+Where `stepWeight` is where you put your model choice:
+
+- if you want “pure counting”, the weights are all `1`,
+- if you want an area-phase, you multiply by something like `exp(i * α * h)` at
+  each step (because height is the instantaneous unresolved-structure level).
+
+The arXiv paper calls this a transfer recursion / transfer matrix. In plain
+language:
+
+> **FACT** — “Sum over all histories” doesn’t mean you literally enumerate them
+> one by one. Because each history is built from local steps, you can propagate
+> the total amplitude forward one step at a time by summing contributions from
+> the two possible predecessor states.
+
+So the “dot distribution at the screen” is computed by taking the amplitude
+table at time `k_screen` and reading off the squared magnitudes at each height.
+
+### 4.5 What “two slits” means in this language
+
+In the usual double-slit story, the difference between “both slits open” and
+“one slit blocked” is not mystical. It is literally a change in which histories
+are allowed to contribute.
+
+In Catalan terms, you implement a slit by imposing a constraint at an
+intermediate slice time `k_slit`.
+
+For example: you might say “only histories that have height `h=2` at `k_slit`
+are allowed through slit L” and “only those with height `h=4` at `k_slit` are
+allowed through slit R”.
+
+Then:
+
+- with **both slits open**, histories through L and histories through R both
+  contribute, and their amplitudes add at the screen;
+- with **one slit blocked**, one family of histories is removed, so the sum
+  changes and interference disappears.
+
+> **FACT** — Interference is not “many realities doing computation”. It is a
+> property of *how you aggregate indistinguishable alternatives*. If you remove
+> a whole family of alternatives (block a slit), or if you label them so they
+> become distinguishable (which-path information), the cross-term vanishes.
+
+This is the sense in which “the possibility space is real” can be said without
+overclaiming: the *statistics* force you to treat unobserved alternatives as
+contributing coherently.
+
+---
+
+## 5. Why phase belongs to “return” and “obligation” (in the simplest model)
+
+At this point, we’ve described the mechanism of interference but not the source
+of phase. Where do those complex factors come from?
+
+The paper’s clean answer is: we choose a phase functional that is computed
+pair-locally along growth.
+
+In your own terms: if the only primitive thing is “open obligations” and “close
+obligations”, then the most primitive “running cost” is: how many obligations
+are open at each step.
+
+That is height.
+
+And the simplest extensive total cost is: sum of height over time.
+
+That is area.
+
+> **MODEL CHOICE** — Assign each history a complex weight of the form
+> `exp(i * (scale) * area)`. The scale is a parameter (later: a physical
+> calibration target).
+
+Why is this not arbitrary? Because it’s the first nontrivial additive functional
+you can build without smuggling in extra state.
+
+> **FACT** — If you demand (i) additivity under concatenation, and (ii)
+> computability from bounded local growth data, then your phase must be a sum
+> of per-step increments. “Area” is the special case where the increment is
+> exactly the current height.
+
+And now your earlier “both” instinct becomes crisp:
+
+- “phase accrues while obligations are open” is the per-step height view,
+- “phase accrues at returns” is the per-pair lifetime view,
+- they agree because they are literally two bookkeepings of the same sum.
+
+So you don’t have to choose between them at this level. The model chooses a
+quantity; you can tell two different stories about how it is paid.
+
+> **INTERPRETATION** — If you want to hear physics in it, area is “how much
+> unresolved structure was ‘in circulation’ over the course of the history”.
+> That is exactly the kind of thing an action-like phase would naturally depend
+> on: not just where you ended, but how you got there.
+
+> **OPEN** — This still doesn’t derive *why* nature uses complex phase rather
+> than a real weight, or why area is the unique right functional. What it does
+> give is the simplest pair-local candidate that reproduces the *mechanism* of
+> interference.
+
+---
+
+## 6. Where computation lives (and why unlabeled S-expressions are not a sideshow)
+
+Your `\iffalse` appendix block is pointing at something deep:
+
+The Catalan substrate is not just “a geometry”. It is also “the set of all
+program *shapes*”, once you decide that a program is built by repeated binary
+application.
+
+McCarthy’s Lisp idea was: the primitive data constructor is `cons`, and the rest
+of language is built on top.
+
+Your move is: push even harder—erase atoms entirely and ask what remains if the
+only thing you can do is build pairs.
+
+What remains is a universe of unlabeled S-expressions: pure parentheses.
+
+And those pure parentheses already carry:
+
+- a notion of context (nesting depth),
+- a notion of completion (return to zero),
+- and a notion of local rewrite (replace a subtree with another subtree).
+
+So it becomes reasonable to treat “computation” as something that happens *inside
+the Catalan family*, not something you bolt on.
+
+> **FACT** — In `src/graph/evaluator.js` and `src/graph/sk-legacy.js`, the core
+> structural rewrite `(() x) → x` is implemented as a deterministic reduction
+> rule. With binder/slot re-entry (De Bruijn references), this supports SKI and
+> lambda-like computation without relying on atom inspection.
+
+Here’s a clean way to keep the roles straight:
+
+- **Dyck return** is the closure law that makes histories “complete”.
+- **η-collapse** `(() x)→x` is a *quotient rule* that removes neutral wrappers
+  (vacuum bubbles) without changing the carried structure.
+- **Re-entry** is what lets a pure tree behave like a program with binding and
+  self-reference.
+
+If you put those together, you get your “self-interpreting, self-reflective
+structure of pure associations” as a concrete research direction, not a mood.
+
+> **INTERPRETATION** — In the computation view, “focus” (car / left spine) is
+> the place where structure is assimilated: where an operator meets an operand,
+> where a binder receives an argument, where a reduction actually fires. That
+> does rhyme with attention. It’s a powerful analogy—but it belongs in the
+> interpretation layer, not in the arXiv claims.
+
+### 6.1 Gödel numbering, but for shapes
+
+Gödel’s move was: treat “a formula” as “a number” by choosing an encoding. The
+details don’t matter here; what matters is the viewpoint:
+
+Syntax can be made into arithmetic.
+
+Your viewpoint is adjacent, but structural:
+
+Programs can be made into *trees*, and trees can be made into *parenthesis
+strings*, and parenthesis strings can be made into *numbers*.
+
+So the “set of all possible programs” becomes something you can literally point
+to: it’s an enumerable set of finite objects.
+
+> **FACT** — Once you choose a finite encoding of labels, every finite program
+> is representable as a finite labeled tree. Forgetting labels gives you a
+> Catalan skeleton. This is the sense in which Catalan structure is a “program
+> frame”.
+
+> **INTERPRETATION** — The Catalan engine is a way of studying “the space of all
+> programs” through a geometric lens: depth/breadth tradeoffs become geometric
+> constraints; rewrite locality becomes causal structure; enumeration becomes
+> entropy.
+
+---
+
+## 7. Attractors instead of “one true history”
+
+You’ve said something I think is crucial: a “specific history” doesn’t exist any
+more than a concept does. Instead, we have local attractors.
+
+Here is a crisp way to say that in model terms.
+
+There are (at least) two distinct objects:
+
+1. **The substrate**: the full space of admissible Catalan histories/prefixes.
+2. **A rule or measure** on that space: a way of assigning weights, phases, or
+   transition probabilities.
+
+Once you have a rule/measure, you can talk about:
+
+- which structures are common vs rare,
+- which motifs recur,
+- which patterns are stable under dynamics,
+- which bundles of histories add coherently (stationary-phase–like clusters),
+- which regions behave like basins (attractors).
+
+That’s already a very “concept-like” ontology: what is real is the stable
+pattern, not a single micro-history.
+
+> **INTERPRETATION** — A “particle” or a “concept” is not one tree; it’s a
+> stable motif class: something that keeps reappearing as you evolve, compress,
+> or coarse-grain the structure.
+
+> **FACT** — The repo already has an experimental version of this idea:
+> `src/catalan/motif-discover.js` runs stochastic local reductions and logs
+> recurrent end-shapes (“motifs”). This is not a theory of mind, but it *is* a
+> concrete attractor-finding experiment on the Catalan substrate.
+
+> **OPEN** — To turn “attractors” into a tight theory, you need to specify the
+> dynamics precisely (what expansions are allowed, what collapses are allowed,
+> what weights/temperatures you use) and then prove or measure stability and
+> universality properties (do the attractors persist under perturbations?).
+
+---
+
+## 8. Occam, Solomonoff, and “choose the simplest until observation demands more”
+
+Occam’s razor is not a law of nature; it’s a strategy for surviving ignorance:
+prefer the simplest explanation that fits what you’ve seen.
+
+Solomonoff induction is one attempt to formalize that instinct: assign higher
+prior weight to hypotheses that have shorter descriptions.
+
+The Catalan engine flirts with that philosophy in a very literal way:
+
+- a Catalan object is a short description of a nested structure,
+- the whole space of such objects is enumerable,
+- you can imagine weighting them by something like “description length” or
+  “structural cost”.
+
+> **INTERPRETATION** — If nature behaves like an optimizer under constraints, or
+> like a universal prior over simple generative processes, then “start with the
+> simplest pair-local substrate” is not just aesthetic; it is a plausible
+> heuristic.
+
+> **OPEN** — This is where we must not bluff. The paper can use Occam as
+> motivation, but “nature follows Solomonoff” is not something we can claim
+> without a sharp, testable consequence.
+
+---
+
+## 9. Energy, curvature, and the “only moves are expansion and return” thesis
+
+Now we return to your deepest instinct:
+
+If the only primitives are:
+
+- expand (open new obligations / grow possibility),
+- return (close obligations / discharge / collapse),
+
+then whatever we call “energy” has to come from that circuit.
+
+There is a disciplined way to say this that stays inside the model.
+
+At any moment, the system has some amount of unresolved structure. Call it
+potential if you like. In the walk picture, it is height. In the tree picture,
+it is “how much is still nested and incomplete”. In the S-expression picture,
+it is “how many frames are still open”.
+
+Then:
+
+- expansion injects potential (opens new obligations),
+- return releases potential (closes obligations),
+- the history’s total “cost” is the integral of potential over time (area).
+
+> **INTERPRETATION** — The simplest energy story here is not “mass is stored in
+> atoms”. It is “energy is stored in unresolved structure”.
+
+Now curvature.
+
+In ordinary physics language, curvature is a way of saying that “straight lines”
+are not globally straight; local geometry biases paths.
+
+In your lattice language, “curvature” could mean something like:
+
+- the statistics are not uniform; they prefer some local transitions over others.
+
+If a transition kernel makes some moves more likely than others, then the space
+of histories is no longer “flat”: it has a built-in bias field.
+
+> **MODEL CHOICE** — Choose a specific local rule (or weighting) that makes the
+> growth non-uniform (e.g. weights depending on height or on local motifs). This
+> induces a geometry in the sense that it changes which paths dominate.
+
+> **OPEN** — Turning “bias” into “curvature” can be made mathematically precise
+> (there are discrete curvature notions for Markov chains and graphs), but it
+> is not automatic. We would need to pick the kernel and then *compute* the
+> induced geometry, not just name it.
+
+---
+
+## 10. What you already have, and what it would mean to “tighten the picture”
+
+Here’s the state of play in the simplest honest phrasing I can give:
+
+> **FACT** — You have a canonical substrate (Catalan/Dyck) with a built-in cone
+> constraint, multiple equivalent coordinate systems, and a working structural
+> computation kernel (`(() x)→x` + re-entry).
+
+> **MODEL CHOICE** — You can get interference by adding a pair-local additive
+> phase functional (area is the simplest) and summing coherently over
+> indistinguishable histories defined by an observation map.
+
+> **OPEN** — The measurement problem (why one dot) is not solved by the above.
+> But the interference pattern (the distribution) does not require solving it.
+
+If the goal of this document is “make the solutions plain to you”, then the
+next tightening questions are not many; they’re few and sharp:
+
+1. **What is the observation map for a given physical experiment?**
+   (What exactly is a “screen coordinate” in Catalan terms?)
+
+2. **What principle selects the phase functional?**
+   (Area is minimal; what would make it uniquely demanded rather than merely
+   chosen?)
+
+3. **What dynamics, if any, sits underneath the amplitude picture?**
+   (Do we only ever talk about a measure on histories, or do we posit a
+   selection/collapse dynamics in addition?)
+
+4. **Where do attractors live, and what are they stable under?**
+   (This is the bridge from “a space of programs” to “a space of concepts”.)
+
+If you tell me which of these feels most like “the missing hinge” right now, I
+can keep writing the next section in the same voice—but focused on that hinge.
