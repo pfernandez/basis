@@ -551,7 +551,43 @@ literally “how many closes have occurred so far”.
 In SR, a Lorentz transformation is a change of coordinates between inertial
 frames that preserves the interval (equivalently: preserves the light cones).
 
-In 1+1 dimensions, boosts look especially simple in null coordinates: they are
+Before the formulas, it helps to name the idea they’re expressing.
+
+> **FACT** — A *frame* (in SR) is just a coordinate system used by an observer
+> moving at constant velocity. A *boost* is the coordinate change between two
+> such frames when one observer is moving relative to the other along the
+> “space” direction. Boost symmetry is the statement that the laws don’t care
+> which inertial frame you use: you can rewrite them in primed coordinates and
+> they keep the same form.
+
+Where do the equations come from? In 1+1 dimensions you can get them from two
+simple requirements (in units where `c=1`):
+
+1. **Straight lines stay straight.** If you want “constant-velocity motion” to
+   look constant-velocity in every inertial frame, the transformation should be
+   linear (no weird bending of worldlines).
+2. **Light rays stay light rays.** The lines `x = ±t` (the cone boundaries) must
+   map to lines of the same slope in the new coordinates.
+
+A quick derivation uses the null coordinates `u=t+x`, `v=t-x`. The two cone
+boundaries are exactly the lines `u=0` and `v=0`. A linear transformation that
+preserves those null lines must have the form
+
+```
+u' = a u
+v' = b v
+```
+
+for some positive constants `a,b` (positive so you don’t flip time orientation).
+The interval is `t^2 - x^2 = u v`, so preserving it requires
+
+```
+u'v' = uv  ⇒  ab = 1  ⇒  b = 1/a.
+```
+
+It’s convenient to write `a = e^{η}` (because composing boosts multiplies the
+scales, so the parameter `η` adds). This `η` is called the **rapidity**. With
+that convention, boosts look especially simple in null coordinates: they are
 just rescalings,
 
 ```
@@ -560,6 +596,31 @@ v' = e^{-η} v
 ```
 
 which preserve the product `u v` (another way to write `t^2 - x^2`).
+
+If you convert back to `(t,x)` using `t=(u+v)/2`, `x=(u-v)/2`, you get the
+“hyperbolic rotation” form
+
+```
+t' = cosh(η) t + sinh(η) x
+x' = sinh(η) t + cosh(η) x
+```
+
+where `cosh` and `sinh` are the functions that satisfy `cosh^2(η) - sinh^2(η) = 1`
+(the Lorentz analogue of `cos^2 + sin^2 = 1` for ordinary rotations).
+
+If you prefer an ordinary velocity parameter `β` with `|β|<1`, set
+
+```
+β = tanh(η),   γ = cosh(η) = 1 / sqrt(1-β^2),
+```
+
+and the same transformation can be written in the more familiar `γ` form (up to
+sign conventions about which direction is “positive x”):
+
+```
+t' = γ (t ± β x)
+x' = γ (x ± β t)
+```
 
 Now the crucial point:
 
