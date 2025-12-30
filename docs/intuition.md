@@ -701,6 +701,54 @@ The budget can be spent in two qualitatively different ways:
    irreversible “return” events that reduces unresolved structure (in whatever
    collapse rule you have in mind).
 
+It’s worth separating three ideas that can get conflated because they’re all
+“ways of walking through the Catalan set”:
+
+> **FACT** — A listing order (like lexicographic order on Dyck words) is just a
+> bookkeeping choice. A rotation relation (Tamari) is a local *rebracketing*
+> move at fixed size. A growth relation (prefix extension / returns) changes
+> size by adding or discharging obligations.
+
+The computational S-expr bijection does not force one ordering over another. It
+identifies the objects. The moment you define “space = adjacency”, though, you
+must decide which adjacency you mean.
+
+> **MODEL CHOICE** — When you build “dynamics on a tier” (a Laplacian, a
+> Schrödinger operator, a diffusion process on fixed `n`), you have to pick an
+> adjacency graph. Tamari rotations are a natural pair-local choice because
+> they are literally local rewrites; lex order is not an adjacency.
+
+Here’s a tiny concrete example of refocusing vs return, using the simplest
+nontrivial tier (`n=2` internal nodes, i.e. 3 leaves).
+
+Take three items `a,b,c` and think of pairing as “application”:
+
+```
+((a b) c)   ↔   (a (b c))
+```
+
+Those are the two Catalan shapes at this size. In the unlabeled-tree encoding
+used elsewhere in this repo, they render as:
+
+```
+((()())())    ↔    (()(()()))
+```
+
+Moving from the left bracketing to the right bracketing is a **refocus /
+rotation**: it doesn’t create or destroy any pairs; it just changes *which pair
+is “inside” which other pair*. (That’s the Tamari/associahedron move.)
+
+By contrast, a **return / collapse** actually removes unresolved structure. In
+the evaluator rule you started from, the primitive return is:
+
+```
+(() x)  →  x
+```
+
+That’s a different kind of event: it reduces “how much pairing structure is
+still present”. In the walk picture it’s a downstep; in the S-expr picture it’s
+an applicative discharge.
+
 In this picture, “space” is not a pre-existing stage. “Space” is the adjacency
 graph of places the focus could be, i.e. how far (in edges) you are from where
 you were.
