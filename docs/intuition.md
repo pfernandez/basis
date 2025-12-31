@@ -449,6 +449,117 @@ This is the sense in which “the possibility space is real” can be said witho
 overclaiming: the *statistics* force you to treat unobserved alternatives as
 contributing coherently.
 
+### 4.6 Scouting mission: what “space” could mean in the Catalan engine
+
+At this point you’ve felt the core tension: we have a very sharp causal growth
+law, and a very suggestive cone picture, but “what is the spatial coordinate?”
+still feels underdetermined.
+
+The cleanest way I know to unstick this is to separate three roles that are
+easy to blur because they all sound like “geometry”:
+
+> **FACT** — There are three different things:
+> 1. the **state/history space** (what the system is made of),
+> 2. the **outcome/coordinate** you *read out* (what an apparatus reports),
+> 3. the **locality notion** (which states count as “neighbors” for dynamics).
+
+The Catalan substrate fixes (1) very tightly, and gives you a strong causal
+structure in (time, prefix) order. But (2) and (3) are where the model still has
+degrees of freedom.
+
+Here are the main choices you’ve been orbiting, with the “what do you buy, what
+do you pay” summary for each.
+
+#### Option A: “screen coordinate” = height at a slice (the minimal toy space)
+
+This is what we did above: pick `k_screen` and set `x := H(k_screen)`.
+
+> **FACT** — Height is not a unique address on the slice. It’s a projection.
+> Many different prefixes at time `k` share the same height `h`.
+
+That non-uniqueness is not a problem: it’s exactly how coarse measurement works.
+All the distinct micro-histories that land in the same height bin contribute to
+the same “pixel”, and that’s where coherent addition (and interference) lives.
+
+This choice is extremely pair-local and computationally clean because the
+transfer recursion closes on `(k,h)` alone.
+
+#### Option B: “space” = breadth `r(w)` (the chain–star cone coordinate)
+
+Breadth `r(w)` is a beautiful global statistic, and it really does interpolate
+between “everything nested” and “everything separated”.
+
+But:
+
+> **FACT** — `r(w)` is a property of a *completed* history. It summarizes a whole
+> episode; it is not “where the particle is” at some intermediate time.
+
+So `r` is great as an across-histories chart `(n,r)` and as a way to talk about
+depth–breadth tradeoffs. It is much less natural as a literal detector
+coordinate, unless you intend the apparatus to measure a global “max width”
+feature of the entire run.
+
+#### Option C: “space” = focus/address (your “measurement chooses a focus” instinct)
+
+If you want slit separation to be a literal integer distance, this is the most
+direct route:
+
+- Treat a state not just as “a Dyck prefix exists”, but as “a Dyck-derived tree
+  exists *with a distinguished active pair* (a focus)”.
+- Call “position” the address of that focused pair (an `L/R` bitstring from the
+  root, or a left-to-right index along the frontier at the chosen slice).
+
+> **MODEL CHOICE** — This introduces extra structure (a focus and a rule for how
+> it moves), but in exchange you get an honest coordinate that can distinguish
+> two slits and measure their separation as a graph distance.
+
+This is also where refocusing/rotations belong naturally: they are position-like
+motions at fixed size.
+
+#### Option D: “space” = within-tier adjacency (Tamari / Dyck / alt-Tamari)
+
+If you want a Laplacian/Hamiltonian acting on the tier Hilbert space `ℓ²(D_n)`,
+you need a notion of “neighboring states on the tier”.
+
+> **MODEL CHOICE** — Pick an adjacency graph on `D_n`. Tamari rotations are the
+> canonical pair-local move (local rebracketing). Dyck/alt-Tamari give other
+> tier-local adjacencies.
+
+This gives you a principled locality and a canonical-looking Laplacian once the
+adjacency is fixed. But it’s “space of shapes/programs” unless you also supply
+an observation map that tells you what a lab detector reads off from a shape.
+
+#### A warning about “lex order” and the rim shift idea
+
+It’s tempting to take an enumeration (lex, or “radial then lex”) and treat the
+index as a coordinate, then define a shift `S|j⟩=|j+1⟩` and a Laplacian on that
+cycle.
+
+> **FACT** — That construction makes a perfectly good operator, but it is
+> locality on a *labeling*, not locality forced by pairs. Different enumerations
+> give different “cycle geometries”.
+
+So lex is great for *printing* and for stable indexing, but it’s not the same as
+a pair-local neighbor relation like Tamari rotation.
+
+#### What “overlap of paths” means, precisely
+
+One last knot to untie, since it shows up in your “focus at the slit” picture:
+
+> **FACT** — Two distinct prefixes at the same slice time label disjoint sets of
+> full histories. A completed history can’t have two different prefixes of the
+> same length.
+
+So the “recombination” required for interference is not an overlap of history
+sets. It is overlap after *forgetting*: both source-families can feed the same
+later outcome label because the observation map discards which-source
+information.
+
+> **OPEN** — The big outstanding physical identification is: which option (or
+> mixture) corresponds to “space in the lab”? The paper can show that several
+> choices produce coherent interference mechanisms; it does not yet derive the
+> unique one nature uses.
+
 ---
 
 ## 5. Relativity: cones, frames, and the symmetries you actually have
