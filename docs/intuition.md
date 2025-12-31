@@ -560,6 +560,142 @@ information.
 > choices produce coherent interference mechanisms; it does not yet derive the
 > unique one nature uses.
 
+### 4.7 Invariants: what survives changing the story
+
+When you ask “what is real here?”, a surprisingly sharp proxy question is:
+what is invariant?
+
+Not “invariant” in the mystic sense, but in the technical sense:
+
+> **FACT** — An invariant is something that does not change when you apply an
+> equivalence you’ve declared to be “mere description” (a bijection, a gauge
+> quotient, a change of chart, a re-serialization of independent events, or a
+> coarse-graining map that defines what an apparatus can see).
+
+This matters for your “we live in symmetries” idea: what survives the symmetries
+is exactly what an observer can coordinatize by without smuggling in extra
+choices.
+
+Here are the invariants we actually have today, grouped by what they are
+invariant *under*.
+
+#### (i) Intrinsic Dyck invariants (exact, no dynamics required)
+
+Fix a prefix or a completed Dyck word. There are quantities that are just “part
+of the object” regardless of any story you tell about it.
+
+> **FACT** — For a prefix of length `k`:
+> - the **open count** `o(k)` and **close count** `c(k)` satisfy `o+c=k`,
+> - the **height** is `H(k)=o(k)-c(k) ≥ 0`,
+> - the **null coordinates** `u=t+x` and `v=t-x` satisfy `u=2o(k)` and `v=2c(k)`
+>   once you identify `t:=k` and `x:=H(k)`.
+
+For a completed history (length `2n`), `o(2n)=c(2n)=n`. That `n` is a genuine
+rank/time parameter: it’s the tier label.
+
+> **FACT** — “Time” in this substrate is already canonical: the tier `n` (or
+> prefix length `k`) is invariant under every equivalence we’ve discussed so far.
+
+Global statistics like area (sum of heights) and breadth (max width) are also
+intrinsic functions of a completed history:
+
+> **FACT** — If you fix a history `w`, then quantities like Dyck area `A(w)` and
+> breadth `r(w)` are unambiguous. They’re not “conserved”; they’re just
+> well-defined features of the object you fixed.
+
+#### (ii) Gauge invariants (exact, once you accept commuting diamonds)
+
+This is the “Noether-like backbone” you already have: disjoint local events can
+be swapped without changing the outcome. Once you declare that swap to be gauge,
+anything that depends only on *which local events occurred*, not on their
+accidental order, becomes well-defined.
+
+> **FACT** — If two local rewrites are disjoint, swapping their order produces a
+> commuting diamond. So any “total weight” that is a commutative fold over local
+> events (a sum, a multiset union, etc.) is invariant under re-serialization.
+
+Concrete examples:
+
+> **FACT** — The following descend to the gauge quotient (they are functions of
+> the commutation class, not the chosen ordering):
+> - total step count,
+> - multiset / histogram of rule applications,
+> - any additive cost or “action” built from local costs,
+> - any additive phase built from local phase increments.
+
+There’s also a deeper invariant hiding behind the same idea:
+
+> **INTERPRETATION** — A commutation class is better thought of as “a partial
+> order of dependent events” (a causal skeleton). A linear execution order is
+> just one way of listing that poset. In that sense: total order is gauge; the
+> dependency structure is physical.
+
+(“Poset” just means: a set of events where some pairs have a “must happen
+before” relation, but many pairs are incomparable.)
+
+This is exactly where you can get principled “interactions” without breaking
+pair locality:
+
+> **OPEN** — If independent diamonds are “flat” (exactly commuting), the gauge
+> quotient is large. If you allow a controlled failure of commutation (a phase
+> mismatch around a diamond), that mismatch is a local holonomy/curvature term:
+> it’s a clean place for interaction to live without introducing global state.
+
+#### (iii) Observation-map invariants (exact, once you choose what the lab reads)
+
+Once you choose an observation map (the “apparatus readout”) `f`, there are
+quantities that are invariant because they are defined purely from the induced
+partition of histories into outcome-bins.
+
+> **FACT** — With fixed `n` and fixed `f`, multiplicities `N(x)=#{w∈D_n: f(w)=x}`
+> are unambiguous. So are derived quantities like “how much uncertainty is left”
+> (`log N(x)`) and “how much uncertainty was removed by learning `x`”
+> (`log |D_n| - log N(x)`).
+
+That’s a very clean way to say what “collapse” is doing in this model: it’s an
+information update relative to a chosen coarse-graining.
+
+#### (iv) Embedded Lorentz invariants (useful mnemonics, not exact lattice symmetries)
+
+If you embed a Dyck prefix into a 1+1 chart, the continuum interval
+`t^2 - x^2 = uv` is invariant under *continuous* Lorentz boosts.
+
+> **FACT** — `uv = (t+x)(t-x) = t^2 - x^2` is algebraically exact once you pick
+> the chart. But generic boosts do not preserve the integer/boundary Dyck lattice,
+> so this is a comparison invariant, not a proven symmetry of the discrete model.
+
+#### Where this points next (and the “three spatial dimensions” hope)
+
+Your hope was: “maybe time is invariant, and the other three spatial dimensions
+will show up among the invariants too.”
+
+There’s a clean diagnostic here:
+
+> **FACT** — The plain Dyck substrate is intrinsically 1+1 in the walk picture:
+> at each slice you have (time `k`, height `H(k)`) plus hidden internal degrees
+> of freedom. You should not expect three independent *coordinate-like* invariants
+> to pop out of this without enlarging the structure.
+
+That’s not defeat; it’s information. It tells you what kinds of extensions
+would be “minimal and honest” if you want 1+3:
+
+> **OPEN** — Three routes that preserve the “we live in symmetries” philosophy:
+> 1. **Multiple independent counters:** replace scalar height by a vector height
+>    constrained to a nonnegative cone (a higher-dimensional ballot/Weyl-chamber
+>    generalization). Then “space axes” really are independent invariants.
+> 2. **Emergent dimension of slices:** declare “space at time `n`” to be a
+>    canonical adjacency graph on the slice (or on its gauge quotient), and define
+>    dimension by scaling laws (volume growth or spectral dimension).
+> 3. **Translation symmetries first:** identify a natural commuting family of
+>    automorphisms (“shifts”) of whatever dynamics you settle on; the conserved
+>    charges/eigenmodes of those shifts behave like momenta, whose duals behave
+>    like coordinates.
+
+Those are genuine research directions, but they are not yet theorems of the
+current paper. The good news is that they each keep faith with pair locality:
+they don’t add a global field by hand; they add (or extract) structure in a way
+that can be made local and checkable.
+
 ---
 
 ## 5. Relativity: cones, frames, and the symmetries you actually have
