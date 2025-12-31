@@ -945,6 +945,160 @@ really a symmetry” instinct can guide you:
 > Catalan engine, Lorentz invariance is an aspiration for an emergent limit, not
 > an established symmetry of the discrete substrate.
 
+### 5.7 Mass: internal clocks, mobility, and what we can say now
+
+“Mass” is one of those words that carries a lot of baggage. Here are the two
+pieces of it we actually care about in this project:
+
+1. **Inertia:** how strongly a thing resists having its motion changed.
+2. **Phase rate:** how quickly a thing’s quantum phase winds as it evolves.
+
+In ordinary physics these are not unrelated accidents. In relativistic quantum
+mechanics, mass is the coefficient that ties proper time to action/phase.
+
+> **FACT** — In Feynman’s path-integral picture, a free relativistic particle
+> contributes a phase like `exp(i S / ħ)` with `S = -m ∫ dτ`. In units where
+> `ħ=1` and `c=1`, mass has units of inverse time: it’s literally a frequency.
+
+This matches your “internal cycle time equals mass” instinct (Kip Thorne’s
+clock picture): a larger mass corresponds to a faster intrinsic phase rotation.
+
+Now translate that into our model language.
+
+#### Massless vs massive: what “lightlike” would mean here
+
+In ordinary relativity, there is a sharp divider:
+
+> **FACT** — If a worldline is **lightlike** (photon-like), then the proper time
+> along it is `Δτ = 0`. If it is **timelike** (massive-particle-like), then
+> `Δτ > 0`.
+
+In our discrete picture, we already have a cone constraint (`|Δx|≤Δt`) once we
+interpret `Δx` as “net drift of the focus” under a pair-local speed limit.
+
+So the cleanest Catalan analogue of “massless vs massive” is not “chain vs star”
+as a slogan, but “does the process accumulate intrinsic return time?”
+
+> **MODEL CHOICE** — Call an excitation “effectively massless” if, over the
+> segment of interest, it saturates the speed limit and accumulates essentially
+> no proper time (`Δτ≈0`). Call it “massive” if `Δτ` accumulates at a nonzero
+> rate.
+
+> **INTERPRETATION** — This is the honest way to read the “light cone” mnemonic:
+> what matters is not the picture of an envelope, but whether the internal clock
+> is ticking along the propagation.
+
+> **OPEN** — A finite Dyck word always returns to zero, so “purely lightlike for
+> all time” can only be an infinite-size idealization or a statement about a
+> long segment between interactions. That’s fine, but we should say it that way.
+
+#### Mass as “phase per unit proper time” (the cleanest bridge)
+
+We already introduced a model proper time `τ` as “how many irreversible returns
+happened”, or (if we want the Lorentz-flavored bridge) as `sqrt(Δt^2-Δx^2)`.
+
+The most conservative way to introduce mass is then:
+
+> **MODEL CHOICE** — Define a mass parameter `m` as the coefficient that turns
+> proper time into phase: histories pick up a factor like `exp(-i m τ)` (up to
+> conventions and units).
+
+This is attractive because it does *not* require you to decide what “space” is
+in full generality. It only requires that you have some honest intrinsic clock
+functional `τ` attached to a process.
+
+> **INTERPRETATION** — “Heavier” means “phase winds faster per unit intrinsic
+> return”. Fast winding makes alternative histories cancel unless they are very
+> near stationary, which is one clean route to the classical limit: big `m`
+> makes the interference pattern wash out into something trajectory-like.
+
+> **OPEN** — Our current paper uses “Dyck area” as the phase functional because
+> it is the simplest pair-local extensive functional on a walk. A more
+> relativistic story would likely want phase tied primarily to `τ` (proper time)
+> and treat “area-like” terms as potentials. That’s a real fork we can explore.
+
+#### Boost bookkeeping: separating “rest” from “motion” (if we want Lorentz language)
+
+Suppose we take the Lorentz-flavored choice `Δτ = sqrt(Δt^2-Δx^2)` seriously as
+an emergent approximation.
+
+Then there’s a standard way to talk about “kinetic vs rest” without changing
+the invariant mass.
+
+Define:
+
+- `v := Δx/Δt` (speed as drift per tick),
+- `γ := Δt/Δτ = 1/sqrt(1-v^2)` (the time-dilation factor).
+
+> **FACT** — In SR, boosts change `v` and `γ`, and they mix what one observer
+> calls “energy” and “momentum”, but the combination `E^2 - p^2` stays fixed.
+> That fixed value is `m^2` (in units `c=1`).
+
+If we want the same bookkeeping here, the simplest transplant is:
+
+> **MODEL CHOICE** — Define Catalan “energy” and “momentum” by
+> `E := m γ` and `p := m γ v` (equivalently `p := m Δx/Δτ`).
+
+> **INTERPRETATION** — Read `γ = Δt/Δτ` as “how many coordinate chronons elapse
+> per unit intrinsic return time”. Then `E` is “update budget per intrinsic
+> tick”, and `p` is the portion of that budget committed to drift.
+
+This is exactly the move you were gesturing at when you asked about Lorentz
+transforms and “potential vs kinetic”: once you have an `x` and a `τ`, the split
+is not metaphysics; it’s algebra.
+
+> **OPEN** — This doesn’t become a claim until we (i) pick/derive what `x` is
+> operationally (which space notion), and (ii) show that the same `m` extracted
+> from interference/dispersion also controls whatever we call inertia.
+
+#### Mass as “mobility” on a chosen spatial adjacency
+
+There’s a second, very operational place mass appears: in how fast a wavepacket
+spreads.
+
+In the nonrelativistic Schrödinger equation, mass sits in front of the Laplacian
+as `-(1/2m)Δ`. Bigger mass means smaller kinetic spreading.
+
+In Catalan terms, if we adopt a within-tier neighbor graph (Tamari rotations, or
+some other pair-local adjacency) and write down a Laplacian `L` on that graph,
+then:
+
+> **MODEL CHOICE** — Use a Hamiltonian with a kinetic term proportional to
+> `L/m`. Here mass is “how hard it is to move in shape/focus space”.
+
+> **INTERPRETATION** — This is the cleanest way to make “heavy things don’t
+> diffract much” true in the model: increasing `m` simply weakens within-tier
+> spread.
+
+Notice how this hooks back into your “refocus vs return” distinction: mobility
+is about refocus-like motion on a fixed-size space; proper time is about return
+events. Mass can couple to either story (or both), depending on what continuum
+limit you’re aiming for.
+
+#### Calibration (Planck units) and gravity constants (what we can’t claim yet)
+
+If you want to speak about physical mass in kilograms, you need a unit map.
+This is where “one pair = one Planck unit” shows up.
+
+> **MODEL CHOICE** — Pick a physical calibration that maps one update tick (one
+> chronon) and/or one pair-local operation to physical time/length. Then `m`
+> becomes a number with dimensions once you restore `c` and `ħ`.
+
+But calibration does not, by itself, solve the harder identification:
+
+> **OPEN** — A unit map sets scale after you’ve chosen an observation map and a
+> dynamics. It does not uniquely decide *which* Catalan observable corresponds
+> to “position in the lab”, or which kernel corresponds to “free motion”.
+
+You floated two candidates for what might play the role of `G` (a universal
+“collapse force of 1” vs a drift/bias).
+
+> **OPEN** — If gravity emerges here, it likely emerges as a specific bias of
+> the transition weights (a curvature of the history measure). In that case,
+> “mass as stored unresolved structure” could become “mass sources bias”. But
+> we are not yet at a place where we can write `G` down without smuggling in the
+> answer as a parameter.
+
 ---
 
 ## 6. Why phase belongs to “return” and “obligation” (in the simplest model)
