@@ -260,13 +260,16 @@ k(w):=\sum_{j=1}^{2n-1}\mathbf{1}\{(w_j,w_{j+1})=(\texttt{(},\texttt{)})\}.
 		1 \le b(w) \le n,
 	\]
 	with $b=1$ for the fully nested chain and $b=n$ for the fully separated star.
-	The inequality
-	\[
-		b \le n
-	\]
-	is enforced purely by the recursive constraint. It is the discrete analogue of
-	the relativistic light-cone bound $|\Delta x| \le \Delta t$ (in units with
-	$c=1$).
+		The inequality
+		\[
+			b \le n
+		\]
+		is enforced purely by the recursive constraint. It is the discrete analogue of
+		the relativistic light-cone bound $|\Delta x| \le \Delta t$ (in units with
+		$c=1$).
+		This analogy is mnemonic only: no discrete Lorentz invariance is claimed, and
+		the integer null-count lattice admits no nontrivial boosts
+		(Remark~\ref{rem:no-lattice-boost}).
 
 	\begin{remark}[Breadth as a recursive fold]
 	\label{rem:breadth-fold}
@@ -603,7 +606,8 @@ Catalan motifs (Remark~\ref{rem:symbol-motifs}).
 	in a purely structural setting: there is an injective encoding of labeled
 	application trees (and in particular SKI terms) into unlabeled Catalan trees by
 	tagging constructor nodes and representing each symbol by a fixed subtree motif.
-	An explicit construction is recorded in the companion supplement.
+	An explicit construction is recorded in the companion supplement (Computational
+	Foundations appendix).
 	\end{remark}
 
 This observation also extends to operational semantics. Standard reductions
@@ -1366,16 +1370,19 @@ rescaled height process on $[0,1]$,
 \[
 X^{(n)}(\tau) := n^{-1/2} H_w(\lfloor 2n\tau\rfloor), \qquad 0\le \tau \le 1.
 \]
-Under the standard Dyck-to-Brownian-excursion scaling, $X^{(n)} \Rightarrow X$
-in distribution, where $X$ is a Brownian excursion on $[0,1]$.
+	Under the standard Donsker-type invariance principle for Dyck paths (conditioned
+	random walks), $X^{(n)} \Rightarrow X$ in distribution, where $X$ is a Brownian
+	excursion on $[0,1]$ \cite{le-gall05,janson07}.
 
-The discrete area rescales as a Riemann sum:
-\[
-\frac{1}{2n^{3/2}}A(w)
-= \frac{1}{2n}\sum_{k=0}^{2n-1} n^{-1/2}H_w(k)
-\;\Longrightarrow\;
-\int_0^1 X(\tau)\,d\tau.
-\]
+	The discrete area rescales as a Riemann sum:
+	\[
+	\frac{1}{2n^{3/2}}A(w)
+	= \frac{1}{2n}\sum_{k=0}^{2n-1} n^{-1/2}H_w(k)
+	\;\Longrightarrow\;
+	\int_0^1 X(\tau)\,d\tau.
+	\]
+	The factor $2$ reflects that a Dyck history of semilength $n$ has $2n$ steps,
+	so $1/(2n)$ is the natural Riemann-sum normalization over $\tau\in[0,1]$.
 Consequently, a nontrivial continuum phase is obtained by scaling $\alpha$ with
 $n$ as
 \[
@@ -1405,12 +1412,14 @@ Let $n\to\infty$ and rescale time and height by
 	t \mapsto n\tau, \qquad h \mapsto \sqrt{n}\,x .
 \]
 
-Under this scaling, the rescaled Dyck height process converges in law to a
-Brownian excursion on $x\ge0$. At the PDE level, the diffusion part is governed
-by the heat operator on the half-line, while the Dyck constraint is imposed by
-conditioning (a Doob transform / Bessel-bridge representation) rather than by a
-time-homogeneous boundary condition alone. In particular, the corresponding
-diffusion term on $x>0$ is the half-line Laplacian,
+	Under the standard Donsker-type invariance principle for conditioned simple
+	random walks (equivalently, uniform Dyck paths), the rescaled height process
+	converges in law to a Brownian excursion on $x\ge0$. At the PDE level, the
+	diffusion part is governed
+	by the heat operator on the half-line, while the Dyck constraint is imposed by
+	conditioning (a Doob transform / Bessel-bridge representation) rather than by a
+	time-homogeneous boundary condition alone. In particular, the corresponding
+	diffusion term on $x>0$ is the half-line Laplacian,
 
 \[
 L := \frac{1}{2}\,\partial_x^2.
@@ -1433,7 +1442,9 @@ generates a unitary group $e^{itL_{\mathrm{disc}}}$ solving the discrete free
 Schr\"odinger equation $i\partial_t\psi=-L_{\mathrm{disc}}\psi$.
 \end{remark}
 
-See \cite{le-gall05,janson07} for standard derivations and precise statements.
+	See \cite{le-gall05,janson07} for standard derivations and precise statements,
+	and \cite{pitman1999,takacs1991} for Brownian excursion and Bessel-bridge
+	viewpoints.
 Appendix~\ref{appendix:coordinate-charts}, Section~\ref{subsec:projection-correlation}
 records a complementary view of the same limit through the covariance structure of
 the height observable and its Karhunen--Lo\`eve modes.
@@ -1441,14 +1452,18 @@ the height observable and its Karhunen--Lo\`eve modes.
 \subsection{Schr\"odinger equation}
 \label{subsec:schrodinger}
 
-More formally, let $L$ denote the diffusion generator on $x\ge 0$ with a chosen
-boundary condition at $x=0$ (e.g.\ reflecting/Neumann or absorbing/Dirichlet),
-\[
-L := \frac{1}{2}\,\partial_x^2.
-\]
-The heat semigroup $e^{\tau L}$ governs the base diffusion term; excursion
-conditioning corresponds to a time-inhomogeneous Doob transform
-(Remark~\ref{rem:dyck-conditioned-drift-scaling}).
+	More formally, let $L$ denote the diffusion generator on $x\ge 0$ with a chosen
+	boundary condition at $x=0$ (e.g.\ reflecting/Neumann or absorbing/Dirichlet),
+	\[
+	L := \frac{1}{2}\,\partial_x^2.
+	\]
+	Different boundary conditions correspond to different idealizations of the
+	behavior at the hard wall $x=0$; the Dyck excursion limit itself is enforced
+	by time-inhomogeneous conditioning (positivity and return), not by a single
+	time-homogeneous boundary condition alone.
+	The heat semigroup $e^{\tau L}$ governs the base diffusion term; excursion
+	conditioning corresponds to a time-inhomogeneous Doob transform
+	(Remark~\ref{rem:dyck-conditioned-drift-scaling}).
 Because $-L$ is (under these standard boundary conditions) a self-adjoint
 nonnegative operator, it generates a unitary group
 $U_t:=e^{-it(-L)}=e^{itL}$. Writing $\psi(t)=U_t\psi(0)$ yields the free
@@ -2305,8 +2320,10 @@ height at a fixed time step after the ``slits'':
 \[
 f(w) := H_w(6)\in\{0,2\}.
 \]
-This is a discrete analogue of recording transverse displacement at a detector
-time without access to which slit was taken.
+	This is a discrete analogue of recording transverse displacement at a detector
+	time without access to which slit was taken.
+	The areas $A(w)$ listed below are computed directly from
+	Lemma~\ref{lem:area-pair-lifetimes}; we list them without further derivation.
 
 \begin{table}[ht]
 \centering
@@ -2337,10 +2354,12 @@ With phase $\psi(w)=e^{i\alpha A(w)}$, the detector amplitudes are
 = 2e^{i7\alpha}\cos(\alpha).
 \]
 By counting alone one would predict multiplicities $N(2)=4$ and $N(0)=2$. In contrast,
-the Born-style intensities $|\Psi(x)|^2$ vary with $\alpha$ and can exhibit strong
-suppression. For example, at $\alpha=\pi/2$ one obtains $\Psi(2)=0$ (exact
-destructive interference at the outcome $x=2$), even though $N(2)=4$ histories
-contribute.
+	the Born-style intensities $|\Psi(x)|^2$ vary with $\alpha$ and can exhibit strong
+	suppression. For example, at $\alpha=\pi/2$ one obtains $\Psi(2)=0$ (exact
+	destructive interference at the outcome $x=2$), even though $N(2)=4$ histories
+	contribute.
+	This discrepancy between raw multiplicities $N(x)$ and intensities $|\Psi(x)|^2$
+	is what we mean by interference in this discrete setting.
 
 This example is intentionally tiny: its purpose is to show, in finite
 combinatorial terms, how (i) multiple histories per outcome, (ii) an additive
