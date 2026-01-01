@@ -377,6 +377,15 @@ Appendix~\ref{appendix:coordinate-charts} collects optional coordinate-chart
 constructions (null-count embeddings and related continuum comparisons) used for
 intuition; the combinatorial results below do not depend on these embeddings.
 
+\begin{remark}[Two cone projections]
+The tier--breadth diagram $(n,b(w))$ organizes \emph{completed} histories by the
+global breadth statistic $b(w)$. Separately, local-growth statements are most
+naturally expressed in the within-history prefix chart $(k,H_w(k))$ (or in the
+null-count chart of Appendix~\ref{appendix:coordinate-charts}). These two
+projections should not be identified: $H_w(k)$ is a Markov state variable along
+growth, while $b(w)$ is a coarse summary of an entire completed history.
+\end{remark}
+
 \subsection{Recursive Self-Similarity and Local Re-Centering}
 \label{sec:selfsimilarity}
 
@@ -933,8 +942,8 @@ projection rather than any imposed dynamics.
 
 A discrete analogue of an integral along a history is given by the step-sum of
 the height profile,
-			\[
-				A(w) := \sum_{k=0}^{2n-1} H_w(k),
+				\[
+					A(w) := \sum_{k=0}^{2n-1} H_w(k),
 			\]
 			which measures the cumulative dwell time at nonzero height. This quantity
 			depends on the full distribution of height along the path, not merely on
@@ -946,9 +955,28 @@ accumulating it, and is therefore of the step-additive form of
 Proposition~\ref{prop:phase-classification}.
 \end{remark}
 
-			\begin{remark}[Area refinement and $q$-Catalan weights]
-			Under the standard identification of Dyck paths with lattice paths from
-			$(0,0)$ to $(n,n)$ staying above the diagonal, the usual \emph{area} statistic
+\begin{lemma}[Area as sum of pair lifetimes]
+\label{lem:area-pair-lifetimes}
+Let $w=w_1\cdots w_{2n}\in\mathcal D_n$ and let $A(w)=\sum_{k=0}^{2n-1}H_w(k)$ as
+above. For each matched pair $p$ of parentheses in $w$, let $i(p)<j(p)$ be the
+positions of its opening and closing symbols. Then
+\[
+A(w)=\sum_{p}\bigl(j(p)-i(p)\bigr).
+\]
+In particular, $A(w)$ decomposes as a sum of contributions associated to
+individual pairs.
+\end{lemma}
+
+\begin{proof}
+For each $k\in\{0,\dots,2n-1\}$, the height $H_w(k)$ equals the number of pairs
+whose opening has occurred but whose closing has not yet occurred. A fixed pair
+$p$ contributes $1$ to $H_w(k)$ exactly for $k=i(p),\dots,j(p)-1$, a set of size
+$j(p)-i(p)$. Double counting yields the identity.
+\end{proof}
+
+				\begin{remark}[Area refinement and $q$-Catalan weights]
+				Under the standard identification of Dyck paths with lattice paths from
+				$(0,0)$ to $(n,n)$ staying above the diagonal, the usual \emph{area} statistic
 			$\mathrm{area}(w)$ (counting unit squares between the path and the diagonal)
 		satisfies $\mathrm{area}(w)=(A(w)-n)/2$, i.e.\ $A(w)=n+2\,\mathrm{area}(w)$.
 		Consequently, the weighted sum of the area phase is a specialization of the

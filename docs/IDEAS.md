@@ -291,6 +291,27 @@ This is a \*heuristic direction\*, not a theorem derivable from Catalan combinat
 
 This dossier collects the “global sum over histories” side: assign actions/amplitudes to Dyck histories (and/or collapse-decorated histories) to recover continuum dynamics and probability rules.
 
+#### Decision checkpoint: observation map `f` (what a detector reads) **[IDEA ONLY]**
+
+**Status in paper.** The paper treats `f` abstractly as a coarse-graining/observable, and the double-slit appendix uses a concrete example of the form `f(w)=H_w(k_{\mathrm{screen}})` (height at a fixed slice time), specifically to keep the mechanism finite and combinatorial.
+
+**Commitment question.** When we say “space coordinate” in the narrative, which kind of readout do we mean?
+
+1. **Height-at-slice readout:** `x := H_w(k)` (or a binning of height).
+   - Pros: purely local/Markov; transfer recursions close on `(k,h)`; already supports interference cleanly.
+   - Cons: 1D and intentionally coarse; does not uniquely label a microstate on the slice.
+2. **Focus/address readout:** enrich the state with a distinguished “focused” pair and set `x := addr(focus)` (an address in the tree/pairing).
+   - Pros: yields a literal position-like coordinate and makes “refocus vs return” into honest dynamics.
+   - Cons: adds extra structure and requires a focus-transport rule (still pair-local, but an additional model choice).
+3. **Within-tier shape locality:** choose an adjacency on `D_n` (e.g. Tamari rotations) and define a Laplacian/Hamiltonian on `\ell^2(D_n)`; readouts then become functions on that graph.
+   - Pros: gives a canonical-looking notion of “neighbors” on a constant-tier slice.
+   - Cons: this is “shape space” unless paired with a separate measurement map to lab outcomes.
+4. **Whole-history statistics:** breadth `b(w)`, area, peak count, etc.
+   - Pros: natural for thermodynamic/coarse capacity statements across histories.
+   - Cons: not a screen-pixel model at an intermediate time.
+
+**Recommendation (to force progress).** Keep (1) as the v1/v2 paper’s minimal measurement story, and treat (2) as the main fork if we want a more literal multi-dimensional “space” narrative. Until we commit to a specific `f`, claims about “what space is” remain interpretive rather than derived.
+
 #### Structural action as Dyck area (solid definition; open uniqueness) **[IN PAPER]**
 
 For a Dyck path $w$ of semilength $n$ with height process $(H_k)_{k=0}^{2n}$, define the area
