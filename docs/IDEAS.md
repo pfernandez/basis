@@ -258,6 +258,31 @@ Early simulation hints suggest symmetry/antisymmetry-like behavior for certain n
 
 Once reentry edges are allowed, the structure is a directed graph, not a planar tree. Nonplanarity arguments (e.g. $K_{3,3}$) show that **2D drawings must introduce spurious crossings** for generic reentrant structure. **3D is sufficient** to embed generic finite graphs without forced crossings. The leap from “needs 3D to draw without lies” to “explains 3 spatial dimensions” is conjectural, but the combinatorial pressure toward higher-dimensional faithful embeddings is real.
 
+#### Closure postulate: no invisible substitution (local sharing must be explicit) **[IDEA ONLY]**
+
+Pure Dyck/tree rewriting does not support reuse/fanout by purely local moves: if the same subtree is needed in two places, a tree either (i) duplicates it (breaking “maximal sharing”), or (ii) appeals to a global substitution/interpreter mechanism. A clean closure postulate is:
+
+- **All sharing is explicit.** The substrate is enriched from trees to a wiring/DAG representation (reentry edges, explicit fanout nodes, or both).
+- **All computation is local.** Every computational effect (including reuse) is realized by bounded local rewrites on that explicit shared structure.
+
+This keeps “pair locality” honest: nothing happens by nonlocal, invisible copying.
+
+#### Exchange principle: permutation-only vs braid data **[IDEA ONLY]**
+
+If you physically work in a 2D ambient space, exchanges of strands can carry additional braid data (and, in quantum settings, additional topological phases). If the intended theory space is instead “exchange is just permutation of indistinguishable degrees of freedom” (no additional braid observable), then that is an additional model restriction:
+
+- **Permutation-only exchange.** Identify independent exchanges up to permutation (quotient braid data away rather than retaining it as an extra observable).
+
+This is not “more correct” than anyonic/braided statistics; it’s a closure choice about what information the model retains.
+
+#### Minimal ambient dimension heuristic (why 3D keeps showing up) **[IDEA ONLY]**
+
+Under the two closure moves above (explicit sharing + local rewrites, and exchange treated as permutation-only), planar embeddings become a bottleneck: to route and reorder independent strands by local moves without introducing an extra primitive “magical swap/interpreter,” you need room for strands to pass without forced crossings. In that sense:
+
+- **3D is the minimal geometric host** where generic wiring/reentry structure can be represented and locally rerouted without crossings becoming unavoidable bookkeeping artifacts.
+
+This is a \*heuristic direction\*, not a theorem derivable from Catalan combinatorics alone; it becomes sharpenable only after committing to a specific local wiring calculus and a precise notion of what counts as an allowed local move.
+
 ---
 
 ### 5) Amplitudes: structural action, Born-like measures, and Catalan path integrals **[PARTIAL]**

@@ -282,14 +282,14 @@ making them explicit so they stop competing in your head.
    naturally supports “screen plane at time `k`”.
 
 2. **The across-histories cone (tier vs breadth statistic).**
-   This is the `(n,r)` picture in the arXiv paper: once a full history is
+   This is the `(n,b)` picture in the arXiv paper: once a full history is
    complete (tier `n`), you can summarize its *shape* by a single breadth number
-   `r(w)` (for example: the maximum number of pairs at a common nesting depth).
+   `b(w)` (for example: the maximum number of pairs at a common nesting depth).
 
 They are both honest, but they are not the same axis labels.
 
 > **FACT** — `(k,h)` is a coordinate system on *prefixes of a single history*.
-> `(n,r)` is a coordinate system on *the set of completed histories*, where `r`
+> `(n,b)` is a coordinate system on *the set of completed histories*, where `b`
 > is a global summary of the whole shape.
 
 The reason they still feel like “the same light cone” is that they both express
@@ -484,17 +484,17 @@ the same “pixel”, and that’s where coherent addition (and interference) li
 This choice is extremely pair-local and computationally clean because the
 transfer recursion closes on `(k,h)` alone.
 
-#### Option B: “space” = breadth `r(w)` (the chain–star cone coordinate)
+#### Option B: “space” = breadth `b(w)` (the chain–star cone coordinate)
 
-Breadth `r(w)` is a beautiful global statistic, and it really does interpolate
+Breadth `b(w)` is a beautiful global statistic, and it really does interpolate
 between “everything nested” and “everything separated”.
 
 But:
 
-> **FACT** — `r(w)` is a property of a *completed* history. It summarizes a whole
+> **FACT** — `b(w)` is a property of a *completed* history. It summarizes a whole
 > episode; it is not “where the particle is” at some intermediate time.
 
-So `r` is great as an across-histories chart `(n,r)` and as a way to talk about
+So `b` is great as an across-histories chart `(n,b)` and as a way to talk about
 depth–breadth tradeoffs. It is much less natural as a literal detector
 coordinate, unless you intend the apparatus to measure a global “max width”
 feature of the entire run.
@@ -600,7 +600,7 @@ Global statistics like area (sum of heights) and breadth (max width) are also
 intrinsic functions of a completed history:
 
 > **FACT** — If you fix a history `w`, then quantities like Dyck area `A(w)` and
-> breadth `r(w)` are unambiguous. They’re not “conserved”; they’re just
+> breadth `b(w)` are unambiguous. They’re not “conserved”; they’re just
 > well-defined features of the object you fixed.
 
 #### (ii) Gauge invariants (exact, once you accept commuting diamonds)

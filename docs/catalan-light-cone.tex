@@ -222,13 +222,13 @@ k(w):=\sum_{j=1}^{2n-1}\mathbf{1}\{(w_j,w_{j+1})=(\texttt{(},\texttt{)})\}.
 \begin{figure}[ht]
 		\centering
 		% Placeholder: schematic light-cone diagram
-		\begin{tikzpicture}[scale=1.1]
-		% axes
-			\draw[->] (0,0) -- (0,4) node[left] {$n$};
-			\draw[->] (0,0) -- (4,0) node[below] {$r$};
-		% cone boundaries
-		\draw[thick] (0,0) -- (3.5,3.5);
-		\draw[thick] (0,0) -- (0.8,3.5);
+			\begin{tikzpicture}[scale=1.1]
+			% axes
+				\draw[->] (0,0) -- (0,4) node[left] {$n$};
+				\draw[->] (0,0) -- (4,0) node[below] {$b$};
+			% cone boundaries
+			\draw[thick] (0,0) -- (3.5,3.5);
+			\draw[thick] (0,0) -- (0.8,3.5);
 		% discrete layers
 		\foreach \y in {1,2,3} {
 			\draw[dashed] (0.25*\y,\y) -- (0.85*\y,\y);
@@ -237,47 +237,47 @@ k(w):=\sum_{j=1}^{2n-1}\mathbf{1}\{(w_j,w_{j+1})=(\texttt{(},\texttt{)})\}.
 			\node[left] at (0,3.6) {timelike chain};
 			\node[above right] at (3.5,3.5) {lightlike envelope (star)};
 			\node at (1.1,2.2) {\small Dyck layer};
-			\end{tikzpicture}
-			\caption{The Catalan light cone.
-				Tier $n$ (the number of Dyck units) plays the role of a discrete time
-				coordinate, while breadth $r$ measures lateral spread.
-				All Dyck configurations at fixed tier lie between the fully nested chain
-				(timelike extreme) and the fully separated star (lightlike envelope).
-				Discrete Dyck layers approximate constant-time hypersurfaces, and the bound
-			$r \le n$ is enforced combinatorially.}
-			\label{fig:catalan-cone}
-	\end{figure}
+				\end{tikzpicture}
+				\caption{The Catalan light cone.
+					Tier $n$ (the number of Dyck units) plays the role of a discrete time
+					coordinate, while breadth $b$ measures lateral spread.
+					All Dyck configurations at fixed tier lie between the fully nested chain
+					(timelike extreme) and the fully separated star (lightlike envelope).
+					Discrete Dyck layers approximate constant-time hypersurfaces, and the bound
+				$b \le n$ is enforced combinatorially.}
+				\label{fig:catalan-cone}
+		\end{figure}
+	
+	\subsection{Breadth as spatial extent}
+	Define the \emph{breadth} $b(w)$ of a Dyck path $w$ to be the size of a
+	largest level set in the nesting-depth decomposition of matched pairs:
+	\[
+		b(w) := \max_{\ell} \{\text{number of matched pairs at nesting depth } \ell\}.
+	\]
+	Equivalently, $b(w)$ is the maximal number of non-overlapping pairs at a common
+	nesting depth. For a Dyck word of tier $n$ there are $n$ matched pairs in total,
+	so
+	\[
+		1 \le b(w) \le n,
+	\]
+	with $b=1$ for the fully nested chain and $b=n$ for the fully separated star.
+	The inequality
+	\[
+		b \le n
+	\]
+	is enforced purely by the recursive constraint. It is the discrete analogue of
+	the relativistic light-cone bound $|\Delta x| \le \Delta t$ (in units with
+	$c=1$).
 
-\subsection{Breadth as spatial extent}
-Define the \emph{breadth} $r(w)$ of a Dyck path $w$ to be the size of a
-largest level set in the nesting-depth decomposition of matched pairs:
-\[
-	r(w) := \max_{\ell} \{\text{number of matched pairs at nesting depth } \ell\}.
-\]
-Equivalently, $r(w)$ is the maximal number of non-overlapping pairs at a common
-nesting depth. For a Dyck word of tier $n$ there are $n$ matched pairs in total,
-so
-\[
-	1 \le r(w) \le n,
-\]
-with $r=1$ for the fully nested chain and $r=n$ for the fully separated star.
-The inequality
-\[
-	r \le n
-\]
-is enforced purely by the recursive constraint. It is the discrete analogue of
-the relativistic light-cone bound $|\Delta x| \le \Delta t$ (in units with
-$c=1$).
-
-\begin{remark}[Breadth as a recursive fold]
-\label{rem:breadth-fold}
-Although $r(w)$ is a statistic of a completed history, it is computed by a
-recursive fold on the standard Catalan decomposition. For each Dyck word $w$,
-let $L_w(\ell)$ be the number of matched pairs of $w$ at nesting depth $\ell$, so
-$r(w)=\max_{\ell} L_w(\ell)$ and $L_\varepsilon(\ell)=0$ for the empty word. If
-$w=\texttt{(}u\texttt{)}v$ with $u,v$ Dyck words, then
-\[
-	L_w(1)=1+L_v(1),
+	\begin{remark}[Breadth as a recursive fold]
+	\label{rem:breadth-fold}
+	Although $b(w)$ is a statistic of a completed history, it is computed by a
+	recursive fold on the standard Catalan decomposition. For each Dyck word $w$,
+	let $L_w(\ell)$ be the number of matched pairs of $w$ at nesting depth $\ell$, so
+	$b(w)=\max_{\ell} L_w(\ell)$ and $L_\varepsilon(\ell)=0$ for the empty word. If
+	$w=\texttt{(}u\texttt{)}v$ with $u,v$ Dyck words, then
+	\[
+		L_w(1)=1+L_v(1),
 	\qquad
 	L_w(\ell+1)=L_u(\ell)+L_v(\ell+1)\quad(\ell\ge 1).
 \]
@@ -288,13 +288,13 @@ L_w(\ell)=\sum_{k=1}^{2n}\mathbf{1}\{w_k=\texttt{(},\ H_k=\ell\}.
 \]
 \end{remark}
 
-\subsection{Depth--breadth tradeoff}
-Let $h(w)$ denote the maximum height of a Dyck path, i.e.\ the maximum nesting
-depth. Recall that the breadth $r(w)$ is the maximum number of matched pairs
-occurring at any fixed nesting depth:
-\[
-	r(w):=\max_{\ell}{\text{number of matched pairs at nesting depth }\ell}.
-\]
+	\subsection{Depth--breadth tradeoff}
+	Let $h(w)$ denote the maximum height of a Dyck path, i.e.\ the maximum nesting
+	depth. Recall that the breadth $b(w)$ is the maximum number of matched pairs
+	occurring at any fixed nesting depth:
+	\[
+		b(w):=\max_{\ell}{\text{number of matched pairs at nesting depth }\ell}.
+	\]
 
 \begin{remark}[Height as a recursive fold]
 \label{rem:height-fold}
@@ -308,69 +308,69 @@ If $w$ has height process $(H_k)_{k=0}^{2n}$, then
 			h\bigl(\texttt{(}u\texttt{)}v\bigr)=\max\{1+h(u),\,h(v)\}.
 		\]
 		\end{remark}
-	Depth and breadth are not independent: since $n=\sum_{\ell=1}^{h(w)} L_w(\ell)$
-	and $L_w(\ell)\le r(w)$ for all $\ell$, one has
-\[
-	n=\sum_{\ell=1}^{h(w)} L_w(\ell)\le h(w)\,r(w)
-	\quad\Rightarrow\quad
-	h(w)\ge \frac{n}{r(w)}.
-\]
-Thus narrow configurations (small $r$) must be deep, while wide configurations
-(large $r$) may be shallow; the chain and star saturate this bound.
+		Depth and breadth are not independent: since $n=\sum_{\ell=1}^{h(w)} L_w(\ell)$
+		and $L_w(\ell)\le b(w)$ for all $\ell$, one has
+	\[
+		n=\sum_{\ell=1}^{h(w)} L_w(\ell)\le h(w)\,b(w)
+		\quad\Rightarrow\quad
+		h(w)\ge \frac{n}{b(w)}.
+	\]
+	Thus narrow configurations (small $b$) must be deep, while wide configurations
+	(large $b$) may be shallow; the chain and star saturate this bound.
 
 \begin{figure}[ht]
 			\centering
 			\[
-				\begin{array}{ccl}
-			((())) & \quad & (h=3,\ r=1) \\
-			(()()) &      & (h=2,\ r=2) \\
-			(())() &      & (h=2,\ r=2) \\
-			()(()) &      & (h=2,\ r=2) \\
-			()()() &      & (h=1,\ r=3)
-			\end{array}
-	\]
-		\caption{All Dyck words of tier $n=3$, ordered from maximal nesting (chain)
-			to maximal separation (star). These five configurations exhaust the discrete
-			causal possibilities at fixed tier.
-			Depth $h$ and breadth $r$ interpolate between the two extremes, illustrating
-			the intrinsic tradeoff enforced by the Dyck constraint.
-		Higher tiers replicate this structure at larger scale.}
-		\label{fig:dyck-n3}
-	\end{figure}
-
-\subsection{Cone structure}
-Organizing Dyck paths by tier $n$ and breadth $r$ yields a discrete cone:
-\begin{itemize}
-	\item each tier is a ``constant-time'' slice,
-	\item the chain defines the timelike axis,
-	\item the star defines the lightlike boundary,
+					\begin{array}{ccl}
+				((())) & \quad & (h=3,\ b=1) \\
+				(()()) &      & (h=2,\ b=2) \\
+				(())() &      & (h=2,\ b=2) \\
+				()(()) &      & (h=2,\ b=2) \\
+				()()() &      & (h=1,\ b=3)
+				\end{array}
+		\]
+			\caption{All Dyck words of tier $n=3$, ordered from maximal nesting (chain)
+				to maximal separation (star). These five configurations exhaust the discrete
+				causal possibilities at fixed tier.
+				Depth $h$ and breadth $b$ interpolate between the two extremes, illustrating
+				the intrinsic tradeoff enforced by the Dyck constraint.
+			Higher tiers replicate this structure at larger scale.}
+			\label{fig:dyck-n3}
+		\end{figure}
+	
+	\subsection{Cone structure}
+	Organizing Dyck paths by tier $n$ and breadth $b$ yields a discrete cone:
+	\begin{itemize}
+		\item each tier is a ``constant-time'' slice,
+		\item the chain defines the timelike axis,
+		\item the star defines the lightlike boundary,
 	\item admissible configurations fill the interior.
 \end{itemize}
 This structure will be referred to as the \emph{Catalan light cone}.
 
-\subsection{Scaling behavior}
-Classical results on conditioned random walks show that typical Dyck paths at
-tier $n$ have height and breadth of order $\sqrt{n}$
-\cite{le-gall05,janson07,addario-berry13}. Extremal configurations saturate
-the linear bound $r\le n$, while typical configurations lie deep within the
-cone. This separation between extremal and typical behavior mirrors the role of
-null, timelike, and spacelike trajectories in relativistic geometry, and we
-use this terminology only as a mnemonic: the statements here are purely
-combinatorial (see also Remark~\ref{rem:no-lattice-boost}).
+	\subsection{Scaling behavior}
+	Classical results on conditioned random walks show that typical Dyck paths at
+	tier $n$ have height and breadth of order $\sqrt{n}$
+	\cite{le-gall05,janson07,addario-berry13}. Extremal configurations saturate
+	the linear bound $b\le n$, while typical configurations lie deep within the
+	cone. This separation between extremal and typical behavior mirrors the role of
+	null, timelike, and spacelike trajectories in relativistic geometry, and we
+	use this terminology only as a mnemonic: the statements here are purely
+	combinatorial (see also Remark~\ref{rem:no-lattice-boost}).
 
-\begin{theorem}[Discrete light-cone bound and scaling]
-	Let $w$ be a Dyck word of semilength $n$ and breadth $r(w)$ as above. Then
-	\[
-		1 \le r(w) \le n.
-	\]
-	Moreover, for a uniformly random Dyck word of semilength $n$, the typical
-	height and breadth are of order $\sqrt{n}$.
-\end{theorem}
-\noindent
-The first statement follows from the definition of $r(w)$ and the fact that
-there are $n$ matched pairs, while the scaling behavior is a consequence of
-invariance-principle results for conditioned random walks
-\cite{le-gall05,janson07,addario-berry13}.
+	\begin{theorem}[Discrete light-cone bound and scaling]
+		Let $w$ be a Dyck word of semilength $n$ and breadth $b(w)$ as above. Then
+		\[
+			1 \le b(w) \le n.
+		\]
+		Moreover, for a uniformly random Dyck word of semilength $n$, the typical
+		height and breadth are of order $\sqrt{n}$.
+	\end{theorem}
+	\noindent
+	The first statement follows from the definition of $b(w)$ and the fact that
+	there are $n$ matched pairs, while the scaling behavior is a consequence of
+	invariance-principle results for conditioned random walks
+	\cite{le-gall05,janson07,addario-berry13}.
 
 \paragraph{Coordinate charts and continuum comparisons.}
 Appendix~\ref{appendix:coordinate-charts} collects optional coordinate-chart
@@ -815,6 +815,15 @@ functional on histories. Given these, we define amplitudes by coherent summation
 over preimages and probabilities by normalized squared magnitudes, in analogy
 with the Born rule \cite{feynman-hibbs65}.
 
+\paragraph{Configuration space versus readout.}
+At fixed tier $n$, the set $\mathcal D_n$ is a \emph{configuration space} of
+completed histories. A ``screen coordinate'' (or any measurement outcome) is not
+identified with $\mathcal D_n$ itself, but with an \emph{observable} (deterministic
+coarse-graining) $f:\mathcal D_n\to\mathcal X$ to an outcome set $\mathcal X$,
+chosen to model a measurement protocol. Likewise, intrinsic chart variables
+attached to histories (e.g.\ height along a prefix trajectory, or history-level
+statistics such as breadth $b(w)$) become readouts only when selected as part of $f$.
+
 \begin{definition}[Catalan amplitude model at fixed tier]
 \label{def:catalan-amplitude-model}
 Fix a tier $n$ and an observable (coarse-graining) $f:\mathcal D_n\to\mathcal X$
@@ -884,6 +893,15 @@ example, by a finite-state transducer driven by the current height and step
 type). For such $f$, the multiplicities $N(x)$ may be computed by transfer-matrix
 recursions on the induced state space. We keep $f$ arbitrary here for
 generality.
+\par
+Independently of any chosen observable, the Dyck growth process admits a canonical
+state compression: the rooted future cone of a prefix depends only on its current
+height (Lemma~\ref{lem:cone-iso-height}), and for a fixed completion horizon the
+number of admissible completions depends only on remaining steps and height
+(Lemma~\ref{lem:ballot-completions}). This yields the time-inhomogeneous
+Dyck-conditioned Markov kernel of Lemma~\ref{lem:dyck-conditioned-kernel}, in
+which the next step is chosen with probability proportional to the number of
+admissible futures after taking that step.
 \end{remark}
 \begin{remark}[Coherent vs.\ counting aggregation]
 In the uniform counting baseline, the probability of an outcome is proportional
@@ -2313,9 +2331,9 @@ contexts remain. Value return is mediated by this control return; the Dyck
 ``return'' is fundamentally the discharge of outstanding obligations.
 
 \paragraph{Breadth as a different projection (history-level, not frontier-level).}
-Statistics such as breadth $r(w)$ summarize a \emph{completed} history by the
+Statistics such as breadth $b(w)$ summarize a \emph{completed} history by the
 maximum size of a constant-depth slice in its associated tree. This is a
-coarse-graining of $w$ (many distinct histories share the same $(n,r)$), and it
+coarse-graining of $w$ (many distinct histories share the same $(n,b)$), and it
 should be distinguished from the frontier coordinate $x_k$, which is an
 instantaneous depth/obligation variable along a single prefix trajectory.
 
@@ -2324,7 +2342,7 @@ There is one substrate $\mathcal{C}$ (and its re-rooted futures $\mathcal{C}(p)$
 Two useful ``cone'' pictures arise from:
 (i) the embedded prefix trajectory $(t_k,x_k)$ derived from null counts
 (pathwise frontier dynamics), and
-(ii) history-level projections such as $(n,r(w))$ (coarse geometric envelope).
+(ii) history-level projections such as $(n,b(w))$ (coarse geometric envelope).
 The pairs/tree/$S$-expression view does not introduce a new object; it is an
 identity of representations of the same Catalan structure.
 
