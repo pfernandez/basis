@@ -35,12 +35,12 @@ induces a natural causal prefix order, and organizing histories by tier and
 lateral spread yields a discrete cone whose extremal configurations reproduce a
 light-cone--like causal envelope.
 
-	Classical results on conditioned random walks imply that, under diffusive
-	scaling, Dyck ensembles converge to Brownian excursions. This provides a
-	continuum comparison in which the induced evolution is governed by the heat
-	operator on the half-line (as a base diffusion generator), with the Dyck
-	conditioning encoded via a Doob transform / Bessel-bridge representation, and
-	under analytic continuation one obtains the free Schr\"odinger equation.
+Classical results on conditioned random walks imply that, under diffusive
+scaling, Dyck ensembles converge to Brownian excursions. This provides a
+continuum comparison in which the induced evolution is governed by the heat
+operator on the half-line (as a base diffusion generator), with the Dyck
+conditioning encoded via a Doob transform / Bessel-bridge representation, and
+under analytic continuation one obtains the free Schr\"odinger equation.
 
 The same Catalan shapes also serve as unlabeled application skeletons for
 $\lambda$-calculus and SKI terms (after choosing a standard finite encoding of
@@ -139,11 +139,11 @@ dynamics.%
 Section~\ref{sec:amplitudes} may be read in either order after the geometric
 setup in Section~\ref{sec:catalan_cone}.}
 Locality and disjoint-commutation are discussed in Section~\ref{sec:locality}.
-Sections~\ref{sec:discussion}--\ref{sec:conclusion} provide contextual discussion
-and summarize scope and limitations.
-Appendices collect supporting axioms and constructions (including optional
-coordinate charts such as the Lorentz/proper-time embedding), technical notes,
-and illustrative examples, separate from the main formal development.
+	Sections~\ref{sec:discussion}--\ref{sec:conclusion} provide contextual discussion
+	and summarize scope and limitations.
+	Appendices collect optional coordinate charts (continuum comparison tools) and
+	a worked finite example, separate from the main formal development. Additional
+	appendices and extended proof sketches are collected in a companion supplement.
 
 \section{The Catalan Light Cone as a Discrete Causal Geometry}
 \label{sec:catalan_cone}
@@ -159,8 +159,8 @@ with $n$ internal nodes. The number of such paths is the $n$th Catalan number
 	C_n = \frac{1}{n+1}\binom{2n}{n}.
 \]
 Each up--down pair \(()\) represents a minimal unit of growth. The integer $n$
-will be called the \emph{tier} and will be interpreted as a discrete proper
-time.
+will be called the \emph{tier} and will be interpreted as a discrete time
+parameter.
 
 \subsection{Prefix order and causality}
 Let $\mathcal{C}$ denote the set of \emph{Dyck prefixes}: balanced-parentheses
@@ -174,12 +174,11 @@ a discrete causal structure:
 		\item multiple incompatible futures may branch from the same prefix,
 		\item cycles are prohibited by construction.
 \end{itemize}
-No additional causal axiom is introduced; causality is enforced combinatorially
-by the Dyck constraint.
-Appendix~\ref{appendix:uniqueness} records an axiomatic characterization of this
-collision-free two-move growth structure, and Appendix~\ref{appendix:unfoldings}
-extends the characterization to growth systems with merges via an explicit
-unfolding construction.
+	No additional causal axiom is introduced; causality is enforced combinatorially
+	by the Dyck constraint.
+	A companion supplement records an axiomatic characterization of this
+	collision-free two-move growth structure, and extends the characterization to
+	growth systems with merges via an explicit unfolding construction.
 
 \subsection{Extremal configurations: chain and star}
 At fixed tier $n$ there are many Dyck paths. Two extremal configurations play a
@@ -220,9 +219,9 @@ k(w):=\sum_{j=1}^{2n-1}\mathbf{1}\{(w_j,w_{j+1})=(\texttt{(},\texttt{)})\}.
 \end{remark}
 
 \begin{figure}[ht]
-		\centering
-		% Placeholder: schematic light-cone diagram
-			\begin{tikzpicture}[scale=1.1]
+			\centering
+			% Schematic light-cone diagram
+				\begin{tikzpicture}[scale=1.1]
 			% axes
 				\draw[->] (0,0) -- (0,4) node[left] {$n$};
 				\draw[->] (0,0) -- (4,0) node[below] {$b$};
@@ -235,14 +234,14 @@ k(w):=\sum_{j=1}^{2n-1}\mathbf{1}\{(w_j,w_{j+1})=(\texttt{(},\texttt{)})\}.
 		}
 			% labels
 			\node[left] at (0,3.6) {timelike chain};
-			\node[above right] at (3.5,3.5) {lightlike envelope (star)};
+			\node[above right] at (3.5,3.5) {lightlike boundary (star)};
 			\node at (1.1,2.2) {\small Dyck layer};
 				\end{tikzpicture}
 				\caption{The Catalan light cone.
 					Tier $n$ (the number of Dyck units) plays the role of a discrete time
 					coordinate, while breadth $b$ measures lateral spread.
 					All Dyck configurations at fixed tier lie between the fully nested chain
-					(timelike extreme) and the fully separated star (lightlike envelope).
+					(timelike extreme) and the fully separated star (lightlike boundary).
 					Discrete Dyck layers approximate constant-time hypersurfaces, and the bound
 				$b \le n$ is enforced combinatorially.}
 				\label{fig:catalan-cone}
@@ -598,14 +597,14 @@ programs (as terms) within the Catalan substrate. The apparent choice of leaf
 alphabet can itself be internalized by representing symbols as distinguished
 Catalan motifs (Remark~\ref{rem:symbol-motifs}).
 
-\begin{remark}[Symbols as Distinguished Motifs]
-\label{rem:symbol-motifs}
-Although we sometimes describe leaf labels as an external choice, one may work
-in a purely structural setting: there is an injective encoding of labeled
-application trees (and in particular SKI terms) into unlabeled Catalan trees by
-tagging constructor nodes and representing each symbol by a fixed subtree motif.
-See Lemma~\ref{lem:symbol-motifs} in Appendix~\ref{appendix:computational-foundations}.
-\end{remark}
+	\begin{remark}[Symbols as Distinguished Motifs]
+	\label{rem:symbol-motifs}
+	Although we sometimes describe leaf labels as an external choice, one may work
+	in a purely structural setting: there is an injective encoding of labeled
+	application trees (and in particular SKI terms) into unlabeled Catalan trees by
+	tagging constructor nodes and representing each symbol by a fixed subtree motif.
+	An explicit construction is recorded in the companion supplement.
+	\end{remark}
 
 This observation also extends to operational semantics. Standard reductions
 (such as $\beta$-reduction or SKI contraction) are local rewrite rules on binary
@@ -630,10 +629,21 @@ the full ensemble of admissible computational histories.
 		preserve membership in $\mathcal{T}$. Thus a program, its syntactic
 	expansions, and every admissible reduction history correspond to paths within
 	the Catalan substrate.
-\end{proposition}
-\noindent
-A proof sketch is provided in
-Appendix~\ref{appendix:computational-foundations}.
+	\end{proposition}
+	\noindent
+	\begin{proof}[Proof sketch]
+	As described in classical treatments of combinatory logic and the
+	$\lambda$-calculus \cite{CurryFeys1958,barendregt84}, application is a binary
+	operation, so every term admits a unique representation as a full binary tree:
+	internal nodes encode application and leaves encode atomic symbols (after
+	fixing a standard encoding of symbols/variables). Conversely, any labeled full
+	binary tree denotes a unique applicative term modulo surface syntax.
+	Operational semantics (e.g.\ $\beta$-reduction and SKI contraction) act as
+	local pattern-rewrite rules on such trees and preserve the class of full binary
+	trees. Thus a program, its syntactic expansions, and each admissible reduction
+	history correspond to paths in the induced multiway rewrite graph on
+	$\mathcal{T}$.
+	\end{proof}
 
 \paragraph{Two parenthesis encodings.}
 Two particularly useful parenthesis-only encodings of a full binary tree are:
@@ -823,15 +833,20 @@ histories are regarded as the same outcome, and (ii) a choice of additive phase
 functional on histories. Given these, we define amplitudes by coherent summation
 over preimages and probabilities by normalized squared magnitudes, in analogy
 with the Born rule \cite{feynman-hibbs65}.
+We do not derive \emph{why} histories should carry a complex phase; the phase
+functional is treated as an additional modeling input, constrained only by the
+pairs-only locality discipline.
 
-\paragraph{Configuration space versus readout.}
-At fixed tier $n$, the set $\mathcal D_n$ is a \emph{configuration space} of
-completed histories. A ``screen coordinate'' (or any measurement outcome) is not
-identified with $\mathcal D_n$ itself, but with an \emph{observable} (deterministic
-coarse-graining) $f:\mathcal D_n\to\mathcal X$ to an outcome set $\mathcal X$,
-chosen to model a measurement protocol. Likewise, intrinsic chart variables
-attached to histories (e.g.\ height along a prefix trajectory, or history-level
-statistics such as breadth $b(w)$) become readouts only when selected as part of $f$.
+	\paragraph{Configuration space versus readout.}
+	At fixed tier $n$, the set $\mathcal D_n$ is a \emph{configuration space} of
+	completed histories. A ``screen coordinate'' (or any measurement outcome) is not
+	identified with $\mathcal D_n$ itself, but with an \emph{observable} (deterministic
+	coarse-graining) $f:\mathcal D_n\to\mathcal X$ to an outcome set $\mathcal X$,
+	chosen to model a measurement protocol. Likewise, intrinsic chart variables
+	attached to histories (e.g.\ height along a prefix trajectory, or history-level
+	statistics such as breadth $b(w)$) become readouts only when selected as part of $f$.
+	When a concrete detector coordinate is needed, our default choice is a
+	height-at-slice readout (Appendix~\ref{appendix:doubleslit}).
 
 \begin{definition}[Catalan amplitude model at fixed tier]
 \label{def:catalan-amplitude-model}
@@ -1220,8 +1235,8 @@ summing coherently over coarse-grained equivalence classes before applying the
 Born rule.
 
 \paragraph{Optional: coarse-graining entropy.}
-Appendix~\ref{appendix:technical-notes} records an optional entropy bookkeeping
-for coarse-grainings and collapse counts.
+A companion supplement records an optional entropy bookkeeping for
+coarse-grainings and collapse counts.
 
 \subsection{Path integrals and conditioned walks}
 
@@ -1482,8 +1497,32 @@ the same coarse-grained outcome, differing only in the interleaving of
 independent local updates. When such differences are unobservable (or regarded
 as irrelevant bookkeeping), one may quotient the history space by the induced
 equivalence relation, replacing many interleavings by a single equivalence
-class. This redundancy is structurally analogous to gauge: distinct internal
-descriptions correspond to the same coarse description.
+	class. This redundancy is structurally analogous to gauge: distinct internal
+	descriptions correspond to the same coarse description.
+
+	\begin{lemma}[Commutation of disjoint reductions]
+		\label{lem:causal-consistency}
+		Let $T$ be a full binary tree and consider any local rewrite system whose
+		single-step reductions replace a rooted subtree matching a finite pattern by a
+		new subtree, leaving the rest of $T$ unchanged. Suppose two single-step
+		reductions are applicable at positions $p$ and $q$ whose rooted subtrees are
+		disjoint (neither position lies on the root-to-node path of the other). Let
+		$T_p$ denote the result of applying the reduction at $p$, and similarly $T_q$.
+		Then both reductions remain applicable after the other, and they commute:
+		\[
+			(T_p)_q \;\equiv\; (T_q)_p.
+		\]
+		In particular, disjoint reductions form a commuting diamond as in
+		Figure~\ref{fig:disjoint-subtrees}.
+	\end{lemma}
+
+	\begin{proof}[Proof sketch]
+		Since $p$ and $q$ lie in disjoint subtrees, contracting at $p$ rewrites only
+		the subtree rooted at $p$ and leaves the subtree rooted at $q$ unchanged.
+		Symmetrically, contracting at $q$ leaves the subtree at $p$ unchanged. Because
+		the two rewrite steps act on disjoint parts of the tree, performing both
+		contractions yields the same result regardless of order.
+	\end{proof}
 
 \paragraph{Step-additive history functionals.}
 When assigning a weight (e.g.\ a cost, action, or phase) to a reduction history,
@@ -1590,9 +1629,8 @@ at fixed tier---is analyzed in detail by Chenevi\`ere \cite{cheneviere2022linear
   \label{fig:disjoint-subtrees}
 \end{figure}
 
-(See Appendix~\ref{appendix:computational-foundations}, and in particular
-Lemma~\ref{lem:causal-consistency}, for a formal statement and proof sketch
-of the corresponding disjoint-commutation property.)
+Lemma~\ref{lem:causal-consistency} states (and sketches a proof of) the
+corresponding disjoint-commutation property.
 
 \subsection{Collapse and selection}
 Both computation and amplitude propagation require selection:
@@ -1622,10 +1660,10 @@ emphasized:
 		\item Physical constants and interactions are not derived.
 		\item Only free (noninteracting) wave dynamics appears explicitly.
 		\item Collapse probabilities are not fixed uniquely by the structure.
-			\item Lorentz symmetry is discussed only via continuum embeddings; no discrete
-				boost invariance is claimed (Remark~\ref{rem:no-lattice-boost}).
-		\item The choice of phase/action functional (e.g.\ Dyck area) is not shown to
-			be unique.
+		\item Lorentz symmetry is discussed only via continuum embeddings; no discrete
+			boost invariance is claimed (Remark~\ref{rem:no-lattice-boost}).
+		\item Complex phases and the choice of phase/action functional (e.g.\ Dyck
+			area) are model choices and are not shown to be unique.
 	\end{itemize}
 These limitations reflect a deliberate restriction of scope. The goal has been
 to isolate the minimal recursive structure common to multiple domains, not to
@@ -1659,600 +1697,6 @@ deriving interactions, constants, or a unique collapse/measurement rule requires
 additional structure beyond what is developed here.
 
 \appendix
-
-\section{A Conditional Uniqueness Theorem for the Dyck-Prefix Substrate}
-\label{appendix:uniqueness}
-
-This appendix isolates a minimal set of structural axioms under which the
-Dyck-prefix substrate is not merely an example but is determined uniquely up to
-isomorphism. The result is interpretation-neutral: it assumes no particular
-computational semantics (evaluation order, combinators, rewriting), only a
-ranked causal-growth structure with a one-sided admissibility boundary.
-
-\subsection{Ranked growth posets}
-
-\begin{definition}[Ranked growth poset]
-\label{def:ranked-growth-poset}
-A \emph{ranked growth poset} is a triple $(S,\preceq,\mathrm{rk})$ where $S$ is a
-countable set, $\preceq$ is a partial order on $S$, and
-$\mathrm{rk}:S\to\mathbb{N}$ is a rank function such that:
-\begin{enumerate}[label=(\roman*)]
-\item for every $t\in S$ the set $\{s\in S : s\preceq t\}$ is finite, and
-\item $\mathrm{rk}$ is strictly order-increasing along cover relations.
-\end{enumerate}
-Write $s\prec t$ when $s\preceq t$ and $s\neq t$, and write
-$s\lessdot t$ if $s\prec t$ and there is no $u$ with $s\prec u\prec t$
-(i.e.\ $t$ \emph{covers} $s$).
-\end{definition}
-
-\begin{definition}[Two-move height structure]
-\label{def:two-move-height}
-Let $(S,\preceq,\mathrm{rk})$ be a ranked growth poset with a distinguished root
-$s_{\emptyset}\in S$ satisfying $\mathrm{rk}(s_{\emptyset})=0$.
-A \emph{two-move height structure} on $S$ consists of a function
-$h:S\to\mathbb{Z}_{\ge 0}$ (height) with $h(s_{\emptyset})=0$ such that every
-cover relation $s\lessdot t$ satisfies
-\[
-\mathrm{rk}(t)=\mathrm{rk}(s)+1
-\qquad\text{and}\qquad
-h(t)=h(s)\pm 1.
-\]
-We call a cover with $h(t)=h(s)+1$ an \emph{up-step} and a cover with
-$h(t)=h(s)-1$ a \emph{down-step}.
-\end{definition}
-
-\subsection{Axioms for the Catalan core}
-
-The uniqueness theorem below follows from four axioms capturing: (i) discrete
-single-step growth, (ii) exactly two local move types (up/down), (iii) a
-one-sided boundary in which down-steps are disabled at height $0$, and (iv) an
-\emph{unfolded} (collision-free) history space.
-
-\begin{definition}[Catalan core axioms]
-\label{def:catalan-core-axioms}
-A ranked growth poset $(S,\preceq,\mathrm{rk})$ with root $s_{\emptyset}$ and
-two-move height structure $h$ satisfies the \emph{Catalan core axioms} if:
-\begin{enumerate}[label=(A\arabic*)]
-\item \textbf{(Ranked single-step growth)} For every cover $s\lessdot t$, one has
-$\mathrm{rk}(t)=\mathrm{rk}(s)+1$ and $h(t)=h(s)\pm 1$.
-
-\item \textbf{(Local determinism by move type)} For each $s\in S$, there exists
-\emph{at most one} up-step successor $t_{\uparrow}$ with $s\lessdot t_{\uparrow}$
-and $h(t_{\uparrow})=h(s)+1$, and \emph{at most one} down-step successor
-$t_{\downarrow}$ with $s\lessdot t_{\downarrow}$ and $h(t_{\downarrow})=h(s)-1$.
-
-\item \textbf{(One-sided boundary admissibility)} For each $s\in S$, an up-step
-successor exists, while a down-step successor exists \emph{iff} $h(s)>0$.
-
-\item \textbf{(No collisions / unique history)} Each $t\in S$ admits a unique
-saturated chain (cover chain) from the root:
-\[
-s_{\emptyset}=s_0 \lessdot s_1 \lessdot \cdots \lessdot s_{\mathrm{rk}(t)}=t.
-\]
-\end{enumerate}
-\end{definition}
-
-\subsection{Dyck-prefix poset}
-
-Let $\Sigma=\{+,-\}$. For a word $w=w_1\cdots w_n\in\Sigma^n$, define the
-partial-sum height
-\[
-H_w(k)=\sum_{j=1}^k \xi(w_j),
-\qquad
-\text{where }\xi(+)=+1,\ \xi(-)=-1.
-\]
-Call $w$ \emph{admissible} if $H_w(k)\ge 0$ for all $k$.
-Let $\mathcal{C}$ be the set of all admissible words (Dyck prefixes), partially
-ordered by prefix: $u\preceq v$ iff $u$ is a prefix of $v$. Let $\ell(w)=n$ be
-length and $H(w)=H_w(n)$ be final height.
-
-\begin{definition}[Dyck-prefix poset]
-\label{def:dyck-prefix-poset}
-The \emph{Dyck-prefix poset} is $(\mathcal{C},\preceq,\ell)$ with root
-$\varepsilon$ (the empty word).
-\end{definition}
-
-\subsection{Uniqueness theorem}
-
-\begin{theorem}[Dyck-prefix uniqueness]
-\label{thm:dyck-uniqueness}
-Let $(S,\preceq,\mathrm{rk})$ be a ranked growth poset with root $s_{\emptyset}$
-and a two-move height structure $h$. If $S$ satisfies the Catalan core axioms of
-Definition~\ref{def:catalan-core-axioms}, then there exists a unique bijection
-\[
-\pi:S\to\mathcal{C}
-\]
-such that for every $s\in S$,
-\[
-\ell(\pi(s))=\mathrm{rk}(s),
-\qquad
-H(\pi(s))=h(s),
-\]
-and $\pi$ is an order isomorphism:
-\[
-s\preceq t \quad\Longleftrightarrow\quad \pi(s)\preceq \pi(t)
-\quad\text{(prefix order).}
-\]
-In particular, $(S,\preceq,\mathrm{rk})$ is isomorphic to the Dyck-prefix poset.
-\end{theorem}
-
-\begin{proof}
-By (A4), each $s\in S$ admits a unique cover chain
-$s_{\emptyset}=s_0\lessdot\cdots\lessdot s_n=s$ where $n=\mathrm{rk}(s)$. Define
-a word $\pi(s)\in\Sigma^n$ by setting
-\[
-\pi(s)_k=
-\begin{cases}
-+ & \text{if } h(s_k)=h(s_{k-1})+1,\\
-- & \text{if } h(s_k)=h(s_{k-1})-1.
-\end{cases}
-\]
-This is well-defined and has length $\ell(\pi(s))=n$. By construction, the
-partial sums of $\pi(s)$ coincide with the height along the chain,
-\[
-H_{\pi(s)}(k)=h(s_k)\ge 0 \quad\text{for all }k,
-\]
-so $\pi(s)$ is admissible and $\pi(s)\in\mathcal{C}$. Moreover
-$H(\pi(s))=H_{\pi(s)}(n)=h(s)$.
-
-We now show that $\pi$ is bijective. Given any admissible word
-$w=w_1\cdots w_n\in\mathcal{C}$, construct a chain in $S$ by starting at
-$s_0=s_{\emptyset}$ and for each $k\ge 1$ taking the successor specified by
-$w_k$:
-\[
-s_k=
-\begin{cases}
-\text{the (unique) up-step successor of } s_{k-1} & \text{if } w_k=+,\\
-\text{the (unique) down-step successor of } s_{k-1} & \text{if } w_k=-.
-\end{cases}
-\]
-Existence and uniqueness follow from (A2)--(A3); admissibility of $w$ ensures
-that a down-step is only requested when the current height is positive. Let
-$s:=s_n$ be the resulting node at rank $n$. Then $\pi(s)=w$, proving
-surjectivity. Injectivity follows from (A4): distinct nodes have distinct
-cover chains and hence distinct step sequences.
-
-Finally, $\pi$ preserves order. If $s\preceq t$, then the unique chain to $t$
-contains the chain to $s$ as an initial segment, so $\pi(s)$ is a prefix of
-$\pi(t)$. Conversely, if $\pi(s)$ is a prefix of $\pi(t)$, then the constructed
-chain for $\pi(t)$ passes through the constructed chain for $\pi(s)$, giving
-$s\preceq t$. Uniqueness of $\pi$ is immediate from (A4), since $\pi(s)$ is
-forced by the unique cover chain to~$s$.
-\end{proof}
-
-\subsection{Catalan enumeration at completion}
-
-To recover the usual Catalan counting, impose a completion boundary condition:
-completion occurs when the height returns to zero at even rank.
-
-\begin{definition}[Completed histories]
-\label{def:completed-histories}
-For $n\in\mathbb{N}$, define the set of \emph{completed histories} at rank $2n$ by
-\[
-S^{\mathrm{comp}}_{2n} := \{s\in S : \mathrm{rk}(s)=2n \text{ and } h(s)=0\}.
-\]
-\end{definition}
-
-\begin{corollary}[Catalan counting]
-\label{cor:catalan-counting}
-Under the hypotheses of Theorem~\ref{thm:dyck-uniqueness}, the number of
-completed histories satisfies
-\[
-\#\bigl(S^{\mathrm{comp}}_{2n}\bigr)=C_n
-=\frac{1}{n+1}\binom{2n}{n},
-\]
-the $n$th Catalan number.
-\end{corollary}
-
-\begin{proof}
-By Theorem~\ref{thm:dyck-uniqueness}, $S^{\mathrm{comp}}_{2n}$ is in bijection
-with admissible words of length $2n$ with final height $0$, i.e.\ Dyck words of
-semilength $n$. These are counted by the Catalan number $C_n$.
-\end{proof}
-
-\subsection{Quotients and structural sharing}
-
-The ``no collisions'' axiom (A4) asserts that $S$ is an \emph{unfolded} history
-space: each node encodes a distinct growth history. This does not preclude gauge
-equivalences or multi-way computation graphs; rather, those arise by quotienting
-$S$ by an equivalence relation.
-
-\begin{remark}[Quotients and gauge identification]
-\label{rem:gauge-quotient}
-Let $\sim$ be an equivalence relation on $S$ representing gauge or rewrite
-identifications. The quotient set $S/{\sim}$ may exhibit merges (a DAG-like
-state graph), even if $S$ is collision-free. Theorem~\ref{thm:dyck-uniqueness}
-characterizes the unfolded core; quotient structure is encoded by the choice of
-$\sim$ and acts as an identification of histories rather than a primitive
-feature of the substrate.
-\end{remark}
-
-\begin{remark}[Structural sharing vs.\ semantic collisions]
-\label{rem:sharing}
-Axiom (A4) concerns semantic identity in $S$ (distinct histories are distinct
-nodes). It is compatible with immutability and structural sharing in
-implementations (e.g.\ hash-consing), which may share representation of common
-substructures without identifying distinct history nodes.
-\end{remark}
-
-\subsection{Scope of the result}
-
-Theorem~\ref{thm:dyck-uniqueness} establishes a core uniqueness statement:
-given two local move types changing an integer height by $\pm 1$, a one-sided
-boundary disabling down-steps at height $0$, and an unfolded history space, the
-substrate is forced to be Dyck-prefix order. This statement is independent of
-additional semantic layers (program interpretations, rewriting dynamics, or
-amplitude assignments), which can be imposed on top of the substrate without
-affecting the isomorphism.
-
-\section{Unfoldings and Covers of Growth Posets}
-\label{appendix:unfoldings}
-
-Many natural representations of computation or gauge-identified state spaces
-exhibit merges: distinct growth histories may lead to the same state, producing
-a DAG-like multi-way graph rather than a tree. The core uniqueness theorem in
-Appendix~\ref{appendix:uniqueness} characterizes the \emph{unfolded} history
-space. This appendix makes that relationship explicit by defining a canonical
-unfolding (history cover) for a ranked growth poset and showing that the Catalan
-uniqueness statement applies upstairs even when merges exist downstairs.
-
-\subsection{Growth graphs}
-
-\begin{definition}[Rooted ranked growth poset]
-\label{def:rooted-ranked-growth-poset}
-A \emph{rooted ranked growth poset} is a ranked growth poset
-$(S,\preceq,\mathrm{rk})$ (Definition~\ref{def:ranked-growth-poset}) equipped
-with a distinguished root $s_{\emptyset}\in S$ such that for every $s\in S$ one
-has $s_{\emptyset}\preceq s$ (i.e.\ every node is reachable from the root).
-\end{definition}
-
-\begin{definition}[Directed growth graph]
-\label{def:directed-growth-graph}
-Let $(S,\preceq,\mathrm{rk})$ be a rooted ranked growth poset.
-Its \emph{directed growth graph} is the rooted directed graph
-$G(S)=(V,E,s_{\emptyset})$ where $V=S$ and $(s,t)\in E$ iff $s\lessdot t$
-(i.e.\ $t$ covers $s$). We regard each edge as a single-step growth move.
-\end{definition}
-
-\begin{definition}[Move type induced by height]
-\label{def:move-type}
-If $(S,\preceq,\mathrm{rk})$ carries a two-move height structure $h$
-(Definition~\ref{def:two-move-height}), then each directed edge $s\to t$ in
-$G(S)$ has a \emph{move type}
-\[
-\mathrm{type}(s\to t)\in\{+,-\}
-\quad\text{defined by}\quad
-\mathrm{type}(s\to t)=
-\begin{cases}
-+ & \text{if } h(t)=h(s)+1,\\
-- & \text{if } h(t)=h(s)-1.
-\end{cases}
-\]
-\end{definition}
-
-\subsection{Rooted covers (local isomorphism in one step)}
-
-To model ``the same local growth rule everywhere'' we use a minimal notion of
-cover: a map that is locally bijective on outgoing edges from each node. This
-avoids introducing general poset coverings and suffices for the unfolding
-argument below.
-
-\begin{definition}[Rooted directed cover]
-\label{def:rooted-directed-cover}
-Let $G=(V,E,r)$ and $\widetilde{G}=(\widetilde{V},\widetilde{E},\widetilde{r})$
-be rooted directed graphs. A function $\varphi:\widetilde{V}\to V$ is a
-\emph{rooted directed cover} if:
-\begin{enumerate}[label=(\roman*)]
-\item $\varphi(\widetilde{r})=r$;
-\item for every $\widetilde{v}\in\widetilde{V}$, the map
-\[
-\varphi_*:\mathrm{Out}(\widetilde{v})\to \mathrm{Out}(\varphi(\widetilde{v})),
-\qquad
-(\widetilde{v}\to \widetilde{w})\mapsto (\varphi(\widetilde{v})\to \varphi(\widetilde{w}))
-\]
-is a bijection, where $\mathrm{Out}(x)=\{x\to y\in E\}$ denotes the set of
-outgoing edges from $x$.
-\end{enumerate}
-If edges carry move types $\{+,-\}$, we additionally require that $\varphi_*$
-preserves move type (i.e.\ the bijection matches $+$-edges to $+$-edges and
-$-$-edges to $-$-edges).
-\end{definition}
-
-\subsection{The canonical unfolding (history cover)}
-
-\begin{definition}[Unfolding as rooted path space]
-\label{def:unfolding}
-Let $(S,\preceq,\mathrm{rk})$ be a rooted ranked growth poset and let $G(S)$ be
-its directed growth graph.
-Define the \emph{unfolding} $\widetilde{S}$ to be the set of all finite directed
-paths in $G(S)$ starting at the root:
-\[
-\widetilde{S}
-:=\bigl\{
-(s_0\to s_1\to\cdots\to s_n)\ :\ s_0=s_{\emptyset},\ (s_{k-1},s_k)\in E
-\bigr\}.
-\]
-Write $\widetilde{s}=(s_0\to\cdots\to s_n)$ and define:
-\begin{enumerate}[label=(\roman*)]
-\item the \emph{endpoint} map $\varphi:\widetilde{S}\to S$ by
-$\varphi(\widetilde{s})=s_n$;
-\item the \emph{rank} $\widetilde{\mathrm{rk}}(\widetilde{s})=n$ (path length);
-\item the \emph{prefix order} on $\widetilde{S}$:
-$\widetilde{u}\preceq \widetilde{v}$ iff $\widetilde{u}$ is an initial segment
-(prefix) of $\widetilde{v}$.
-\end{enumerate}
-If $S$ has a height function $h$, define the lifted height
-$\widetilde{h}(\widetilde{s}) := h(\varphi(\widetilde{s}))$.
-\end{definition}
-
-\begin{lemma}[The unfolding is collision-free]
-\label{lem:unfolding-collision-free}
-Every element $\widetilde{s}\in\widetilde{S}$ has a unique predecessor chain
-from the root in the prefix order, i.e.\ $\widetilde{S}$ satisfies the ``no
-collisions / unique history'' property (A4) of
-Definition~\ref{def:catalan-core-axioms}.
-\end{lemma}
-
-\begin{proof}
-By construction, each $\widetilde{s}$ is itself a rooted path
-$(s_0\to\cdots\to s_n)$. Its strict prefixes are exactly the initial segments
-$(s_0\to\cdots\to s_k)$ for $0\le k<n$, and these form the unique saturated
-chain from the root to $\widetilde{s}$ under prefix inclusion.
-\end{proof}
-
-\begin{lemma}[The endpoint map is a rooted directed cover]
-\label{lem:endpoint-cover}
-Let $G(\widetilde{S})$ be the directed growth graph of the unfolding, whose
-edges append one growth step:
-\[
-(s_0\to\cdots\to s_n)\ \to\ (s_0\to\cdots\to s_n\to s_{n+1})
-\quad\text{whenever } s_n\to s_{n+1}\text{ is an edge in }G(S).
-\]
-Then the endpoint map $\varphi:\widetilde{S}\to S$ from
-Definition~\ref{def:unfolding} is a rooted directed cover in the sense of
-Definition~\ref{def:rooted-directed-cover}. If $S$ carries a two-move height
-structure, then $\varphi$ preserves move type.
-\end{lemma}
-
-\begin{proof}
-Clearly $\varphi$ maps the length-$0$ path $(s_{\emptyset})$ to $s_{\emptyset}$.
-Fix a path $\widetilde{s}=(s_0\to\cdots\to s_n)$. Outgoing edges from
-$\widetilde{s}$ in $G(\widetilde{S})$ are in bijection with outgoing edges from
-$s_n$ in $G(S)$ by appending the corresponding last step $s_n\to s_{n+1}$. Under
-$\varphi$, each appended edge maps to exactly that edge $s_n\to s_{n+1}$, giving
-a bijection on outgoing edges. If move types are present, appending an up-step
-or down-step in $\widetilde{S}$ maps to an up-step or down-step in $S$ by
-Definition~\ref{def:move-type}, so type is preserved.
-\end{proof}
-
-\subsection{Dyck-prefix structure upstairs}
-
-\begin{proposition}[Lift of the Catalan core axioms]
-\label{prop:lift-axioms}
-Suppose $(S,\preceq,\mathrm{rk})$ is a rooted ranked growth poset with a two-move
-height structure $h$ satisfying axioms (A1)--(A3) of
-Definition~\ref{def:catalan-core-axioms} (ranked single-step growth, local
-determinism by move type, and one-sided boundary admissibility), but not
-necessarily (A4). Then the unfolding $(\widetilde{S},\preceq,\widetilde{\mathrm{rk}})$
-with lifted height $\widetilde{h}$ satisfies (A1)--(A4).
-\end{proposition}
-
-\begin{proof}
-Axiom (A4) holds by Lemma~\ref{lem:unfolding-collision-free}. For (A1)--(A3),
-each cover in $\widetilde{S}$ appends exactly one edge of $G(S)$, so ranks
-increase by one and height changes by $\pm 1$ exactly as in $S$. Moreover, by
-local determinism in $S$, from any endpoint there is at most one $+$-successor
-and at most one $-$-successor; by Lemma~\ref{lem:endpoint-cover} the same holds
-in the unfolding at every path. Finally, one-sided boundary admissibility is
-preserved: a $-$-extension exists in $\widetilde{S}$ precisely when the endpoint
-height is positive.
-\end{proof}
-
-\begin{theorem}[Dyck-prefix characterization of the unfolding]
-\label{thm:dyck-unfolding}
-Under the hypotheses of Proposition~\ref{prop:lift-axioms}, the unfolding
-$\widetilde{S}$ is (canonically) order-isomorphic to the Dyck-prefix poset
-(Definition~\ref{def:dyck-prefix-poset}). In particular, completed unfolded
-histories are counted by Catalan numbers as in Corollary~\ref{cor:catalan-counting}.
-\end{theorem}
-
-\begin{proof}
-By Proposition~\ref{prop:lift-axioms}, $\widetilde{S}$ satisfies the full Catalan
-core axioms (A1)--(A4). The conclusion follows by applying
-Theorem~\ref{thm:dyck-uniqueness} to $\widetilde{S}$.
-\end{proof}
-
-\begin{remark}[Canonical quotient and ``collisions'']
-\label{rem:canonical-quotient}
-The unfolding comes with a canonical surjection $\varphi:\widetilde{S}\to S$
-(the endpoint map). Collisions/merges in $S$ correspond exactly to
-identifications of distinct unfolded histories:
-\[
-\widetilde{u}\sim_{\varphi}\widetilde{v}
-\quad\Longleftrightarrow\quad
-\varphi(\widetilde{u})=\varphi(\widetilde{v}).
-\]
-Thus, as a set of states reachable from the root, $S$ is naturally identified
-with the quotient $\widetilde{S}\big/\!\sim_{\varphi}$.
-For the distinction between semantic identification and structural sharing in
-implementations, see Remark~\ref{rem:sharing}.
-\end{remark}
-
-\subsection{A Reduction-Theoretic ``Full Uniqueness'' Statement}
-\label{subsec:full-uniqueness}
-
-The core uniqueness theorem (Theorem~\ref{thm:dyck-uniqueness}) shows that a
-collision-free two-move growth system with a one-sided boundary is forced to be
-Dyck-prefix order. This subsection records a complementary reduction statement:
-if a canonical notion of \emph{intrinsic state} (defined by future-cone
-isomorphism) is already a minimal one-counter system, and if the projection to
-intrinsic state is locally bijective on labeled moves, then the Catalan core is
-forced as the unfolded normal form.
-
-\subsubsection{Future cones and intrinsic-state equivalence}
-
-\begin{definition}[Future cone as a rooted directed graph]
-\label{def:future-cone}
-Let $(S,\preceq,\mathrm{rk})$ be a rooted ranked growth poset with directed
-growth graph $G(S)=(S,E,s_{\emptyset})$ (Definition~\ref{def:directed-growth-graph}).
-For $s\in S$, define the \emph{future cone} at $s$ to be the rooted directed
-subgraph
-\[
-\mathrm{Cone}(s)\ :=\ \bigl(S_s,E_s,s\bigr),
-\]
-where $S_s=\{t\in S:\ s\preceq t\}$ and $E_s=\{(u,v)\in E:\ u,v\in S_s\}$. If
-edges in $G(S)$ are labeled by a finite move alphabet (in particular $\{+,-\}$),
-we regard $\mathrm{Cone}(s)$ as an edge-labeled rooted directed graph.
-\end{definition}
-
-\begin{definition}[Cone isomorphism and intrinsic-state equivalence]
-\label{def:cone-iso}
-Assume edges are labeled by move type in $\{+,-\}$. For $s,t\in S$, write
-$s\equiv t$ if there exists a rooted directed graph isomorphism
-\[
-\psi:\mathrm{Cone}(s)\ \cong\ \mathrm{Cone}(t)
-\]
-sending root to root and preserving move labels. This defines an equivalence
-relation $\equiv$ on $S$, called \emph{intrinsic-state equivalence}. Let
-$M:=S/{\equiv}$ be the set of equivalence classes, with root
-$m(s_{\emptyset})\in M$, and write
-\[
-m:S\to M,\qquad m(s)=[s]_{\equiv}
-\]
-for the canonical projection.
-\end{definition}
-
-\begin{remark}[Relocatable futures]
-\label{rem:relocatable}
-The equivalence relation $\equiv$ captures a precise form of relocatability:
-states are indistinguishable if and only if their reachable futures are
-isomorphic as rooted labeled growth graphs. The quotient $M=S/{\equiv}$ is a
-canonical ``coarsest'' state descriptor that preserves the full future growth
-structure.
-\end{remark}
-
-\subsubsection{Intrinsic dynamics and the cover hypothesis}
-
-\begin{definition}[Intrinsic transition graph]
-\label{def:intrinsic-transition}
-Let $G(S)$ be labeled by $\{+,-\}$. Define a rooted labeled directed graph
-$G(M)$ on $M$ by declaring a labeled edge $x\to_{\pm} y$ to exist if there are
-$s,t\in S$ such that $s\lessdot t$ is a $\pm$-labeled edge of $G(S)$ and
-$m(s)=x$, $m(t)=y$.
-\end{definition}
-
-\begin{definition}[One-counter intrinsic dynamics]
-\label{def:one-counter-dynamics}
-We say $(S,\preceq,\mathrm{rk})$ has \emph{one-counter intrinsic dynamics} if
-there exists a bijection
-\[
-\iota: M \ \to\ \mathbb{Z}_{\ge 0}
-\]
-with $\iota(m(s_{\emptyset}))=0$ such that, for every intrinsic state $x\in M$
-with $\iota(x)=k$:
-\begin{enumerate}[label=(\roman*)]
-\item (\textbf{Two primitive moves}) there exists exactly one $+$-successor
-$y_{+}$ of $x$ in $G(M)$ with $\iota(y_{+})=k+1$;
-\item (\textbf{One-sided boundary}) there exists a $-$-successor $y_{-}$ of $x$
-in $G(M)$ iff $k>0$, and in that case $\iota(y_{-})=k-1$;
-\item (\textbf{No other intrinsic moves}) $x$ has no other outgoing edges in
-$G(M)$ besides $x\to_{+}y_{+}$ and (when $k>0$) $x\to_{-}y_{-}$.
-\end{enumerate}
-Equivalently, $G(M)$ is isomorphic (as a rooted labeled graph) to the standard
-one-counter graph on $\mathbb{Z}_{\ge 0}$ with edges $k\to_{+} k+1$ for all $k$
-and edges $k\to_{-} k-1$ for $k>0$.
-\end{definition}
-
-\begin{remark}[Minimality content]
-\label{rem:minimality-content}
-Definition~\ref{def:one-counter-dynamics} should be read as a minimality
-hypothesis: the intrinsic descriptor $M=S/{\equiv}$ is already a single
-nonnegative integer, and it admits exactly two primitive move types with a
-one-sided boundary at~$0$.
-\end{remark}
-
-\begin{definition}[Cover-consistency of the intrinsic projection]
-\label{def:intrinsic-cover}
-Assume edges are labeled by $\{+,-\}$. We say the intrinsic projection
-$m:S\to M$ is \emph{cover-consistent} if it is a rooted directed cover
-(Definition~\ref{def:rooted-directed-cover}) from the labeled growth graph
-$G(S)$ to the intrinsic graph $G(M)$ (Definition~\ref{def:intrinsic-transition}),
-i.e.\ for every $s\in S$ the induced map on outgoing edges
-$\mathrm{Out}(s)\to\mathrm{Out}(m(s))$ is a label-preserving bijection.
-\end{definition}
-
-\begin{remark}
-Under the one-counter identification $\iota:M\to\mathbb{Z}_{\ge 0}$ of
-Definition~\ref{def:one-counter-dynamics}, cover-consistency of $m$ is
-equivalent to requiring that the composite $h:=\iota\circ m:S\to\mathbb{Z}_{\ge 0}$
-is a rooted directed cover from $G(S)$ to the standard one-counter graph on
-$\mathbb{Z}_{\ge 0}$.
-\end{remark}
-
-\subsubsection{Reduction to the Dyck-prefix normal form}
-
-\begin{theorem}[Reduction to a Dyck-prefix cover]
-\label{thm:full-uniqueness-reduction}
-Let $(S,\preceq,\mathrm{rk})$ be a rooted ranked growth poset whose directed
-growth graph $G(S)$ is labeled by move type in $\{+,-\}$. Assume:
-\begin{enumerate}[label=(H\arabic*)]
-\item \textbf{(Intrinsic-state quotient)} intrinsic-state equivalence $\equiv$ is
-defined by label-preserving cone isomorphism as in Definition~\ref{def:cone-iso},
-with quotient $m:S\to M$;
-\item \textbf{(One-counter intrinsic dynamics)} $S$ satisfies
-Definition~\ref{def:one-counter-dynamics};
-\item \textbf{(Cover consistency)} the intrinsic projection $m$ is a rooted
-directed cover as in Definition~\ref{def:intrinsic-cover};
-\item \textbf{(Tiered single-step growth)} for every cover $s\lessdot t$,
-$\mathrm{rk}(t)=\mathrm{rk}(s)+1$.
-\end{enumerate}
-Let $\widetilde{S}$ be the unfolding (history cover) of $S$ (Definition~\ref{def:unfolding})
-with endpoint map $\varphi:\widetilde{S}\to S$. Then $\widetilde{S}$ is
-(canonically) order-isomorphic to the Dyck-prefix poset (Definition~\ref{def:dyck-prefix-poset}),
-and hence $S$ is a quotient (folding) of a Dyck-prefix cover via~$\varphi$
-(Remark~\ref{rem:canonical-quotient}).
-\end{theorem}
-
-\begin{proof}
-Define a height function on $S$ by composing the intrinsic-state projection with
-the one-counter identification,
-\[
-h(s)\;:=\;\iota(m(s))\in\mathbb{Z}_{\ge 0}.
-\]
-By cover consistency (Definition~\ref{def:intrinsic-cover}) and one-counter
-intrinsic dynamics (Definition~\ref{def:one-counter-dynamics}), each $s\in S$
-has exactly one outgoing $+$-edge, and it has an outgoing $-$-edge iff $h(s)>0$.
-Moreover, because $m$ is label-preserving and $\iota$ identifies $G(M)$ with the
-standard one-counter graph, along any cover edge $s\lessdot t$ one has
-$h(t)=h(s)+1$ for a $+$-edge and $h(t)=h(s)-1$ for a $-$-edge. Together with the
-tier assumption $\mathrm{rk}(t)=\mathrm{rk}(s)+1$, this shows that $S$ admits a
-two-move height structure satisfying axioms (A1)--(A3) of
-Definition~\ref{def:catalan-core-axioms}.
-
-Applying Theorem~\ref{thm:dyck-unfolding} now yields that the unfolding
-$\widetilde{S}$ is Dyck-prefix order-isomorphic. The quotient statement for $S$
-is then exactly Remark~\ref{rem:canonical-quotient}.
-\end{proof}
-
-\begin{remark}[What is and is not proved]
-\label{rem:what-is-not-proved}
-Theorem~\ref{thm:full-uniqueness-reduction} is a ``full uniqueness'' statement
-in the reduction sense: once relocatable futures are formalized via cone
-isomorphism and the intrinsic state space is assumed to be a one-counter with
-two primitive moves, together with the cover-consistency hypothesis (no hidden
-multiplicity in the projection $m$), the Catalan substrate is forced as the
-unfolded normal form. What is not claimed is that all reasonable substrates
-satisfy these minimality hypotheses; establishing that requires separate
-domain-specific arguments.
-\end{remark}
-
-\subsection{Interpretive takeaway}
-
-Theorems~\ref{thm:dyck-uniqueness} and~\ref{thm:dyck-unfolding} together support
-the following robust core statement: whenever a ranked two-move growth system
-with a one-sided boundary is present, the unfolded history space is forced to be
-Dyck-prefix order, and any merged multi-way representation is a quotient of that
-Catalan cover.
 
 \section{Coordinate Charts and Continuum Comparisons}
 \label{appendix:coordinate-charts}
@@ -2803,133 +2247,6 @@ induces a causal orientation. The projected height dynamics, their conditioning,
 and their scaling limits are invariant under such re-rootings.
 \end{remark}
 
-\section{Additional Technical Notes}
-\label{appendix:technical-notes}
-
-\noindent
-This appendix collects optional bookkeeping and auxiliary constructions. It is
-separate from the main formal development and may be skipped on first reading.
-
-\subsection{Entropy of coarse-graining and information rate}
-
-Fix a tier $n$ and an observable (deterministic coarse-graining)
-$f:\mathcal D_n\to\mathcal X$. For $x\in\mathcal X$ write
-\[
-N(x)\;:=\;\#\{w\in \mathcal D_n: f(w)=x\},
-\]
-so that $f^{-1}(x)$ is the equivalence class of histories identified as the
-same outcome.
-If $f$ is prefix-local in the sense of Remark~\ref{rem:local-observables}, then
-the multiplicities $N(x)$ admit transfer recursions on the induced state space.
-
-\paragraph{Multiplicity entropy.}
-Define the (microcanonical) entropy of the full ensemble at tier $n$ by
-\[
-S_n \;:=\; \log \#(\mathcal D_n),
-\]
-and the conditional entropy of an outcome $x$ by
-\[
-S(x) \;:=\; \log N(x).
-\]
-The information eliminated by selecting outcome $x$ is the entropy drop
-\[
-\Delta S(x)\;:=\; S_n - S(x)
-\;=\; \log\!\Big(\frac{\#(\mathcal D_n)}{N(x)}\Big).
-\]
-(Any logarithm base may be used; base $2$ yields units of bits.)
-
-\begin{remark}[Retrospective vs.\ prospective counts]
-The multiplicity entropy $S(x)=\log N(x)$ measures how many fine-grained
-histories are identified as the same outcome at tier $n$. A complementary
-forward-looking quantity is the number of admissible continuations of a
-realized prefix into higher tiers (the size of its local cone; see
-Section~\ref{sec:multiplecones}), which may be studied by counting completions
-as a function of current height (Lemma~\ref{lem:ballot-completions}).
-\end{remark}
-
-\paragraph{Completion multiplicity and future-cone entropy.}
-Fix a Dyck prefix $u$ of length $k$ and height $h$. For a target tier $n$ with
-$2n\ge k$, define the completion multiplicity
-\[
-M_n(u)\;:=\;\#\{w\in \mathcal D_n : u\preceq w\},
-\]
-the number of completed histories at tier $n$ consistent with the partial
-history $u$. This is the finite-tier size of the local cone rooted at $u$.
-It depends only on the remaining step budget $s:=2n-k$ and the current height
-$h$, and admits the explicit ballot-number formula of
-Lemma~\ref{lem:ballot-completions}. The associated future-cone entropy is
-\[
-S^{\mathrm{cone}}_n(u)\;:=\;\log M_n(u).
-\]
-
-\paragraph{Information rate as rate of possibility reduction.}
-Let $m$ denote the number of selection events (local contractions) along a
-history, and let computational proper time be $\tau=\tau_0 m$ for a fixed scale
-$\tau_0>0$. We define the information rate associated with outcome $x$ to be the
-information loss per unit computational proper time,
-\[
-R(x)\;:=\;\frac{\Delta S(x)}{\tau}.
-\]
-In the simplest case of a single event ($m=1$), this reduces to
-$R(x)=\Delta S(x)/\tau_0$.
-One may also adopt a coarser tier-wise selection model in which $m$ is
-identified with the tier index $n$ (one selection per tier boundary), but we
-keep these notions separate in general.
-
-\paragraph{Gauge-invariant counting.}
-When histories admit a redundancy under commuting spacelike-separated updates,
-one may quotient the fine-grained history set at tier $n$ by the induced gauge
-equivalence relation $\sim_g$ of Definition~\ref{def:gauge-equivalence}. When
-$\mathcal D_n$ is taken to parametrize such fine-grained histories at tier $n$,
-define $\bar{\mathcal D}_n:=\mathcal D_n/\!\sim_g$. If $f$ is gauge-invariant
-(constant on $\sim_g$-orbits), define
-\[
-\bar N(x):=\#\{[w]\in \bar{\mathcal D}_n : f(w)=x\},
-\qquad
-\bar{\Delta S}(x):=\log\!\Big(\frac{\#(\bar{\mathcal D}_n)}{\bar N(x)}\Big),
-\]
-and use $\bar{\Delta S}$ in place of $\Delta S$. This removes overcounting due
-solely to reordering of independent collapses.
-
-\subsection{Size bookkeeping for subtree-selection collapses}
-\label{subsec:collapse-size}
-
-In addition to ensemble-level multiplicities, some collapse rules admit a simple
-size bookkeeping at the level of individual trees. Let $T$ be a finite full
-binary tree. Define its \emph{internal size} $U(T)$ (number of internal nodes)
-recursively by
-\[
-U(\texttt{()}) := 0,\qquad
-U(\bullet(L,R)) := 1 + U(L) + U(R),
-\]
-where $\texttt{()}$ denotes a leaf and $\bullet(L,R)$ denotes a binary pair.
-
-\begin{lemma}[Size drop under subtree selection]
-\label{lem:subtree-selection-drop}
-Consider the local collapse that replaces a pair $\bullet(L,R)$ by one of its
-children:
-\[
-\bullet(L,R)\;\rightsquigarrow\; L
-\qquad\text{or}\qquad
-\bullet(L,R)\;\rightsquigarrow\; R.
-\]
-Then the size drop is
-\[
-U(\bullet(L,R)) - U(L) = 1 + U(R),
-\qquad
-U(\bullet(L,R)) - U(R) = 1 + U(L).
-\]
-In particular, if the collapse rule keeps the larger child in $U$ (i.e.\ keeps
-$\arg\max\{U(L),U(R)\}$), then the drop is $1+\min\{U(L),U(R)\}$.
-\end{lemma}
-
-\begin{proof}
-Immediate from the defining recursion $U(\bullet(L,R))=1+U(L)+U(R)$.
-\end{proof}
-
-% Optional operator/field frameworks previously here were moved to
-% supplemental-operators.tex (not included in the arXiv v1 PDF).
-% \input{supplemental-operators.tex}
 
 \section{A Double-Slit Thought Experiment on the Catalan Light Cone}
 \label{appendix:doubleslit}
@@ -3036,514 +2353,6 @@ this construction. The example simply instantiates the general mechanism of
 Section~\ref{sec:amplitudes}: complex weights, coherent summation over
 coarse-grained preimages, and Born-style squaring suffice to produce
 interference.
-
-\section{Computational Foundations}
-\label{appendix:computational-foundations}
-
-This appendix records proof sketches for the computational claims used in the
-main text, including Proposition~\ref{prop:catalan-programs} and the
-disjoint-commutation property of Lemma~\ref{lem:causal-consistency}. For a lean
-v1, extended examples and additional formal development are omitted.
-
-\begin{lemma}[Internalizing Symbols as Motifs]
-\label{lem:symbol-motifs}
-Let $\Sigma$ be a finite (or countable) alphabet of atomic symbols, and consider
-finite applicative terms over $\Sigma$ (binary application with atoms). There
-is an injective encoding of such labeled application trees into the Catalan
-family $\mathcal{T}$ of unlabeled full binary trees. One explicit construction
-fixes two distinct tag trees $A,B\in\mathcal{T}$, assigns each
-$\sigma\in\Sigma$ a distinct motif $S_\sigma\in\mathcal{T}\setminus\{A,B\}$, and
-defines
-\[
-	E(\sigma)\;:=\;\bullet(A,S_\sigma),\qquad
-	E(t\cdot u)\;:=\;\bullet\bigl(B,\bullet(E(t),E(u))\bigr),
-\]
-where $t\cdot u$ denotes application and $\bullet(\,\cdot\,,\,\cdot\,)$ denotes
-binary pairing of subtrees. The left tag distinguishes atoms from applications,
-so $E$ is recursively decodable and therefore injective.
-\end{lemma}
-
-
-\begin{proof}[Proof Sketch (of Proposition~\ref{prop:catalan-programs})]
-			As described in classical treatments of combinatory logic and the
-			$\lambda$-calculus \cite{CurryFeys1958,barendregt84}, application is a
-		binary operation, and every term therefore possesses a unique representation
-		as a full binary tree: internal nodes encode application, and leaves encode
-	variables, constants, or combinators.  This establishes a canonical embedding
-	of programs into $\mathcal{T}$.
-
-	Conversely, any full binary tree with labeled leaves may be interpreted as a
-	well-formed program term by reading internal nodes as applications and leaves
-	as atomic symbols, yielding a unique term up to $\alpha$-equivalence.
-
-	Operational semantics are defined via local tree rewrites.  A $\beta$-redex
-	$(\lambda x.M)\,N$ contracts by replacing the parent application with
-	$M[x:=N]$; SKI reductions replace specific subtrees according to fixed
-	patterns.  In each case, the output remains a full binary tree, so evaluation
-	never leaves $\mathcal{T}$.  Because nondeterministic redex choices correspond
-	to branching in the space of trees, each complete reduction sequence is a path
-	through the Catalan possibility space, completing the correspondence.
-\end{proof}
-
-
-\begin{lemma}[Commutation of disjoint reductions]
-	\label{lem:causal-consistency}
-	Let $T$ be a full binary tree and consider any local rewrite system whose
-	single-step reductions replace a rooted subtree matching a finite pattern by a
-	new subtree, leaving the rest of $T$ unchanged. Suppose two single-step
-	reductions are applicable at positions $p$ and $q$ whose rooted subtrees are
-	disjoint (neither position lies on the root-to-node path of the other). Let
-	$T_p$ denote the result of applying the reduction at $p$, and similarly $T_q$.
-	Then both reductions remain applicable after the other, and they commute:
-	\[
-		(T_p)_q \;\equiv\; (T_q)_p.
-	\]
-	In particular, disjoint reductions form a commuting diamond as in
-	Figure~\ref{fig:disjoint-subtrees}.
-\end{lemma}
-
-\begin{proof}[Proof Sketch]
-	Since $p$ and $q$ lie in disjoint subtrees, contracting at $p$ rewrites only
-	the subtree rooted at $p$ and leaves the subtree rooted at $q$ unchanged.
-	Symmetrically, contracting at $q$ leaves the subtree at $p$ unchanged. Because
-	the two rewrite steps act on disjoint parts of the tree, performing both
-	contractions yields the same result regardless of order.
-\end{proof}
-
-\iffalse
-\subsection{Binary Trees as Universal Program Frames}
-\label{appendix:program-frames}
-
-The identification of Catalan objects with program structures is a standard but
-essential foundation for the present work.  Let $\mathcal{C}$ denote the set of
-full binary trees.  A term in a functional calculus is constructed by repeated
-application, and an application $M\,N$ is represented by a binary node whose
-children encode $M$ and $N$:
-\[
-	(M\,N)
-	\quad\mapsto\quad
-	\begin{tikzpicture}[baseline=-3pt,level distance=7mm,
-		every node/.style={inner sep=1pt}]
-		\node {$\bullet$}
-		child { node {$M$} }
-		child { node {$N$} };
-	\end{tikzpicture}
-\]
-This mapping is bijective between program terms (modulo $\alpha$-conversion) and
-labeled elements of $\mathcal{C}$.
-
-Pairs-expansions of combinators---for example the standard expansions of
-$\mathrm{S}$ and $\mathrm{K}$ into $\lambda$-terms—produce larger trees but
-remain within the Catalan family.  Thus the Catalan substrate is closed under
-syntactic elaboration.
-
-Operational semantics are likewise internal.  Both $\beta$-reduction and SKI
-contraction replace subtrees with simpler subtrees while preserving the global
-full-binary-tree form.  Each admissible reduction path therefore corresponds to
-a trajectory within $\mathcal{C}$, and nondeterminism in reduction strategy
-corresponds to branching structure within the Catalan tree itself.
-
-This uniformity demonstrates that the Catalan substrate simultaneously captures:
-\begin{enumerate}
-	\item program syntax (binary application structure),
-	\item program elaboration (via pairs-expansion or substitution), and
-	\item program dynamics (via evaluation rewrites).
-\end{enumerate}
-Consequently, computation lives entirely within the Catalan family, justifying
-its use as the structural substrate for the unified causal--computational model
-developed in the main text.
-
-\subsection{Illustrative Figures}
-
-\begin{figure}[h]
-	\centering
-	\begin{tikzpicture}[
-		level distance=10mm,
-		sibling distance=18mm,
-		every node/.style={circle,draw,inner sep=1.5pt}
-		]
-		\node {$\cdot$}
-			child { node {$M$} }
-			child { node {$N$} };
-	\end{tikzpicture}
-	\caption{A binary application node representing the term $M\,N$.}
-\end{figure}
-
-\begin{figure}[h]
-	\centering
-	\begin{tikzpicture}[
-		level distance=10mm,
-		sibling distance=16mm,
-		every node/.style={circle,draw,inner sep=1.5pt}
-		]
-		\node {$\cdot$}
-			child {
-				node {$\cdot$}
-				child { node {$\cdot$} child { node {$\mathrm{S}$} } child { node {$f$} } }
-				child { node {$g$} }
-			}
-			child { node {$x$} };
-	\end{tikzpicture}
-	\caption{Binary-tree representation of the term $\mathrm{S}\,f\,g\,x$.}
-	\label{fig:Sfgx-binary-tree}
-\end{figure}
-
-\begin{figure}[h]
-	\centering
-	\begin{tikzpicture}[
-		level distance=10mm,
-		sibling distance=20mm,
-		every node/.style={circle,draw,inner sep=1.5pt}
-		]
-		\node {$\cdot$}
-			child { node {$\lambda x.M$} }
-			child { node {$N$} };
-	\end{tikzpicture}
-	\qquad$\Longrightarrow$\qquad
-	\begin{tikzpicture}[
-		level distance=10mm,
-		sibling distance=20mm,
-		every node/.style={circle,draw,inner sep=1.5pt}
-		]
-		\node {$M[x:=N]$};
-	\end{tikzpicture}
-	\caption{$\beta$-reduction as a local rewrite inside the Catalan family.}
-\end{figure}
-
-\subsection{Pairs Expansion as Variable-Free S-Expressions}
-\label{subsec:pairs-s-expressions}
-
-A central observation motivating this work is that the pairs expansions of
-combinators can be written as \emph{variable- and label-free} S-expressions,
-exactly in the style of McCarthy's original Lisp notation \cite{McCarthy1960}.
-In McCarthy's formulation, the core data structure is the cons-cell, written as
-a parenthesized pair. Here we push this idea to an extreme: we erase all atom
-labels and regard the program itself as a pure cons-tree, encoded only by
-balanced parentheses.
-
-Concretely, consider the binary application tree for the term
-$\mathrm{S}\,f\,g\,x$ (as in Figure~\ref{fig:Sfgx-binary-tree}). Under the pairs
-encoding used in our simulations, this same shape appears as the variable-free
-S-expression
-\[
-	\texttt{(()(()(()())))}.
-\]
-This S-expression can also be understood as \emph{looking down into} the
-underlying Catalan tree: the outer parentheses form the root frame, while each
-\texttt{()} corresponds to a leaf. The corresponding unlabeled binary tree shape
-is shown below.
-
-\begin{center}
-	\begin{tikzpicture}[
-		level 1/.style={level distance=7mm,sibling distance=7mm},
-		level 2/.style={level distance=7mm,sibling distance=7mm},
-		level 3/.style={level distance=7mm,sibling distance=7mm},
-		every node/.style={circle,draw,inner sep=1pt,minimum size=2pt}
-		]
-		\node {}
-			child { node {}
-				child { node {}
-					child { node {} }
-					child { node {} }
-				}
-				child { node {} }
-			}
-			child { node {} };
-	\end{tikzpicture}
-\end{center}
-
-Viewed from this perspective, the S-expression is simply the linear “parenthesis
-trace” of this structure: each ``('' corresponds to descending into a cons-cell,
-each ``)'' corresponds to returning toward the trunk, and the empty pairs
-\texttt{()} mark the terminal leaves.
-
-More generally, the pairs bijection
-
-\begin{small}
-\begin{verbatim}
-n=0, c=1:  ()
-n=1, c=1:  (()())
-n=2, c=2:  (()(()())) ((()())())
-n=3, c=5:  (()(()(()()))) (()((()())())) ((()())(()())) ((()(()()))()) (((()())())())
-\end{verbatim}
-\end{small}
-
-enumerates exactly the same Catalan shapes that appear as Dyck paths
-
-\begin{verbatim}
-n=1, c=1:  ()
-n=2, c=2:  (()) ()()
-n=3, c=5:  ((())) (()()) (())() ()(()) ()()()
-\end{verbatim}
-
-but seen through a different projection. The Dyck words present the
-one-dimensional ``height'' profile of the walk, making the Lorentzian scaling
-limit and the breadth--depth structure of the light cone transparent. The pairs
-S-expressions, by contrast, foreground the \emph{binary computational
-structure}: they are precisely the unlabeled S-expression trees of a Lisp-like
-language, with cons as the sole constructor.
-\footnote{Here “projection’’ is not a literal mapping but a change of
-	coordinates on the same Catalan object. The Dyck, binary-tree, and
-	S-expression representations are all related by canonical bijections; each is
-	a different parametrization of the same underlying Catalan shape.  Thus
-switching from Dyck words to pairs S-expressions does not change the object
-itself, only the coordinate system through which it is viewed.}
-
-In this sense, Dyck words and pairs expansions are two complementary Catalan
-bijections:
-
-\begin{itemize}
-	\item Dyck words: a one-dimensional time--breadth profile well adapted to
-		continuum limits and Lorentzian geometry;
-	\item pairs S-expressions: a fully binary application tree well adapted to
-		combinatory computation.
-\end{itemize}
-
-Both encode the same Catalan shapes; one may view them as distinct ``Lorentz
-frames'' on the same underlying combinatorial substrate. The pairs expansion can
-thus be regarded as an additional invariant transform: it preserves the Catalan
-class while re-expressing the same light-cone structure in purely computational
-coordinates.
-
-There is also an intrinsic handedness in this picture. Dyck words of a given
-semilength $n$ are not symmetric under reversal of the walk; the distribution of
-shapes across the tier reflects the left-to-right order in which parentheses are
-added. This asymmetry is the combinatorial trace of the fundamental handedness
-of applicative collapse in the pairs expansion: application is not commutative,
-and the collapse rule is oriented. The sequential construction of the
-S-expression tree makes this visible as a bias in how breadth is accumulated
-relative to depth.
-
-A further simplification arises when we observe that in the S-expression view,
-explicit application nodes disappear entirely. Application is seen as a
-\emph{property of the parentheses themselves}: a nested pair structure is
-already an applicative program. From the standpoint of Schönfinkel's combinatory
-logic \cite{Schoenfinkel1924}, where even the familiar $\mathrm{S}$ and
-$\mathrm{K}$ can be reduced to a single sufficiently expressive combinator, one
-may heuristically say that if a lone combinator $J$ acting on parentheses is
-enough, then we can omit $J$ and work directly with the bare parentheses~$()$.
-The Catalan substrate then becomes a \emph{combinator-free} calculus of pure
-application.
-
-Traditional functional calculi admit multiple evaluation strategies
-(normal-order, applicative-order, call-by-need, etc.). The Catalan substrate
-makes explicit a natural causal preorder on redex positions (ancestor order),
-constraining dependencies between contractions. Collapse is local, and
-contractions supported on disjoint subtrees commute
-(Lemma~\ref{lem:causal-consistency-long}). Different evaluation strategies may then
-be viewed as different linearizations of the residual freedom to schedule
-causally independent contractions (Appendix~\ref{appendix:computational-foundations}).
-
-\paragraph{Historical Perspective.}
-
-The S-expression viewpoint connects the present framework to three classical
-constructions.  First, McCarthy's original Lisp treats cons-pairs as the sole
-data constructor, with atoms added as a separate syntactic category
-\cite{McCarthy1960}. Here we invert the hierarchy: structure is primary, and
-atoms---if present at all---arise as designated structural motifs.
-
-Second, Church encodings demonstrate that data and control structures can be
-represented entirely by higher-order functions; similarly, SKI combinatory logic
-eliminates variables altogether. These developments show that symbolic reference
-is not primitive but can be reconstructed from purely structural or operational
-primitives.
-
-Third, Gödel numbering treats syntax as arithmetic structure. The present
-approach may be viewed as a ``Catalan numbering,'' where syntactic entities are
-mapped to unlabeled binary trees. The Dyck, pairs, and binary-tree bijections
-then provide multiple coordinate systems for the same structural universe. In
-this sense, the Catalan substrate acts simultaneously as a computational
-calculus and as a structural semantics for symbolic systems.
-
-\subsection{Symbolic Representation in a Structure-Only Substrate}
-\label{subsec:symbolic-representation}
-
-In the Catalan substrate all information is structural: the only primitive
-constructor is the cons-pair, and there are no atomic labels. This raises a
-fundamental question: how can a system without atoms support symbols, naming, or
-reference? The answer is that symbols arise not as primitives but as
-\emph{structural motifs} that function as internal or external markers depending
-on context. We distinguish two forms of symbolic representation.
-
-\subsubsection{Internal Structural Symbols}
-
-Within a closed Catalan machine, one may bootstrap symbolic reference by
-designating particular tree shapes as internal ``names.'' A higher-level
-self-referential mechanism (conceptually similar to a Y-like fixed-point
-operator) can maintain a dictionary of such shapes, mapping them to programs,
-behaviours, or combinator expansions. In this mode, names are themselves Catalan
-objects, and symbolic reference arises entirely from geometry: identifying a
-symbol is equivalent to matching a structural pattern. This yields a Lisp-like
-environment without atomic identifiers, where all ``atoms'' are implemented as
-canonical shapes in the tree.
-
-\subsubsection{External Structural Symbols}
-
-When interacting with external systems, the same structural motifs can serve as
-\emph{extrinsic} symbols. Distinguished shapes may encode character codes,
-vector-drawing glyphs, device signals, or other forms of I/O. This does not
-modify the underlying calculus: it merely overlays a conventional interpretation
-on structural patterns. The Catalan substrate remains atomless internally, while
-external systems treat designated shapes as meaningful codes.
-
-\subsubsection{Unified View: Symbols as Distinguished Motifs}
-
-Both internal and external naming mechanisms exemplify a common principle: in a
-structure-only universe, symbols are not primitive entities but \emph{designated
-Catalan motifs}. A symbol is simply a tree pattern endowed—internally or
-externally—with stable semantic interpretation. The substrate itself does not
-distinguish between data and code, or between program and identifier; all such
-distinctions emerge from the placement and recognition of specific structural
-forms.
-
-\begin{definition}[Structural Symbol]
-
-	A \emph{structural symbol} is a finite Catalan tree $S$ together with an
-	interpretation map $\iota$ assigning $S$ either (i) an internal computational
-	meaning within the Catalan machine, or (ii) an external semantic meaning
-	communicated to an outside system. The substrate recognizes $S$ only as a
-	structure; all semantics flow from~$\iota$.
-
-\end{definition}
-
-\begin{remark}
-
-	Although traditional programming languages begin with atoms and build
-	structure on top of them, the Catalan substrate inverts this perspective:
-	structure comes first, and atoms (if needed) are reintroduced later as
-	structural patterns. From this viewpoint Lisp's cons-based representation, and
-	even Schönfinkel's proposal of a single universal combinator, appear naturally
-	as degenerate cases of a more general structure-first semantics.
-
-\end{remark}
-
-
-\subsection{Causal Admissibility of Redex Contraction}
-\label{subsec:causal-admissibility}
-
-We now formalize the sense in which evaluation order is fixed by causality
-rather than chosen by convention.
-
-\begin{definition}[Causal Preorder on Positions]
-	Let $T$ be a full binary tree in the Catalan substrate, representing a program
-	term. A \emph{position} in $T$ is a node address $p$ in the usual tree sense
-	(e.g.\ a finite word over $\{L,R\}$ indicating left/right choices from the
-	root). We write $p \prec q$ if the node at position $p$ lies on the unique
-	path from the root to the node at position $q$. The reflexive, transitive
-	closure of $\prec$ defines a preorder $\preceq$ on positions, which we call
-	the \emph{causal preorder}.
-\end{definition}
-
-Intuitively, $p \preceq q$ means that the subtree at $q$ is causally downstream of the subtree at $p$: any change at $p$ may propagate to $q$ but not conversely.
-
-\begin{definition}[Redex and Causal Admissibility]
-	A \emph{redex} in $T$ is a position $p$ such that the subtree rooted at $p$
-	matches the left-hand side of a reduction rule (e.g.\ a $\beta$-redex or an
-	SKI contraction). Let $R(T)$ be the set of all redex positions in $T$.
-
-	A redex at position $p \in R(T)$ is \emph{causally admissible} if there is no
-	other redex $q \in R(T)$ with $q \prec p$. In other words, a redex is causally
-	admissible if it is minimal in $R(T)$ with respect to the strict causal order.
-\end{definition}
-
-\begin{definition}[Causally Admissible Reduction Sequence]
-	A finite or infinite sequence of trees
-	\[
-		T_0 \to T_1 \to T_2 \to \cdots
-	\]
-	is \emph{causally admissible} if, for each step $T_i \to T_{i+1}$, the
-	contracted redex is causally admissible in $T_i$ in the above sense. A
-	\emph{causal computation} is a causally admissible sequence starting from some
-	initial tree $T_0$.
-\end{definition}
-
-
-\begin{lemma}[Commutation of disjoint reductions]
-	\label{lem:causal-consistency-long}
-	Let $T$ be a Catalan tree (full binary tree) and let $p,q\in R(T)$ be two redex
-	positions that are \emph{incomparable} under the causal preorder $\preceq$
-	(i.e.\ neither lies on the path from the root to the other). Let $T_p$ denote
-	the result of contracting the redex at $p$, and similarly $T_q$.
-	Then $q$ remains a redex position in $T_p$ and $p$ remains a redex position in
-	$T_q$, and contracting both redexes yields the same tree regardless of order:
-	\[
-		(T_p)_q \;\equiv\; (T_q)_p.
-	\]
-	In particular, disjoint reductions form a commuting diamond as in
-	Figure~\ref{fig:disjoint-subtrees}.
-\end{lemma}
-
-\begin{proof}[Proof Sketch]
-	Since $p$ and $q$ lie in disjoint subtrees, contracting at $p$ rewrites only
-	the subtree rooted at $p$ and leaves the subtree rooted at $q$ unchanged. Thus
-	the redex at $q$ is unaffected (and remains at the same position), so it may
-	still be contracted in $T_p$. Symmetrically, contracting at $q$ leaves the
-	subtree at $p$ unchanged. Because the two rewrite steps act on disjoint parts
-	of the tree, performing both contractions yields the same result regardless of
-	order.
-\end{proof}
-
-
-\subsection{Evaluation Strategies as Coarse-Grainings of Causal Order}
-\label{subsec:evaluation-strategies}
-
-Traditional presentations of the $\lambda$-calculus distinguish several
-evaluation strategies: normal-order, applicative-order, call-by-need, and many
-others. These are usually defined syntactically (e.g.\ by specifying which redex
-is chosen at each step), with confluence guaranteeing that they terminate in the
-same normal form when one exists. In the Catalan substrate, however, causality
-constrains redex selection more tightly.
-
-\begin{definition}[Strategy-Compatible Causal Computation]
-	Let $\mathcal{S}$ be a syntactic evaluation strategy (e.g.\ normal-order or
-	applicative-order) which, given a term, selects one or more redex positions
-	considered ``eligible'' at each step. A causal computation
-	\[
-		T_0 \to T_1 \to \cdots
-	\]
-	is \emph{compatible} with $\mathcal{S}$ if, at each step, the contracted redex
-	is both causally admissible in $T_i$ and belongs to the set of redexes
-	selected by $\mathcal{S}$ for the corresponding term.
-\end{definition}
-
-\begin{proposition}[Strategies as Coarse-Grainings of Causal Structure]
-	\label{prop:strategies-coarse-graining}
-	Let $T_0$ be an initial term, and suppose $\mathcal{S}$ is a standard
-	evaluation strategy that is normalizing on $T_0$ (e.g.\ normal-order for a
-	weakly normalizing term). Then:
-	\begin{enumerate}
-		\item Every $\mathcal{S}$-guided reduction sequence can be refined to a
-			causally admissible computation by reordering only reductions that occur
-			at redexes incomparable under the causal preorder.
-		\item Conversely, every causally admissible computation from $T_0$ to normal
-			form projects to an $\mathcal{S}$-valid history by forgetting the precise
-			interleaving of causally independent reductions.
-	\end{enumerate}
-	In this sense, classical evaluation strategies are coarse-grainings of the
-	underlying causal order: they differ only in how they resolve the residual
-	freedom to permute causally independent redex contractions.
-\end{proposition}
-
-\begin{proof}[Proof Sketch]
-	For (1), observe that any $\mathcal{S}$-guided sequence that temporarily
-	contracts a non-minimal redex (with respect to $\preceq$) must do so in a
-	context where all redexes on which it causally depends will eventually be
-	contracted as well. By standard commuting-conversion arguments, we can reorder
-	the sequence so that causally prior redexes are contracted first, without
-	changing the final normal form. This reordering affects only redexes that lie
-	in disjoint subtrees, i.e.\ are incomparable under $\preceq$.
-
-	For (2), given a causally admissible computation, we can group together all
-	contractions that $\mathcal{S}$ regards as taking place at the ``same'' redex
-	position in the syntactic term, ignoring the precise ordering among
-	contractions in disjoint subtrees. The resulting abstract history matches what
-	$\mathcal{S}$ would produce, by confluence and the fact that $\mathcal{S}$ is
-	normalizing on $T_0$. Thus $\mathcal{S}$ may be seen as a projection that
-	forgets the fine-grained causal structure of independent collapses while
-	preserving the global reduction behaviour.
-	\end{proof}
-
-\fi
 
 
 		\bibliographystyle{plain}

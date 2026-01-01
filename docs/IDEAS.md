@@ -1,13 +1,19 @@
 # IDEAS
 
 _Living consolidation for the Catalan Light Cone / Basis project._
-_Last refactor: 2025-12-13._
+_Last refactor: 2026-01-01._
 
 **What this file is for**
 
 - Keep each coherent idea **in one place**, so its maturity is visible at a glance.
 - Make it easy to mine for the main paper (`docs/catalan-light-cone.tex`) without missing scattered pieces.
 - Preserve ideas even if wording changes.
+
+**Companion docs**
+
+- Main arXiv v1: `docs/catalan-light-cone.tex`
+- Companion supplement (extra appendices/proofs): `docs/catalan-light-cone-supplement.tex`
+- Optional operators/adjacency notes: `docs/supplemental-operators.tex`
 
 **Structure**
 
@@ -128,7 +134,8 @@ Under diffusive scaling, Dyck ensembles converge to Brownian excursions; this su
 
 ### 3) Collapse dynamics: potential, work, locality, and proper time **[PARTIAL]**
 
-**Paper:** `docs/catalan-light-cone.tex` (selection/collapse discussion; computational proper time as event-count parameter; entropy appendix; collapse-size bookkeeping lemma).
+**Paper:** `docs/catalan-light-cone.tex` (selection/collapse discussion; computational proper time as event-count parameter).
+**Supplement:** `docs/catalan-light-cone-supplement-appendices.tex` (coarse-graining entropy bookkeeping; collapse-size bookkeeping lemma).
 
 This dossier is the “local rule” side of the global cone picture: collapse/actualization provides an irreversible arrow and a natural notion of proper time.
 
@@ -146,7 +153,7 @@ Under a “keep the more structured side” collapse, the potential drop for col
 
 $$\Delta U = \big(1+U(L)+U(R)\big) - \max\{U(L),U(R)\}=1+\min\{U(L),U(R)\}.$$
 
-The internal-node bookkeeping and size drops under subtree selection are now recorded in the paper; interpreting $\Delta U$ as irreversible work (and $F_{\text{app}}$ as a force scale) remains optional and is not claimed as physics.
+The internal-node bookkeeping and size drops under subtree selection are recorded in the companion supplement; interpreting $\Delta U$ as irreversible work (and $F_{\text{app}}$ as a force scale) remains optional and is not claimed as physics.
 
 #### Chronons, locality, and a discrete interval (interpretive bridge to relativity) **[IDEA ONLY]**
 
@@ -529,7 +536,7 @@ substrate:
 ```
 
 where $`\mathcal{D}_n`$ is the set of Dyck words of semilength $n$. Each $w$ is
-a full history at that proper time.
+a full history at that tier.
 
 2. **Field on prefixes (the global possibility tree).**  Let $\mathcal{C}$ be
 the infinite Dyck-prefix tree. A field is

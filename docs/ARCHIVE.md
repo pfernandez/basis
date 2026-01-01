@@ -17,7 +17,7 @@ For a Dyck tree $T$, let:
 
 * ${d_i}$ be the depths of its leaves,
 * $h(T) := \max_i d_i$ the maximal depth ("height"),
-* $r(T)$ a breadth measure (e.g. number of leaves or maximum number of disjoint
+* $b(T)$ a breadth measure (e.g. number of leaves or maximum number of disjoint
   pairs at a level).
 
 Interpreting the tree as a full binary prefix code, the **Kraft equality**
@@ -2695,4 +2695,3 @@ These are the kinds of ideas that become the backbone of a mature theory *after*
 | **IV**  | Very Speculative                    | Private notes / appendices        | Gravity analogues, QFT, measurement equivalence                  |
 
 ---
-

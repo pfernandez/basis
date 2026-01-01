@@ -2,9 +2,9 @@
 
 This is not the arXiv paper.
 
-It’s the version written for you: the one that tries to keep the picture alive
-while still staying honest about what is definition, what is choice, what is
-interpretation, and what is still open.
+It’s the version written to keep the picture alive while still staying honest
+about what is definition, what is choice, what is interpretation, and what is
+still open.
 
 Throughout, I’ll use inline callouts like these:
 
@@ -25,7 +25,7 @@ inside one of these blocks.
 
 ## 1. Why Dyck shows up at all (and why it’s not “just branching”)
 
-You started with cons-pairs. That matters.
+A natural entry point is cons-pairs. That matters.
 
 A cons-pair is the smallest nontrivial piece of structure: not a value, not a
 label, not a number, but a *relationship*: a left thing and a right thing held
@@ -40,7 +40,7 @@ smallest possible notion of a completed act.
 
 In parenthesis language, return is “every open must close”.
 In stack language, return is “every push must eventually pop”.
-In your language, return is “every created context must eventually discharge”.
+In this model’s language, return is “every created context must eventually discharge”.
 
 That is the extra constraint that turns “the set of all binary choices” into
 “the set of all well-formed nested choices”.
@@ -239,9 +239,8 @@ thing” and then ask for the simplest extensive (additive) global tally.
 
 ## 4. What a “dot on the screen” is, combinatorially
 
-You asked a very direct question: a dot on the screen has a position in
-spacetime. What is that, from the lattice’s point of view? How do we compute
-it?
+A very direct question is: a dot on the screen has a position in spacetime.
+What is that, from the lattice’s point of view? How do we compute it?
 
 In this framework there are two layers:
 
@@ -273,8 +272,8 @@ internal degrees of freedom.
 
 ### 4.1.1 A small but important clarification: there’s more than one “cone picture”
 
-You’ve been carrying (at least) two geometric pictures at once, and it’s worth
-making them explicit so they stop competing in your head.
+It’s easy to carry (at least) two geometric pictures at once; making them
+explicit helps them stop competing.
 
 1. **The within-history cone (prefix time vs Dyck height).**
    This is the `(k,h)` picture in this section: as a history grows step by step,
@@ -666,8 +665,8 @@ If you embed a Dyck prefix into a 1+1 chart, the continuum interval
 
 #### Where this points next (and the “three spatial dimensions” hope)
 
-Your hope was: “maybe time is invariant, and the other three spatial dimensions
-will show up among the invariants too.”
+A natural hope is: “maybe time is invariant, and the other three spatial
+dimensions will show up among the invariants too.”
 
 There’s a clean diagnostic here:
 
@@ -700,8 +699,8 @@ that can be made local and checkable.
 
 ## 5. Relativity: cones, frames, and the symmetries you actually have
 
-You’re right to feel that the relativistic piece is missing from the intuition
-draft so far.
+It can feel like the relativistic piece is missing from the intuition draft so
+far.
 
 The arXiv paper uses “light cone” language, but in a careful way: as a mnemonic
 for a *constraint*, not as a claim of exact Lorentz symmetry on the Dyck lattice.
@@ -743,7 +742,7 @@ In the Catalan engine, the clean analogue is the difference between:
 - a **serialization** (a particular step-by-step ordering you chose when you
   simulated or evaluated).
 
-Your commutation lemma is the key fact:
+The commutation lemma is the key fact:
 
 > **FACT** — Two disjoint local reductions commute. If neither reduction depends
 > on the other (they touch disjoint subtrees), then swapping their order does
@@ -756,8 +755,8 @@ linear extensions represent the same partial order”.
 > reference frame”: it is a way of listing events that are not causally forced
 > into a unique global order.
 
-This is also where your intuition about “instantaneous collapse of
-probabilities” can get untangled: re-ordering independent computation steps is
+This is also where the “instantaneous collapse of probabilities” intuition can
+get untangled: re-ordering independent computation steps is
 not the same thing as projection/conditioning. One is a symmetry of description;
 the other is a genuine information update that changes which alternatives remain
 indistinguishable.
@@ -899,8 +898,8 @@ So what do you get, honestly?
 
 ### 5.5 When “I can’t choose” is a hint that you’ve found a symmetry
 
-Your instinct here is excellent: sometimes “I don’t know which version is
-right” is your mind noticing that the difference is not physical.
+A useful diagnostic: sometimes “I don’t know which version is right” is a hint
+that the difference is not physical.
 
 A practical rule of thumb:
 
@@ -909,7 +908,7 @@ A practical rule of thumb:
 > gauge freedom). If they lead to different predictions, then you have a real
 > model choice that must be fixed by principle or by observation.
 
-Examples you already have:
+Examples in this framework:
 
 - “phase accrues continuously while open” vs “phase is paid at closure” is (for
   the area functional) the **same accounting**, hence a symmetry of description.
@@ -928,8 +927,8 @@ That’s the line between “equally valid symmetry” and “a fork in theory s
 
 ### 5.6 Chronons, proper time, and time dilation (as a model choice)
 
-Now we can talk about the “chronon budget” picture you’ve carried for a long
-time, but in a way that doesn’t pretend we’ve already derived relativity.
+Now we can talk about a “chronon budget” picture, but in a way that doesn’t
+pretend we’ve already derived relativity.
 
 First, we need one new word.
 
@@ -945,8 +944,8 @@ The budget can be spent in two qualitatively different ways:
    shifting attention, changing parentheses, re-associating application.
 
 2. **Return / collapse.** You actually discharge an obligation—one of the
-   irreversible “return” events that reduces unresolved structure (in whatever
-   collapse rule you have in mind).
+   irreversible “return” events that reduce unresolved structure (under the
+   chosen collapse rule).
 
 It’s worth separating three ideas that can get conflated because they’re all
 “ways of walking through the Catalan set”:
@@ -986,7 +985,7 @@ rotation**: it doesn’t create or destroy any pairs; it just changes *which pai
 is “inside” which other pair*. (That’s the Tamari/associahedron move.)
 
 By contrast, a **return / collapse** actually removes unresolved structure. In
-the evaluator rule you started from, the primitive return is:
+a minimal evaluator rule, the primitive return is:
 
 ```
 (() x)  →  x
@@ -997,8 +996,8 @@ still present”. In the walk picture it’s a downstep; in the S-expr picture i
 an applicative discharge.
 
 In this picture, “space” is not a pre-existing stage. “Space” is the adjacency
-graph of places the focus could be, i.e. how far (in edges) you are from where
-you were.
+graph of places the focus could be, i.e. how far (in edges) the focus is from
+where it was.
 
 So the most basic locality constraint you can impose is:
 
@@ -1018,12 +1017,12 @@ In relativity, *proper time* is the time measured by a clock riding along with a
 process. A moving clock accumulates less proper time between two coordinate-time
 events than a stationary one.
 
-In the Catalan engine, the most natural internal clock you’ve pointed at is:
+In the Catalan engine, a natural internal clock is:
 
 > **MODEL CHOICE** — Define proper time `τ` to be proportional to the number of
 > irreversible return/collapse events experienced along a process.
 
-This fits your intuition: return is the fundamental “it happened” move. It’s
+This matches the return-as-event intuition: return is the fundamental “it happened” move. It’s
 the irreversible act of discharging an obligation.
 
 Now the time-dilation story becomes a budget tradeoff:
@@ -1037,7 +1036,7 @@ Now the time-dilation story becomes a budget tradeoff:
 > done”, not “how many coordinate ticks elapsed”. Motion burns budget that could
 > have gone into returns, so motion dilates proper time.
 
-You can make this concrete in two ways:
+This can be made concrete in two ways:
 
 1. **A literal discrete budget accounting.**
    If each chronon must be spent either moving or collapsing (one or the other),
@@ -1179,9 +1178,8 @@ If we want the same bookkeeping here, the simplest transplant is:
 > per unit intrinsic return time”. Then `E` is “update budget per intrinsic
 > tick”, and `p` is the portion of that budget committed to drift.
 
-This is exactly the move you were gesturing at when you asked about Lorentz
-transforms and “potential vs kinetic”: once you have an `x` and a `τ`, the split
-is not metaphysics; it’s algebra.
+This is the key move in any Lorentz-style comparison: once you have an `x` and a
+`τ`, the potential/kinetic split is not metaphysics; it’s algebra.
 
 > **OPEN** — This doesn’t become a claim until we (i) pick/derive what `x` is
 > operationally (which space notion), and (ii) show that the same `m` extracted
@@ -1290,7 +1288,7 @@ quantity; you can tell two different stories about how it is paid.
 
 ## 7. Where computation lives (and why unlabeled S-expressions are not a sideshow)
 
-Your `\iffalse` appendix block is pointing at something deep:
+One appendix theme points at something deep:
 
 The Catalan substrate is not just “a geometry”. It is also “the set of all
 program *shapes*”, once you decide that a program is built by repeated binary
@@ -1299,8 +1297,8 @@ application.
 McCarthy’s Lisp idea was: the primitive data constructor is `cons`, and the rest
 of language is built on top.
 
-Your move is: push even harder—erase atoms entirely and ask what remains if the
-only thing you can do is build pairs.
+A stronger move is: push even harder—erase atoms entirely and ask what remains if
+the only thing you can do is build pairs.
 
 What remains is a universe of unlabeled S-expressions: pure parentheses.
 
@@ -1326,8 +1324,8 @@ Here’s a clean way to keep the roles straight:
 - **Re-entry** is what lets a pure tree behave like a program with binding and
   self-reference.
 
-If you put those together, you get your “self-interpreting, self-reflective
-structure of pure associations” as a concrete research direction, not a mood.
+Put those together and you get a “self-interpreting, self-reflective structure
+of pure associations” as a concrete research direction, not a mood.
 
 > **INTERPRETATION** — In the computation view, “focus” (car / left spine) is
 > the place where structure is assimilated: where an operator meets an operand,
@@ -1342,7 +1340,7 @@ details don’t matter here; what matters is the viewpoint:
 
 Syntax can be made into arithmetic.
 
-Your viewpoint is adjacent, but structural:
+A closely adjacent viewpoint is structural:
 
 Programs can be made into *trees*, and trees can be made into *parenthesis
 strings*, and parenthesis strings can be made into *numbers*.
@@ -1364,8 +1362,8 @@ to: it’s an enumerable set of finite objects.
 
 ## 8. Attractors instead of “one true history”
 
-You’ve said something I think is crucial: a “specific history” doesn’t exist any
-more than a concept does. Instead, we have local attractors.
+A crucial idea is: a “specific history” doesn’t exist any more than a concept
+does. Instead, we have local attractors.
 
 Here is a crisp way to say that in model terms.
 

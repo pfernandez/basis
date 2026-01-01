@@ -1,0 +1,147 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{geometry}
+\usepackage[hypertexnames=false]{hyperref}
+\usepackage{xr-hyper}
+\externaldocument[CLC-]{catalan-light-cone}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{float}
+\usetikzlibrary{calc}
+\usetikzlibrary{positioning}
+\usetikzlibrary{decorations.pathreplacing}
+\geometry{margin=1in}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{definition}{Definition}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{corollary}{Corollary}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{Supplement to \emph{The Catalan Light Cone}}
+\author{Paul Fernandez}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+This companion document collects additional appendices and proof sketches that
+are omitted from the lean arXiv v1 of \emph{The Catalan Light Cone}. It is
+interpretation-neutral and intended to preserve auxiliary results and extended
+technical development without expanding the main paper.
+\end{abstract}
+
+\appendix
+
+\input{catalan-light-cone-supplement-appendices.tex}
+
+\bibliographystyle{plain}
+\begin{thebibliography}{99}
+
+	\bibitem{addario-berry13}
+	L.~Addario-Berry, L.~Devroye, and S.~Janson.
+	\newblock Sub-Gaussian tail bounds for the width and height of conditioned
+	Galton--Watson trees.
+	\newblock {\em Annals of Probability}, 41(2):1074--1087, 2013.
+
+	\bibitem{ambjorn01}
+	J.~Ambj{\o}rn, J.~Jurkiewicz, and R.~Loll.
+	\newblock Dynamically triangulating Lorentzian quantum gravity.
+	\newblock {\em Nuclear Physics B}, 610:347--382, 2001.
+
+	\bibitem{ambjorn12}
+	J.~Ambj{\o}rn, A.~G{\"o}rlich, J.~Jurkiewicz, and R.~Loll.
+	\newblock Nonperturbative quantum gravity.
+	\newblock {\em Physics Reports}, 519:127--210, 2012.
+
+	\bibitem{barendregt84}
+	H.~P. Barendregt.
+	\newblock {\em The Lambda Calculus: Its Syntax and Semantics}.
+	\newblock North-Holland, 1984.
+
+	\bibitem{bombelli87}
+	L.~Bombelli, J.~Lee, D.~Meyer, and R.~D. Sorkin.
+	\newblock Space-time as a causal set.
+	\newblock {\em Physical Review Letters}, 59(5):521--524, 1987.
+
+	\bibitem{church33}
+	A.~Church.
+	\newblock A set of postulates for the foundation of logic.
+	\newblock {\em Annals of Mathematics}, 34:839--864, 1933.
+
+	\bibitem{McCarthy1960}
+	J.~McCarthy.
+	\newblock Recursive functions of symbolic expressions and their computation by
+	machine, Part~I.
+	\newblock {\em Communications of the ACM}, 3(4):184--195, 1960.
+
+	\bibitem{CurryFeys1958}
+	H.~B. Curry and R.~Feys.
+	\newblock {\em Combinatory Logic, Vol.~I}.
+	\newblock North-Holland, 1958.
+
+	\bibitem{feynman-hibbs65}
+	R.~P. Feynman and A.~R. Hibbs.
+	\newblock {\em Quantum Mechanics and Path Integrals}.
+	\newblock McGraw--Hill, 1965. (Dover reprint, 2010).
+
+	\bibitem{janson07}
+	S.~Janson.
+	\newblock Brownian excursion area, Wright's constants in graph enumeration, and
+	other Brownian areas.
+	\newblock {\em Probability Surveys}, 4:80--145, 2007.
+
+	\bibitem{kac49}
+	M.~Kac.
+	\newblock On distributions of certain Wiener functionals.
+	\newblock {\em Transactions of the American Mathematical Society},
+	65(1):1--13, 1949.
+
+	\bibitem{le-gall05}
+	J.-F. Le~Gall.
+	\newblock Random trees and applications.
+	\newblock {\em Probability Surveys}, 2:245--311, 2005.
+
+	\bibitem{orus14}
+	R.~Or\'us.
+	\newblock A practical introduction to tensor networks: Matrix product states and
+	projected entangled pair states.
+	\newblock {\em Annals of Physics}, 349:117--158, 2014.
+
+	\bibitem{pitman1999}
+	J.~Pitman.
+	\newblock Brownian motion, bridge, excursion, and meander revisited.
+	\newblock {\em Electronic Journal of Probability}, 4:1--32, 1999.
+
+	\bibitem{Schoenfinkel1924}
+	M.~Sch{\"o}nfinkel.
+	\newblock {\"U}ber die Bausteine der mathematischen Logik.
+	\newblock {\em Mathematische Annalen}, 92:305--316, 1924.
+
+	\bibitem{rovelli04}
+	C.~Rovelli.
+	\newblock {\em Quantum Gravity}.
+	\newblock Cambridge University Press, 2004.
+
+	\bibitem{stanley-catalan}
+	R.~P. Stanley.
+	\newblock {\em Catalan Numbers}.
+	\newblock Cambridge University Press, 2015.
+
+	\bibitem{takacs1991}
+	L.~Tak{\'a}cs.
+	\newblock A {B}ernoulli excursion and its various applications.
+	\newblock {\em Advances in Applied Probability}, 23(3):557--585, 1991.
+
+	\bibitem{cheneviere2022linear}
+	C.~Chenevi\`ere.
+	\newblock Linear intervals in the Tamari and the Dyck lattices and in the
+	alt-Tamari posets.
+	\newblock arXiv:2209.00418v2, 2022.
+
+\end{thebibliography}
+\end{document}
