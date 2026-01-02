@@ -35,12 +35,12 @@ induces a natural causal prefix order, and organizing histories by tier and
 lateral spread yields a discrete cone whose extremal configurations reproduce a
 light-cone--like causal envelope.
 
-Classical results on conditioned random walks imply that, under diffusive
-scaling, Dyck ensembles converge to Brownian excursions. This provides a
-continuum comparison in which the induced evolution is governed by the heat
-operator on the half-line (as a base diffusion generator), with the Dyck
-conditioning encoded via a Doob transform / Bessel-bridge representation, and
-under analytic continuation one obtains the free Schr\"odinger equation.
+	Classical results on conditioned random walks imply that, under diffusive
+	scaling, Dyck ensembles converge to Brownian excursions. This provides a
+	continuum comparison. The base diffusion generator is the heat operator on the
+	half-line, with the Dyck conditioning encoded via a Doob transform / Bessel-bridge
+	representation. Phase weighting admits a standard Feynman--Kac interpretation.
+	Under analytic continuation one obtains the free Schr\"odinger equation.
 
 The same Catalan shapes also serve as unlabeled application skeletons for
 $\lambda$-calculus and SKI terms (after choosing a standard finite encoding of
@@ -50,10 +50,13 @@ present a minimal Catalan amplitude model: given an observable/coarse-graining
 $f$ and a phase functional (e.g.\ Dyck area), coherent summation over
 the preimages $f^{-1}(x)$ produces interference under Born-style squaring.
 
-Throughout, we distinguish rigorously established statements (combinatorics,
-scaling limits, and commutation of disjoint local rewrites) from interpretive or
-open extensions (measurement, interactions, constants).
-\end{abstract}
+	Throughout, we distinguish rigorously established statements (combinatorics,
+	scaling limits, and commutation of disjoint local rewrites) from interpretive or
+	open extensions (measurement, interactions, constants).
+	The physical interpretation is deliberately minimal; the goal is to isolate a
+	combinatorial substrate that can serve as a starting point for more realistic
+	physics-oriented refinements.
+	\end{abstract}
 
 \section{Introduction}
 Discrete approaches to fundamental physics suggest that continuum
@@ -1698,20 +1701,34 @@ closely analogous.
 \section{Conclusion}
 \label{sec:conclusion}
 
-This paper treats the Catalan family---Dyck paths, full binary trees, and
-balanced-parenthesis expressions---as a single discrete history space supporting
-three complementary readings: causal geometry via the prefix order, computation
-via application trees and local rewrites, and amplitudes via coherent summation
+	This paper treats the Catalan family---Dyck paths, full binary trees, and
+	balanced-parenthesis expressions---as a single discrete history space supporting
+	three complementary readings: causal geometry via the prefix order, computation
+	via application trees and local rewrites, and amplitudes via coherent summation
 over coarse-grained outcomes. Classical scaling results for conditioned walks
 provide a continuum comparison in which Dyck ensembles converge to Brownian
 excursions. The underlying diffusion term is governed by the heat operator on
 the half-line (with the excursion conditioning represented via a Doob transform),
 and under analytic continuation one obtains the free Schr\"odinger equation. The
-scope is intentionally restricted to this shared structural core:
-deriving interactions, constants, or a unique collapse/measurement rule requires
-additional structure beyond what is developed here.
+	scope is intentionally restricted to this shared structural core:
+	deriving interactions, constants, or a unique collapse/measurement rule requires
+	additional structure beyond what is developed here.
 
-\appendix
+	\paragraph{Physics-facing open directions.}
+	The minimal constructions here suggest several directions for
+	physics-oriented refinement:
+	\begin{itemize}
+		\item identify principled phase/action functionals (beyond Dyck area) and
+			corresponding interaction/potential terms compatible with the pair-local
+			dynamics;
+		\item clarify the relation between discrete cone coordinates and Lorentzian
+			geometry in scaling limits (effective metrics, approximate symmetries, and
+			higher-dimensional generalizations);
+		\item specify measurement/readout maps and selection rules, and characterize
+			which choices reproduce standard quantum statistics beyond toy examples.
+	\end{itemize}
+	
+	\appendix
 
 \section{Coordinate Charts and Continuum Comparisons}
 \label{appendix:coordinate-charts}
