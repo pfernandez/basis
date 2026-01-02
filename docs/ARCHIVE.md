@@ -1,3 +1,7 @@
+# ARCHIVE (Working notes)
+
+This is not the arXiv paper. It’s a compact “field guide” to ideas around the project, with mixed levels of rigor. For the current, careful statement of results see `docs/catalan-light-cone.tex` and (optionally) `docs/catalan-light-cone-supplement.tex`.
+
 What follows is a compact "field guide" to the ideas that sit around (but
 mostly outside) the trimmed Catalan Light Cone paper. Each subsection is
 self-contained, with key definitions and equations, and ends with a short note

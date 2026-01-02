@@ -3,6 +3,8 @@
 _Living consolidation for the Catalan Light Cone / Basis project._
 _Last refactor: 2026-01-01._
 
+> Note: this is a working document. Treat it as a roadmap and idea cache, not as a statement of results. The arXiv-ready claims live in `docs/catalan-light-cone.tex` and (optionally) `docs/catalan-light-cone-supplement.tex`.
+
 **What this file is for**
 
 - Keep each coherent idea **in one place**, so its maturity is visible at a glance.
@@ -13,7 +15,9 @@ _Last refactor: 2026-01-01._
 
 - Main arXiv v1: `docs/catalan-light-cone.tex`
 - Companion supplement (extra appendices/proofs): `docs/catalan-light-cone-supplement.tex`
-- Optional operators/adjacency notes: `docs/supplemental-operators.tex`
+- Operators/adjacency notes (included in the companion supplement): `docs/supplemental-operators.tex`
+- Intuition draft (non-paper): `docs/intuition.md`
+- Archive of surrounding ideas (non-paper): `docs/ARCHIVE.md`
 
 **Structure**
 

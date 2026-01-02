@@ -18,6 +18,13 @@ The file docs/catalan-light-cone.tex is the center of gravity. It’s a LaTeX dr
 
 That document is where definitions live, where claims are made carefully, and where speculative material is clearly separated from established results. If you’re primarily interested in the conceptual side, that’s the place to start.
 
+For convenience:
+
+* Main paper PDF: `docs/catalan-light-cone.pdf` (built from `docs/catalan-light-cone.tex`)
+* Companion supplement PDF (extra appendices/proofs): `docs/catalan-light-cone-supplement.pdf` (built from `docs/catalan-light-cone-supplement.tex`)
+* Working notes / intuition (not arXiv-rigorous): `docs/IDEAS.md`, `docs/ARCHIVE.md`, `docs/intuition.md`
+* Legacy drafts (historical; not maintained): `docs/catalan-collapse.tex`, `docs/geometry-of-possibility.tex`
+
 **2. An experimental codebase**
 
 Alongside the paper is code I use to explore and test ideas before (and while) they make their way into formal writing. This includes:
