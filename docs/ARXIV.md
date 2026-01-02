@@ -23,3 +23,8 @@ The v1 TeX file is self-contained (no `\input{...}` or external figures).
 
 - The main paper references a “companion supplement” for material intentionally omitted from the v1 PDF; including the supplement TeX in the arXiv source upload keeps that reference honest even if arXiv only compiles the main file.
 - No `-shell-escape` features are used.
+
+## Categories (suggested)
+
+- Primary: `math.CO`
+- Cross-lists: `math.PR`, `quant-ph` (if you want physics/foundations readers)

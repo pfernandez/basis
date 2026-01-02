@@ -31,8 +31,8 @@ Dyck Paths as a Discrete Substrate for Causal Geometry, Quantum Amplitudes, and 
 We study the Catalan family of structures---Dyck paths, full binary trees, and
 balanced parenthesis expressions---as a single discrete space of admissible
 histories with multiple equivalent ``coordinate systems.'' The Dyck constraint
-induces a natural causal prefix order, and organizing histories by tier and
-lateral spread yields a discrete cone whose extremal configurations reproduce a
+induces a natural causal prefix order, and organizing histories by semilength
+(tier) and lateral spread yields a discrete cone whose extremal configurations reproduce a
 light-cone--like causal envelope (terminology is mnemonic; no discrete Lorentz
 symmetry is claimed).
 
@@ -51,12 +51,8 @@ present a minimal Catalan amplitude model: given an observable/coarse-graining
 $f$ and a phase functional (e.g.\ Dyck area), coherent summation over
 the preimages $f^{-1}(x)$ produces interference under Born-style squaring.
 
-Throughout, we distinguish rigorously established statements (combinatorics,
-scaling limits, and commutation of disjoint local rewrites) from interpretive or
-open extensions (measurement, interactions, constants).
-The physical interpretation is deliberately minimal; the goal is to isolate a
-combinatorial substrate that can serve as a starting point for more realistic
-physics-oriented refinements.
+Complex phases and Born-style readout are part of the amplitude model. Extending
+the dynamics to include interactions, constants, and selection rules remains open.
 \end{abstract}
 
 \section{Introduction}
@@ -96,18 +92,21 @@ syntax convenient.
 
 \paragraph{Pairs-only locality discipline.}
 Throughout, the Catalan object itself is the only combinatorial configuration
-(state): apart from an optional finite leaf-label encoding when representing
-programs, we do not attach independent labels, fields, or global degrees of
-freedom to the substrate.
-When we introduce observables, weights, phases, or amplitudes, these are
-functions of the Catalan object (or of local update events), not additional
-state variables.
-Single-step dynamics are specified by local subtree rewrites (finite patterns),
-and global-looking weights or statistics are introduced together with explicit
-decompositions as step-additive functionals along Dyck growth or as recursive
-folds on the pairing tree (see
-Proposition~\ref{prop:phase-classification} and
-Lemma~\ref{lem:additive-gauge-invariant}).
+(state). Concretely:
+\begin{itemize}
+	\item Apart from an optional finite leaf-label encoding when representing
+		programs, we do not attach independent labels, fields, or global degrees of
+		freedom to the substrate.
+	\item Observables, weights, phases, and amplitudes are functions of the Catalan
+		object (or of local update events), not additional state variables.
+	\item Single-step dynamics are specified by local subtree rewrites (finite
+		patterns).
+	\item Global-looking weights or statistics are introduced together with explicit
+		pair-local decompositions, either as step-additive functionals along Dyck growth
+		or as recursive folds on the pairing tree (see
+		Proposition~\ref{prop:phase-classification} and
+		Lemma~\ref{lem:additive-gauge-invariant}).
+\end{itemize}
 
 \paragraph{Contributions and scope.}
 The paper isolates a common structural core shared by three domains:
@@ -127,14 +126,26 @@ The paper isolates a common structural core shared by three domains:
 			a coarse-graining (observable) and a phase functional determine a coherent sum
 			over indistinguishable histories, producing interference under Born-style squaring.
 \end{enumerate}
-We do not attempt to derive interactions, constants, or a unique measurement
-postulate; where additional structure is introduced (e.g.\ complex phases and
-Born-style probabilities), it is presented as a minimal construction layered on
-the Catalan kinematics.
+
+\paragraph{Model layers and scope (read-first).}
+This paper separates \emph{kinematics} from \emph{dynamical overlays}:
+\begin{itemize}
+	\item \textbf{Kinematics:} the Catalan substrate and its causal prefix order.
+		We use the term ``Catalan light cone'' for the cone-shaped growth envelope of
+		Dyck histories in the $(n,b)$ diagram; no discrete Lorentz symmetry is assumed.
+	\item \textbf{Amplitudes:} a minimal model in which an observable/coarse-graining
+		$f$ and an additive phase functional determine complex weights on histories,
+		with readout by squared magnitudes after coarse-graining.
+	\item \textbf{Computation:} the classical representation of applicative terms by
+		binary application trees and local rewrites.
+\end{itemize}
+The technical goal is to show that each overlay can be expressed by pair-local
+operations on the same substrate. Selecting physically preferred dynamics
+(interactions, calibration, and selection rules) is left open.
 
 \paragraph{Organization.}
 Section~\ref{sec:catalan_cone} establishes the discrete causal geometry of the
-Catalan lattice and its interpretation as a light cone. Section~\ref{sec:computation}
+Catalan lattice and its cone-shaped growth envelope. Section~\ref{sec:computation}
 develops the computational correspondence via binary application trees and pairs
 encodings. Section~\ref{sec:amplitudes} introduces a minimal amplitude
 construction and the continuum comparison to diffusion and Schr\"odinger
@@ -234,22 +245,22 @@ k(w):=\sum_{j=1}^{2n-1}\mathbf{1}\{(w_j,w_{j+1})=(\texttt{(},\texttt{)})\}.
 			\draw[thick] (0,0) -- (0.8,3.5);
 		% discrete layers
 		\foreach \y in {1,2,3} {
-			\draw[dashed] (0.25*\y,\y) -- (0.85*\y,\y);
-		}
-			% labels
-			\node[left] at (0,3.6) {timelike chain};
-			\node[above right] at (3.5,3.5) {lightlike boundary (star)};
-			\node at (1.1,2.2) {\small Dyck layer};
-				\end{tikzpicture}
-				\caption{The Catalan light cone.
-					Tier $n$ (the number of Dyck units) plays the role of a discrete time
-					coordinate, while breadth $b$ measures lateral spread.
-					All Dyck configurations at fixed tier lie between the fully nested chain
-					(timelike extreme) and the fully separated star (lightlike boundary).
-					Discrete Dyck layers approximate constant-time hypersurfaces, and the bound
-				$b \le n$ is enforced combinatorially.}
-				\label{fig:catalan-cone}
-		\end{figure}
+				\draw[dashed] (0.25*\y,\y) -- (0.85*\y,\y);
+			}
+				% labels
+				\node[left] at (0,3.6) {chain (axis)};
+				\node[above right] at (3.5,3.5) {boundary (star)};
+				\node at (1.1,2.2) {\small Dyck layer};
+					\end{tikzpicture}
+					\caption{The Catalan light cone.
+						Tier $n$ (the number of Dyck units) plays the role of a discrete time
+						coordinate, while breadth $b$ measures lateral spread.
+						All Dyck configurations at fixed tier lie between the fully nested chain
+						(axis extreme) and the fully separated star (boundary extreme).
+						Discrete Dyck layers approximate constant-time hypersurfaces, and the bound
+					$b \le n$ is enforced combinatorially.}
+					\label{fig:catalan-cone}
+			\end{figure}
 	
 	\subsection{Breadth as spatial extent}
 	Define the \emph{breadth} $b(w)$ of a Dyck path $w$ to be the size of a
@@ -264,16 +275,13 @@ k(w):=\sum_{j=1}^{2n-1}\mathbf{1}\{(w_j,w_{j+1})=(\texttt{(},\texttt{)})\}.
 		1 \le b(w) \le n,
 	\]
 	with $b=1$ for the fully nested chain and $b=n$ for the fully separated star.
-		The inequality
-		\[
-			b \le n
-		\]
-		is enforced purely by the recursive constraint. It is the discrete analogue of
-		the relativistic light-cone bound $|\Delta x| \le \Delta t$ (in units with
-		$c=1$).
-		This analogy is mnemonic only: no discrete Lorentz invariance is claimed, and
-		the integer null-count lattice admits no nontrivial boosts
-		(Remark~\ref{rem:no-lattice-boost}).
+			The inequality
+			\[
+				b \le n
+			\]
+			is enforced purely by the recursive constraint. We refer to it as a discrete
+			light-cone bound by analogy with $|\Delta x| \le \Delta t$ (in units with
+			$c=1$); see Remark~\ref{rem:no-lattice-boost} for the scope of this analogy.
 
 	\begin{remark}[Breadth as a recursive fold]
 	\label{rem:breadth-fold}
@@ -346,18 +354,14 @@ If $w$ has height process $(H_k)_{k=0}^{2n}$, then
 	
 	\subsection{Cone structure}
 	Organizing Dyck paths by tier $n$ and breadth $b$ yields a discrete cone:
-	\begin{itemize}
-		\item each tier is a ``constant-time'' slice,
-		\item the chain defines the timelike axis,
-		\item the star defines the lightlike boundary,
-	\item admissible configurations fill the interior.
-\end{itemize}
-This structure will be referred to as the \emph{Catalan light cone}.
-The term ``light cone'' is mnemonic for the combinatorial growth envelope in the
-$(n,b)$ coordinates: we establish a causal partial order but do not claim Lorentz
-boost symmetry or an invariant interval on the discrete lattice. The bound
-$b\le n$ is enforced by counting (there are $n$ pairs total), not by relativistic
-kinematics.
+		\begin{itemize}
+			\item each tier is a ``constant-time'' slice,
+			\item the chain defines the axis,
+			\item the star defines the boundary,
+			\item admissible configurations fill the interior.
+	\end{itemize}
+	This structure will be referred to as the \emph{Catalan light cone} (as defined
+	in the Introduction).
 
 		\subsection{Scaling behavior}
 	Classical results on conditioned random walks show that typical Dyck paths at
@@ -812,11 +816,11 @@ interpreting local tree rewrites as SKI reduction therefore equips the Catalan
 substrate with a standard universal calculus: every partial recursive function
 can be encoded as an SKI term \cite{CurryFeys1958,barendregt84}, and hence by a
 finite Dyck tree, and every computation corresponds to a sequence of local tree
-transformations. In this
-sense, the Catalan substrate is \emph{computationally universal}. This
-universality is classical; our purpose is to highlight that computation can be
-expressed by pair-local rewrites on the same Catalan objects that already carry
-the causal prefix order.
+	transformations. In this
+	sense, the Catalan substrate is \emph{computationally universal}. We use this
+	standard universality fact to emphasize that computation can be expressed by
+	pair-local rewrites on the same Catalan objects that carry the causal prefix
+	order.
 
 \subsection{Reduction and local collapse}
 
@@ -843,14 +847,13 @@ on the Catalan light cone.
 \label{sec:amplitudes}
 
 \noindent
-This section layers a minimal amplitude calculus on the Catalan history space.
-Complex phases and Born-style probability readout are modeling inputs, not
-derived from the substrate. The key inputs are (i) a coarse-graining/observable
-$f$ identifying which histories are regarded as the same outcome, and (ii) a
-choice of additive phase functional on histories. Given these, we define
-amplitudes by coherent summation over preimages and probabilities by normalized
-squared magnitudes, in analogy with the Born rule \cite{feynman-hibbs65}. The
-phase functional is constrained here only by the pairs-only locality discipline
+This section defines a minimal amplitude calculus on the Catalan history space.
+The key inputs are (i) a coarse-graining/observable $f$ identifying which
+histories are regarded as the same outcome, and (ii) a choice of additive phase
+functional on histories. Given these, we assign complex phase weights, define
+amplitudes by coherent summation over preimages, and read out probabilities by
+normalized squared magnitudes, in analogy with the Born rule \cite{feynman-hibbs65}.
+The phase functional is constrained here only by the pairs-only locality discipline
 (Proposition~\ref{prop:phase-classification}).
 
 	\paragraph{Configuration space versus readout.}
@@ -1681,28 +1684,16 @@ history space.
 \label{sec:discussion}
 
 The results presented here develop a shared structural framework for causal
-geometry, a minimal amplitude calculus, and computation. Several limitations should be
-emphasized:
-	\begin{itemize}
-		\item Physical constants and interactions are not derived.
-		\item Only free (noninteracting) wave dynamics appears explicitly.
-		\item Collapse probabilities are not fixed uniquely by the structure.
-		\item Lorentz symmetry is discussed only via continuum embeddings; no discrete
-			boost invariance is claimed (Remark~\ref{rem:no-lattice-boost}).
-		\item Complex phases and the choice of phase/action functional (e.g.\ Dyck
-			area) are model choices and are not shown to be unique.
-	\end{itemize}
-These limitations reflect a deliberate restriction of scope. The goal has been
-to isolate the minimal recursive structure common to multiple domains, not to
-provide a complete physical theory.
+geometry, a minimal amplitude calculus, and computation. The paper fixes the
+Catalan kinematics and makes explicit how amplitudes and computation can be
+layered by pair-local constructions (see the scope contract in the
+Introduction). The remaining task is to select and calibrate physically
+preferred dynamics, in particular interactions/constants and selection rules.
 
-More fundamentally, we do not claim that Catalan structures are uniquely suited
-to model physical dynamics, nor that any specific feature of quantum mechanics or
-relativity is \emph{explained} rather than merely \emph{accommodated} by the
-framework. The unification demonstrated here is structural: causal growth,
-amplitude propagation, and computation are all expressible on a common
-combinatorial substrate. Deriving why particular dynamics should be selected
-(and how they should be calibrated to experiment) remains open.
+The unification demonstrated here is structural: causal growth, amplitude
+propagation (under a chosen phase/readout model), and computation are all
+expressible on a common combinatorial substrate. Deriving and calibrating
+physically preferred dynamics remains open.
 
 \subsection{Relation to discrete quantum gravity}
 
