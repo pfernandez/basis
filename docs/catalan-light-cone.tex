@@ -33,7 +33,8 @@ balanced parenthesis expressions---as a single discrete space of admissible
 histories with multiple equivalent ``coordinate systems.'' The Dyck constraint
 induces a natural causal prefix order, and organizing histories by tier and
 lateral spread yields a discrete cone whose extremal configurations reproduce a
-light-cone--like causal envelope.
+light-cone--like causal envelope (terminology is mnemonic; no discrete Lorentz
+symmetry is claimed).
 
 Classical results on conditioned random walks imply that, under diffusive
 scaling, Dyck ensembles converge to Brownian excursions. This provides a
@@ -352,16 +353,18 @@ If $w$ has height process $(H_k)_{k=0}^{2n}$, then
 	\item admissible configurations fill the interior.
 \end{itemize}
 This structure will be referred to as the \emph{Catalan light cone}.
+The term ``light cone'' is mnemonic for the combinatorial growth envelope in the
+$(n,b)$ coordinates: we establish a causal partial order but do not claim Lorentz
+boost symmetry or an invariant interval on the discrete lattice. The bound
+$b\le n$ is enforced by counting (there are $n$ pairs total), not by relativistic
+kinematics.
 
-	\subsection{Scaling behavior}
+		\subsection{Scaling behavior}
 	Classical results on conditioned random walks show that typical Dyck paths at
 	tier $n$ have height and breadth of order $\sqrt{n}$
-	\cite{le-gall05,janson07,addario-berry13}. Extremal configurations saturate
-	the linear bound $b\le n$, while typical configurations lie deep within the
-	cone. This separation between extremal and typical behavior mirrors the role of
-	null, timelike, and spacelike trajectories in relativistic geometry, and we
-	use this terminology only as a mnemonic: the statements here are purely
-	combinatorial (see also Remark~\ref{rem:no-lattice-boost}).
+		\cite{le-gall05,janson07,addario-berry13}. Extremal configurations saturate
+		the linear bound $b\le n$, while typical configurations lie deep within the
+		cone (see also Remark~\ref{rem:no-lattice-boost}).
 
 	\begin{theorem}[Discrete light-cone bound and scaling]
 		Let $w$ be a Dyck word of semilength $n$ and breadth $b(w)$ as above. Then
@@ -579,8 +582,13 @@ minimal amplitude calculus---on this geometry.
 \label{sec:computation}
 
 \noindent
-We now read the same Catalan objects from the computational side. Full binary
-trees serve as application frames, while pairs encodings provide a uniform
+We now read the same Catalan objects from the computational side. The
+correspondence between binary application trees and applicative calculi is
+classical \cite{church33,CurryFeys1958,barendregt84}; our purpose is to emphasize
+that computation, like causal growth and amplitude dynamics, can be expressed
+through pair-local operations on the same substrate. This will later motivate
+the gauge-equivalence viewpoint of Section~\ref{sec:locality}. Full binary trees
+serve as application frames, while pairs encodings provide a uniform
 parenthesis-only syntax. The only additional choice needed to represent concrete
 programs is an encoding of symbols at leaves.
 
@@ -805,9 +813,10 @@ substrate with a standard universal calculus: every partial recursive function
 can be encoded as an SKI term \cite{CurryFeys1958,barendregt84}, and hence by a
 finite Dyck tree, and every computation corresponds to a sequence of local tree
 transformations. In this
-sense, the Catalan substrate is \emph{computationally universal}. What is new
-here is that the same underlying objects simultaneously carry a causal and
-geometric interpretation.
+sense, the Catalan substrate is \emph{computationally universal}. This
+universality is classical; our purpose is to highlight that computation can be
+expressed by pair-local rewrites on the same Catalan objects that already carry
+the causal prefix order.
 
 \subsection{Reduction and local collapse}
 
@@ -835,14 +844,14 @@ on the Catalan light cone.
 
 \noindent
 This section layers a minimal amplitude calculus on the Catalan history space.
-The key inputs are (i) a coarse-graining/observable $f$ identifying which
-histories are regarded as the same outcome, and (ii) a choice of additive phase
-functional on histories. Given these, we define amplitudes by coherent summation
-over preimages and probabilities by normalized squared magnitudes, in analogy
-with the Born rule \cite{feynman-hibbs65}.
-We do not derive \emph{why} histories should carry a complex phase; the phase
-functional is treated as an additional modeling input, constrained only by the
-pairs-only locality discipline.
+Complex phases and Born-style probability readout are modeling inputs, not
+derived from the substrate. The key inputs are (i) a coarse-graining/observable
+$f$ identifying which histories are regarded as the same outcome, and (ii) a
+choice of additive phase functional on histories. Given these, we define
+amplitudes by coherent summation over preimages and probabilities by normalized
+squared magnitudes, in analogy with the Born rule \cite{feynman-hibbs65}. The
+phase functional is constrained here only by the pairs-only locality discipline
+(Proposition~\ref{prop:phase-classification}).
 
 	\paragraph{Configuration space versus readout.}
 	At fixed tier $n$, the set $\mathcal D_n$ is a \emph{configuration space} of
@@ -1687,6 +1696,14 @@ These limitations reflect a deliberate restriction of scope. The goal has been
 to isolate the minimal recursive structure common to multiple domains, not to
 provide a complete physical theory.
 
+More fundamentally, we do not claim that Catalan structures are uniquely suited
+to model physical dynamics, nor that any specific feature of quantum mechanics or
+relativity is \emph{explained} rather than merely \emph{accommodated} by the
+framework. The unification demonstrated here is structural: causal growth,
+amplitude propagation, and computation are all expressible on a common
+combinatorial substrate. Deriving why particular dynamics should be selected
+(and how they should be calibrated to experiment) remains open.
+
 \subsection{Relation to discrete quantum gravity}
 
 Similar scaling behavior appears in two-dimensional quantum gravity and random
@@ -1713,6 +1730,18 @@ and under analytic continuation one obtains the free Schr\"odinger equation. The
 scope is intentionally restricted to this shared structural core:
 deriving interactions, constants, or a unique collapse/measurement rule requires
 additional structure beyond what is developed here.
+
+\paragraph{Technical contributions.}
+The main technical ingredients include: (i) a classification of pair-local
+additive phase functionals and explicit transfer recursions for the Dyck area
+phase (Proposition~\ref{prop:phase-classification},
+Lemma~\ref{lem:area-transfer}, and
+Corollary~\ref{cor:q-catalan-continued-fraction}); (ii) ballot-number completion
+formulas and cone self-similarity underlying tier growth
+(Lemma~\ref{lem:ballot-completions} and Lemma~\ref{lem:cone-iso-height}); and
+(iii) disjoint commutation and the resulting gauge-equivalence viewpoint for
+local rewrites (Lemma~\ref{lem:causal-consistency} and
+Section~\ref{sec:locality}).
 
 \paragraph{Physics-facing open directions.}
 The minimal constructions here suggest several directions for
