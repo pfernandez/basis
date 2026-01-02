@@ -3,6 +3,8 @@
 % Intended use: `\\input{supplemental-operators.tex}` at the former location in
 % Appendix "Additional Technical Notes".
 
+\providecommand{\mainref}[1]{\ref{#1}}
+
 \subsection{Fields on words, prefixes, and nodes (optional)}
 \label{subsec:fields}
 
@@ -230,8 +232,8 @@ This optional tier-graph framework does not fix a preferred choice of adjacency
 $G_n$ and is not used elsewhere in the paper. Its purpose is to make explicit
 that, once a tier-local notion of neighbourhood is specified, discrete diffusion
 and Schr\"odinger-type evolutions on the Catalan state space follow by standard
-graph-Laplacian constructions (compare Remark~\ref{rem:dyck-conditioned-drift-scaling}
-and Remark~\ref{rem:dyck-conditioned-kernel-doob} for the tier-growth Markov
+graph-Laplacian constructions (compare Remark~\mainref{rem:dyck-conditioned-drift-scaling}
+and Remark~\mainref{rem:dyck-conditioned-kernel-doob} for the tier-growth Markov
 structure induced by Dyck conditioning).
 \end{remark}
 

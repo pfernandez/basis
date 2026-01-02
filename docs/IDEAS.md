@@ -563,7 +563,7 @@ below uses the third, but is compatible with the first two.
 
 **Status**
 
-* **Not in paper (v1).** Preserved in `docs/supplemental-operators.tex` (extracted from the Appendix “Additional Technical Notes”).
+* **Not in paper (v1).** Included in the companion supplement (`docs/catalan-light-cone-supplement.tex`) via `docs/supplemental-operators.tex` (extracted from the Appendix “Additional Technical Notes”).
 * **Solid (definitions).** All three views are straightforward structures on the Catalan objects already in use.
 * **Speculative.** Identifying these fields with physical fields (e.g. scalar,
   gauge) is an interpretive layer, not derived.
@@ -612,7 +612,7 @@ ecology).
 
 **Status**
 
-* **Not in paper (v1).** Preserved in `docs/supplemental-operators.tex` (subsection “Subtree indicators as a multiscale spanning family (optional)”, Lemma “Subtree indicators form a basis”, and Corollary “Explicit inversion”).
+* **Not in paper (v1).** Included in the companion supplement (`docs/catalan-light-cone-supplement.tex`) via `docs/supplemental-operators.tex` (subsection “Subtree indicators as a multiscale spanning family (optional)”, Lemma “Subtree indicators form a basis”, and Corollary “Explicit inversion”).
 * **Solid (structural).** The hierarchy of subtrees and the basis/spanning facts are exact combinatorial statements.
 * **Speculative.** The particular choice of mode family $\{\psi_v\}$ or
   $\{\psi_\alpha\}$, and any claim of uniqueness, is model-dependent.
@@ -722,7 +722,7 @@ In large-$n$ limits:
 
 * **Solid (discrete operators).** Graph Laplacians and the induced heat/Schr
   evolutions are standard; a short Catalan-tier/tree framing is preserved in
-  `docs/supplemental-operators.tex` (not included in the arXiv v1 PDF).
+  `docs/supplemental-operators.tex` (not included in the main arXiv v1 PDF; included in the companion supplement PDF).
 * **Speculative.** The precise continuum limit of these operators on random
   Dyck trees, and the identification of the limiting PDEs with physical field
   equations, is a research program rather than a completed derivation.

@@ -608,7 +608,7 @@ N(x)\;:=\;\#\{w\in \mathcal D_n: f(w)=x\},
 \]
 so that $f^{-1}(x)$ is the equivalence class of histories identified as the
 same outcome.
-If $f$ is prefix-local in the sense of Remark~\ref{CLC-rem:local-observables}, then
+If $f$ is prefix-local in the sense of Remark~\mainref{rem:local-observables}, then
 the multiplicities $N(x)$ admit transfer recursions on the induced state space.
 
 \paragraph{Multiplicity entropy.}
@@ -632,8 +632,8 @@ The multiplicity entropy $S(x)=\log N(x)$ measures how many fine-grained
 histories are identified as the same outcome at tier $n$. A complementary
 forward-looking quantity is the number of admissible continuations of a
 realized prefix into higher tiers (the size of its local cone; see
-Section~\ref{CLC-sec:multiplecones}), which may be studied by counting completions
-as a function of current height (Lemma~\ref{CLC-lem:ballot-completions}).
+Section~\mainref{sec:multiplecones}), which may be studied by counting completions
+as a function of current height (Lemma~\mainref{lem:ballot-completions}).
 \end{remark}
 
 \paragraph{Completion multiplicity and future-cone entropy.}
@@ -646,7 +646,7 @@ M_n(u)\;:=\;\#\{w\in \mathcal D_n : u\preceq w\},
 	history $u$. This is the finite-tier size of the local cone rooted at $u$.
 	It depends only on the remaining step budget $s:=2n-k$ and the current height
 	$h$, and admits the explicit ballot-number formula of
-	Lemma~\ref{CLC-lem:ballot-completions}. The associated future-cone entropy is
+	Lemma~\mainref{lem:ballot-completions}. The associated future-cone entropy is
 \[
 	S^{\mathrm{cone}}_n(u)\;:=\;\log M_n(u).
 \]
@@ -668,7 +668,7 @@ keep these notions separate in general.
 \paragraph{Gauge-invariant counting.}
 When histories admit a redundancy under commuting spacelike-separated updates,
 one may quotient the fine-grained history set at tier $n$ by the induced gauge
-equivalence relation $\sim_g$ of Definition~\ref{CLC-def:gauge-equivalence}. When
+equivalence relation $\sim_g$ of Definition~\mainref{def:gauge-equivalence}. When
 $\mathcal D_n$ is taken to parametrize such fine-grained histories at tier $n$,
 define $\bar{\mathcal D}_n:=\mathcal D_n/\!\sim_g$. If $f$ is gauge-invariant
 (constant on $\sim_g$-orbits), define
@@ -716,9 +716,8 @@ $\arg\max\{U(L),U(R)\}$), then the drop is $1+\min\{U(L),U(R)\}$.
 Immediate from the defining recursion $U(\bullet(L,R))=1+U(L)+U(R)$.
 \end{proof}
 
-% Optional operator/field frameworks previously here were moved to
-% supplemental-operators.tex (not included in the arXiv v1 PDF).
-% \input{supplemental-operators.tex}
+% Optional operator/field frameworks (operators on tiers/trees, Laplacians, etc.).
+\input{supplemental-operators.tex}
 
 \section{Computational Foundations}
 \label{appendix:computational-foundations}
@@ -747,12 +746,16 @@ so $E$ is recursively decodable and therefore injective.
 \end{lemma}
 
 
-\begin{proof}[Proof Sketch (Catalan universality for program structure)]
-			As described in classical treatments of combinatory logic and the
-			$\lambda$-calculus \cite{CurryFeys1958,barendregt84}, application is a
-		binary operation, and every term therefore possesses a unique representation
-		as a full binary tree: internal nodes encode application, and leaves encode
-	variables, constants, or combinators.  This establishes a canonical embedding
+\paragraph{Catalan universality for program structure.}
+The following is a proof sketch of Proposition~\mainref{prop:catalan-programs} in
+the main paper.
+
+\begin{proof}[Proof sketch]
+				As described in classical treatments of combinatory logic and the
+				$\lambda$-calculus \cite{CurryFeys1958,barendregt84}, application is a
+			binary operation, and every term therefore possesses a unique representation
+			as a full binary tree: internal nodes encode application, and leaves encode
+		variables, constants, or combinators.  This establishes a canonical embedding
 	of programs into $\mathcal{T}$.
 
 	Conversely, any full binary tree with labeled leaves may be interpreted as a
@@ -785,7 +788,7 @@ so $E$ is recursively decodable and therefore injective.
 		the usual commuting-diamond picture.
 \end{lemma}
 
-\begin{proof}[Proof Sketch]
+\begin{proof}
 	Since $p$ and $q$ lie in disjoint subtrees, contracting at $p$ rewrites only
 	the subtree rooted at $p$ and leaves the subtree rooted at $q$ unchanged.
 	Symmetrically, contracting at $q$ leaves the subtree at $p$ unchanged. Because
@@ -1156,7 +1159,7 @@ Intuitively, $p \preceq q$ means that the subtree at $q$ is causally downstream 
 		the usual commuting-diamond picture.
 \end{lemma}
 
-\begin{proof}[Proof Sketch]
+\begin{proof}[Proof sketch]
 	Since $p$ and $q$ lie in disjoint subtrees, contracting at $p$ rewrites only
 	the subtree rooted at $p$ and leaves the subtree rooted at $q$ unchanged. Thus
 	the redex at $q$ is unaffected (and remains at the same position), so it may
@@ -1207,7 +1210,7 @@ constrains redex selection more tightly.
 	freedom to permute causally independent redex contractions.
 \end{proposition}
 
-\begin{proof}[Proof Sketch]
+\begin{proof}[Proof sketch]
 	For (1), observe that any $\mathcal{S}$-guided sequence that temporarily
 	contracts a non-minimal redex (with respect to $\preceq$) must do so in a
 	context where all redexes on which it causally depends will eventually be

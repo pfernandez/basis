@@ -17,7 +17,7 @@ The v1 TeX file is self-contained (no `\input{...}` or external figures).
 - `catalan-light-cone.tex`
 - `catalan-light-cone-supplement.tex`
 - `catalan-light-cone-supplement-appendices.tex`
-- `supplemental-operators.tex` (optional; currently not included by either PDF)
+- `supplemental-operators.tex` (included by the supplement via `\input`)
 
 ## Notes
 
