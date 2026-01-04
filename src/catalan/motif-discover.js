@@ -20,15 +20,15 @@ import { createCollapsePolicy, COLLAPSE_MODES } from './collapse-policy.js';
 
 //////////////////// CONFIG /////////////////////////////////////////////
 
-const MAX_N = 8;
-const RUNS_PER_TREE = 800;
-const MAX_STEPS = 800;
-const MIN_MOTIF_SIZE = 3;
+const MAX_N = 9;
+const RUNS_PER_TREE = 1000;
+const MAX_STEPS = 10000;
+const MIN_MOTIF_SIZE = 0;
 const USE_ETA = !process.argv.includes('--no-eta');
 const FREEZE_BALANCED = process.argv.includes('--freeze-balanced');
 const policyArg = process.argv.find(arg => arg.startsWith('--policy='));
 const COLLAPSE_MODE = policyArg ? policyArg.split('=')[1] : COLLAPSE_MODES.HEAVIER;
-const EPS = 0.2; // 20% explore, 80% deepest-first
+const EPS = 1; // 0.2 = 20% explore, 80% deepest-first
 
 //////////////////// BASIC TREE STUFF //////////////////////////////////
 
