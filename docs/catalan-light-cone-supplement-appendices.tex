@@ -724,8 +724,7 @@ Immediate from the defining recursion $U(\bullet(L,R))=1+U(L)+U(R)$.
 
 This appendix records proof sketches for the computational claims used in the
 main text, including the Catalan universality statement for program structure and the
-disjoint-commutation property of Lemma~\ref{lem:causal-consistency}. For a lean
-v1, extended examples and additional formal development are omitted.
+disjoint-commutation property of Lemma~\mainref{lem:causal-consistency}.
 
 \begin{lemma}[Internalizing Symbols as Motifs]
 \label{lem:symbol-motifs}
@@ -772,29 +771,15 @@ the main paper.
 \end{proof}
 
 
-\begin{lemma}[Commutation of disjoint reductions]
-	\label{lem:causal-consistency}
-	Let $T$ be a full binary tree and consider any local rewrite system whose
-	single-step reductions replace a rooted subtree matching a finite pattern by a
-	new subtree, leaving the rest of $T$ unchanged. Suppose two single-step
-	reductions are applicable at positions $p$ and $q$ whose rooted subtrees are
-	disjoint (neither position lies on the root-to-node path of the other). Let
-	$T_p$ denote the result of applying the reduction at $p$, and similarly $T_q$.
-	Then both reductions remain applicable after the other, and they commute:
-	\[
-		(T_p)_q \;\equiv\; (T_q)_p.
-	\]
-		In particular, disjoint reductions form a commuting diamond as in
-		the usual commuting-diamond picture.
-\end{lemma}
-
-\begin{proof}
-	Since $p$ and $q$ lie in disjoint subtrees, contracting at $p$ rewrites only
-	the subtree rooted at $p$ and leaves the subtree rooted at $q$ unchanged.
-	Symmetrically, contracting at $q$ leaves the subtree at $p$ unchanged. Because
-	the two rewrite steps act on disjoint parts of the tree, performing both
-	contractions yields the same result regardless of order.
-\end{proof}
+\paragraph{Commutation of disjoint reductions (proof sketch for Lemma~\mainref{lem:causal-consistency}).}
+Let $T$ be a full binary tree and suppose two single-step reductions are applicable
+at positions $p$ and $q$ whose rooted subtrees are disjoint (neither position lies
+on the root-to-node path of the other). Contracting at $p$ rewrites only the
+subtree rooted at $p$ and leaves the subtree rooted at $q$ unchanged, so the
+reduction at $q$ remains applicable afterward; symmetrically, contracting at $q$
+leaves the subtree at $p$ unchanged. Since the two rewrite steps act on disjoint
+parts of the tree, performing both contractions yields the same result regardless
+of order, forming a commuting diamond.
 
 \iffalse
 \subsection{Binary Trees as Universal Program Frames}

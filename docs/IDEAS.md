@@ -3,7 +3,7 @@
 _Living consolidation for the Catalan Light Cone / Basis project._
 _Last refactor: 2026-01-01._
 
-> Note: this is a working document. Treat it as a roadmap and idea cache, not as a statement of results. The arXiv-ready claims live in `docs/catalan-light-cone.tex` and (optionally) `docs/catalan-light-cone-supplement.tex`.
+> Note: this is a working document. Treat it as a roadmap and idea cache, not as a statement of results. The arXiv-ready claims live in `docs/catalan-light-cone.tex` (which now integrates the appendices that previously lived in the supplement).
 
 **What this file is for**
 
@@ -13,9 +13,9 @@ _Last refactor: 2026-01-01._
 
 **Companion docs**
 
-- Main arXiv v1: `docs/catalan-light-cone.tex`
-- Companion supplement (extra appendices/proofs): `docs/catalan-light-cone-supplement.tex`
-- Operators/adjacency notes (included in the companion supplement): `docs/supplemental-operators.tex`
+- Main paper (with appendices): `docs/catalan-light-cone.tex`
+- (Optional/legacy) Standalone supplement build: `docs/catalan-light-cone-supplement.tex`
+- Operators/adjacency notes (included via appendices): `docs/supplemental-operators.tex`
 - Intuition draft (non-paper): `docs/intuition.md`
 - Archive of surrounding ideas (non-paper): `docs/ARCHIVE.md`
 
@@ -139,7 +139,7 @@ Under diffusive scaling, Dyck ensembles converge to Brownian excursions; this su
 ### 3) Collapse dynamics: potential, work, locality, and proper time **[PARTIAL]**
 
 **Paper:** `docs/catalan-light-cone.tex` (selection/collapse discussion; computational proper time as event-count parameter).
-**Supplement:** `docs/catalan-light-cone-supplement-appendices.tex` (coarse-graining entropy bookkeeping; collapse-size bookkeeping lemma).
+**Appendices:** `docs/catalan-light-cone-supplement-appendices.tex` (coarse-graining entropy bookkeeping; collapse-size bookkeeping lemma; integrated into the main paper via `\input`).
 
 This dossier is the “local rule” side of the global cone picture: collapse/actualization provides an irreversible arrow and a natural notion of proper time.
 
@@ -157,7 +157,7 @@ Under a “keep the more structured side” collapse, the potential drop for col
 
 $$\Delta U = \big(1+U(L)+U(R)\big) - \max\{U(L),U(R)\}=1+\min\{U(L),U(R)\}.$$
 
-The internal-node bookkeeping and size drops under subtree selection are recorded in the companion supplement; interpreting $\Delta U$ as irreversible work (and $F_{\text{app}}$ as a force scale) remains optional and is not claimed as physics.
+The internal-node bookkeeping and size drops under subtree selection are recorded in the appendices; interpreting $\Delta U$ as irreversible work (and $F_{\text{app}}$ as a force scale) remains optional and is not claimed as physics.
 
 #### Chronons, locality, and a discrete interval (interpretive bridge to relativity) **[IDEA ONLY]**
 
@@ -567,7 +567,7 @@ below uses the third, but is compatible with the first two.
 
 **Status**
 
-* **Not in paper (v1).** Included in the companion supplement (`docs/catalan-light-cone-supplement.tex`) via `docs/supplemental-operators.tex` (extracted from the Appendix “Additional Technical Notes”).
+* **In paper (appendices).** Included via `docs/catalan-light-cone-supplement-appendices.tex` and `docs/supplemental-operators.tex`.
 * **Solid (definitions).** All three views are straightforward structures on the Catalan objects already in use.
 * **Speculative.** Identifying these fields with physical fields (e.g. scalar,
   gauge) is an interpretive layer, not derived.
@@ -616,7 +616,7 @@ ecology).
 
 **Status**
 
-* **Not in paper (v1).** Included in the companion supplement (`docs/catalan-light-cone-supplement.tex`) via `docs/supplemental-operators.tex` (subsection “Subtree indicators as a multiscale spanning family (optional)”, Lemma “Subtree indicators form a basis”, and Corollary “Explicit inversion”).
+* **In paper (appendices).** Included via `docs/catalan-light-cone-supplement-appendices.tex` and `docs/supplemental-operators.tex` (subtree-indicator basis + inversion).
 * **Solid (structural).** The hierarchy of subtrees and the basis/spanning facts are exact combinatorial statements.
 * **Speculative.** The particular choice of mode family $\{\psi_v\}$ or
   $\{\psi_\alpha\}$, and any claim of uniqueness, is model-dependent.
@@ -726,7 +726,7 @@ In large-$n$ limits:
 
 * **Solid (discrete operators).** Graph Laplacians and the induced heat/Schr
   evolutions are standard; a short Catalan-tier/tree framing is preserved in
-  `docs/supplemental-operators.tex` (not included in the main arXiv v1 PDF; included in the companion supplement PDF).
+  `docs/supplemental-operators.tex` (included in the main paper appendices).
 * **Speculative.** The precise continuum limit of these operators on random
   Dyck trees, and the identification of the limiting PDEs with physical field
   equations, is a research program rather than a completed derivation.

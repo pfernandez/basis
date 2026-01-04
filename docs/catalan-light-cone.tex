@@ -17,6 +17,7 @@
 \newtheorem{proposition}{Proposition}[section]
 \newtheorem{corollary}{Corollary}[section]
 \newtheorem{remark}{Remark}[section]
+\newcommand{\mainref}[1]{\ref{#1}}
 
 \title{The Catalan Light Cone:\\
 Dyck Paths as a Discrete Substrate for Causal Geometry, Quantum Amplitudes, and Computation}
@@ -158,7 +159,7 @@ Locality and disjoint-commutation are discussed in Section~\ref{sec:locality}.
 	and summarize scope and limitations.
 	Appendices collect optional coordinate charts (continuum comparison tools) and
 	a worked finite example, separate from the main formal development. Additional
-	appendices and extended proof sketches are collected in a companion supplement.
+	appendices and extended proof sketches appear in later appendices.
 
 \section{The Catalan Light Cone as a Discrete Causal Geometry}
 \label{sec:catalan_cone}
@@ -189,11 +190,12 @@ a discrete causal structure:
 		\item multiple incompatible futures may branch from the same prefix,
 		\item cycles are prohibited by construction.
 \end{itemize}
-	No additional causal axiom is introduced; causality is enforced combinatorially
-	by the Dyck constraint.
-	A companion supplement records an axiomatic characterization of this
-	collision-free two-move growth structure, and extends the characterization to
-	growth systems with merges via an explicit unfolding construction.
+		No additional causal axiom is introduced; causality is enforced combinatorially
+		by the Dyck constraint.
+		Appendix~\ref{appendix:uniqueness} records an axiomatic characterization of this
+		collision-free two-move growth structure, and Appendix~\ref{appendix:unfoldings}
+		extends the characterization to growth systems with merges via an explicit
+		unfolding construction.
 
 \subsection{Extremal configurations: chain and star}
 At fixed tier $n$ there are many Dyck paths. Two extremal configurations play a
@@ -617,13 +619,12 @@ Catalan motifs (Remark~\ref{rem:symbol-motifs}).
 
 	\begin{remark}[Symbols as Distinguished Motifs]
 	\label{rem:symbol-motifs}
-	Although we sometimes describe leaf labels as an external choice, one may work
-	in a purely structural setting: there is an injective encoding of labeled
-	application trees (and in particular SKI terms) into unlabeled Catalan trees by
-	tagging constructor nodes and representing each symbol by a fixed subtree motif.
-	An explicit construction is recorded in the companion supplement (Computational
-	Foundations appendix).
-	\end{remark}
+		Although we sometimes describe leaf labels as an external choice, one may work
+		in a purely structural setting: there is an injective encoding of labeled
+		application trees (and in particular SKI terms) into unlabeled Catalan trees by
+		tagging constructor nodes and representing each symbol by a fixed subtree motif.
+		An explicit construction is recorded in Appendix~\ref{appendix:computational-foundations}.
+		\end{remark}
 
 This observation also extends to operational semantics. Standard reductions
 (such as $\beta$-reduction or SKI contraction) are local rewrite rules on binary
@@ -1254,7 +1255,7 @@ summing coherently over coarse-grained equivalence classes before applying the
 Born rule.
 
 \paragraph{Optional: coarse-graining entropy.}
-A companion supplement records an optional entropy bookkeeping for
+Appendix~\ref{appendix:technical-notes} records optional entropy bookkeeping for
 coarse-grainings and collapse counts.
 
 \subsection{Path integrals and conditioned walks}
@@ -2410,6 +2411,8 @@ Section~\ref{sec:amplitudes}: complex weights, coherent summation over
 coarse-grained preimages, and Born-style squaring suffice to produce
 interference.
 
+\input{catalan-light-cone-supplement-appendices.tex}
+
 
 		\bibliographystyle{plain}
 		\begin{thebibliography}{99}
@@ -2444,6 +2447,12 @@ interference.
 	A.~Church.
 	\newblock A set of postulates for the foundation of logic.
 	\newblock {\em Annals of Mathematics}, 34:839--864, 1933.
+
+	\bibitem{McCarthy1960}
+	J.~McCarthy.
+	\newblock Recursive functions of symbolic expressions and their computation by
+	machine, Part~I.
+	\newblock {\em Communications of the ACM}, 3(4):184--195, 1960.
 
 		\bibitem{CurryFeys1958}
 		H.~B. Curry and R.~Feys.
@@ -2483,6 +2492,11 @@ interference.
 		\newblock Brownian motion, bridge, excursion, and meander revisited.
 		\newblock {\em Electronic Journal of Probability}, 4:1--32, 1999.
 
+		\bibitem{Schoenfinkel1924}
+		M.~Sch{\"o}nfinkel.
+		\newblock {\"U}ber die Bausteine der mathematischen Logik.
+		\newblock {\em Mathematische Annalen}, 92:305--316, 1924.
+
 		\bibitem{rovelli04}
 		C.~Rovelli.
 		\newblock {\em Quantum Gravity}.
@@ -2503,6 +2517,23 @@ interference.
 		\newblock Linear intervals in the Tamari and the Dyck lattices and in the
 		alt-Tamari posets.
 		\newblock arXiv:2209.00418v2, 2022.
+
+	\bibitem{abhy2018scatteringforms}
+	N.~Arkani-Hamed, Y.~Bai, S.~He, and G.~Yan.
+	\newblock Scattering forms and the positive geometry of kinematics, color and
+	the worldsheet.
+	\newblock {\em JHEP} \textbf{05} (2018) 096.
+	\newblock arXiv:1711.09102.
+
+	\bibitem{banerjee2018stokes}
+	P.~Banerjee, A.~Laddha, and P.~Raman.
+	\newblock Stokes polytopes: The positive geometry for $\phi^4$ interactions.
+	\newblock arXiv:1811.05904, 2018.
+
+	\bibitem{herrmann2022positivegeometry}
+	E.~Herrmann and J.~Trnka.
+	\newblock Positive geometry of scattering amplitudes.
+	\newblock arXiv:2203.13018, 2022.
 
 	\end{thebibliography}
 \end{document}

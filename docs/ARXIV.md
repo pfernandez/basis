@@ -3,25 +3,17 @@
 ## Build
 
 - Main paper: `latexmk -pdf -interaction=nonstopmode -halt-on-error catalan-light-cone.tex`
-- Companion supplement (optional): `latexmk -pdf -interaction=nonstopmode -halt-on-error catalan-light-cone-supplement.tex`
-  - Compile `catalan-light-cone.tex` first so `catalan-light-cone.aux` exists for cross-refs (`xr-hyper`).
+- (Optional) Standalone supplement: `latexmk -pdf -interaction=nonstopmode -halt-on-error catalan-light-cone-supplement.tex`
 
-## Minimal upload set (lean v1)
-
-- `catalan-light-cone.tex`
-
-The v1 TeX file is self-contained (no `\input{...}` or external figures).
-
-## Recommended source bundle (so “companion supplement” references resolve)
+## Minimal upload set (current)
 
 - `catalan-light-cone.tex`
-- `catalan-light-cone-supplement.tex`
-- `catalan-light-cone-supplement-appendices.tex`
-- `supplemental-operators.tex` (included by the supplement via `\input`)
+- `catalan-light-cone-supplement-appendices.tex` (now `\input` by the main file)
+- `supplemental-operators.tex` (now `\input` transitively)
 
 ## Notes
 
-- The main paper references a “companion supplement” for material intentionally omitted from the v1 PDF; including the supplement TeX in the arXiv source upload keeps that reference honest even if arXiv only compiles the main file.
+- The main paper now integrates the previous “companion supplement” as appendices via `\input{...}`.
 - No `-shell-escape` features are used.
 
 ## Categories (suggested)
