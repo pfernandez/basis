@@ -2,25 +2,32 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Basis Graph Viewer</title>
+    <title>Basis • 3D Graph Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="./style.css">
   </head>
   <body>
-    <main>
-      <section class="controls">
-        <div class="toolbar">
-          <button id="fetch-button">Load trace.json</button>
-          <label class="slider-label">
-            Step
-            <input id="step-slider" type="range" min="0" max="0" value="0">
-            <span id="step-label">0 / 0</span>
-          </label>
-        </div>
-        <textarea id="graph-input" rows="8" placeholder="Paste a graph JSON (nodes + links or an array of snapshots)..."></textarea>
-        <button id="render-button">Render Pasted JSON</button>
-      </section>
-      <section class="canvas" id="graph-canvas"></section>
-    </main>
+    <div id="graph"></div>
+    <div id="hud">
+      <div class="row">
+        <button id="load-trace">Load trace.json</button>
+        <button id="play-pause" title="Space">Play</button>
+        <input id="step" type="range" min="0" max="0" value="0" />
+      </div>
+      <div class="row meta">
+        <span id="step-label">0 / 0</span>
+        <span id="note-label"></span>
+      </div>
+      <div class="row">
+        <input id="file" type="file" accept="application/json" />
+      </div>
+      <div class="row">
+        <pre id="focus"></pre>
+      </div>
+    </div>
+
+    <!-- Uses the locally-installed package (run a local server from repo root). -->
+    <script src="/node_modules/3d-force-graph/dist/3d-force-graph.min.js"></script>
     <script type="module" src="./viewer.js"></script>
   </body>
 </html>

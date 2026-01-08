@@ -27,5 +27,8 @@
     "test": "node --test tests/*.test.js"
   },
   "author": "Paul Fernandez",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "dependencies": {
+    "3d-force-graph": "^1.79.0"
+  }
 }
