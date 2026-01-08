@@ -9,14 +9,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function countPointerLinks(graph) {
   return graph.nodes.reduce((count, node) => {
-    if (node.kind === 'binder' && typeof node.cellId === 'string') return count + 1;
-    if (node.kind === 'slot') {
-      let next = count;
-      if (typeof node.binderId === 'string') next += 1;
-      if (typeof node.cellId === 'string') next += 1;
-      return next;
-    }
-    if (node.kind === 'cell' && typeof node.valueId === 'string') return count + 1;
+    if (node.kind === 'slot' && typeof node.binderId === 'string') return count + 1;
+    if (node.kind === 'binder' && typeof node.valueId === 'string') return count + 1;
     return count;
   }, 0);
 }

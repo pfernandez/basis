@@ -149,7 +149,7 @@ export function evaluateExpression(expr, env, options = {}) {
  *
  * @param {Graph} graph
  * @param {any} expr
- * @param {{ id: string, cellId: string }[]} stack
+ * @param {{ id: string }[]} stack
  * @returns {{ graph: Graph, nodeId: string }}
  */
 function buildTemplate(graph, expr, stack) {
@@ -163,24 +163,11 @@ function buildTemplate(graph, expr, stack) {
       const binderResult = addNode(graph, {
         kind: 'binder',
         label: `λ${stack.length}`,
-      });
-      const binderId = binderResult.id;
-      let graphWithBinder = binderResult.graph;
-
-      const cellResult = addNode(graphWithBinder, {
-        kind: 'cell',
-        label: '□',
         valueId: null,
       });
-      const cellId = cellResult.id;
-      graphWithBinder = cellResult.graph;
-      graphWithBinder = updateNode(graphWithBinder, binderId, node => ({
-        ...node,
-        cellId,
-      }));
-
-      const nextStack = [...stack, { id: binderId, cellId }];
-      const body = buildTemplate(graphWithBinder, expr[1], nextStack);
+      const binderId = binderResult.id;
+      const nextStack = [...stack, { id: binderId }];
+      const body = buildTemplate(binderResult.graph, expr[1], nextStack);
       const { graph: complete, id } = addNode(body.graph, {
         kind: 'pair',
         label: '·',
@@ -205,7 +192,6 @@ function buildTemplate(graph, expr, stack) {
       kind: 'slot',
       label: expr,
       binderId: binder.id,
-      cellId: binder.cellId,
     });
     return { graph: nextGraph, nodeId: id };
   }
@@ -234,16 +220,16 @@ function reduceGraph(graph, nodeId, env, tracer, options = {}) {
     return reduceGraph(template.graph, template.nodeId, env, tracer, options);
   }
   if (node.kind === 'slot') {
-    const cellId = node.cellId;
-    if (typeof cellId !== 'string') {
+    const binderId = node.binderId;
+    if (typeof binderId !== 'string') {
       return { graph, rootId: nodeId };
     }
-    const cell = getNode(graph, cellId);
-    if (cell.kind !== 'cell' || !cell.valueId) {
+    const binder = getNode(graph, binderId);
+    if (binder.kind !== 'binder' || !binder.valueId) {
       return { graph, rootId: nodeId };
     }
-    const valueEval = reduceGraph(graph, cell.valueId, env, tracer, options);
-    let nextGraph = updateNode(valueEval.graph, cellId, current => ({
+    const valueEval = reduceGraph(graph, binder.valueId, env, tracer, options);
+    const nextGraph = updateNode(valueEval.graph, binderId, current => ({
       ...current,
       valueId: valueEval.rootId,
     }));
@@ -304,11 +290,8 @@ function applyIfLambda(graph, parentPairId, candidateId, argumentId, tracer) {
   }
   const lambdaBinder = getNode(clonedArg.graph, lambdaBinderId);
   invariant(lambdaBinder.kind === 'binder', 'Lambda binder must be a binder node');
-  invariant(typeof lambdaBinder.cellId === 'string', 'Binder is missing an indirection cell');
-
-  const cellId = lambdaBinder.cellId;
-  let nextGraph = updateNode(clonedArg.graph, cellId, cell => ({
-    ...cell,
+  const nextGraph = updateNode(clonedArg.graph, lambdaBinderId, binder => ({
+    ...binder,
     valueId: clonedArg.rootId,
   }));
 
@@ -358,14 +341,6 @@ function snapshotState(tracer, graph, rootId, note) {
   const nodes = graph.nodes.map(node => ({ ...node, children: node.children ? [...node.children] : undefined }));
   const links = [];
   nodes.forEach(node => {
-    if (node.kind === 'binder' && typeof node.cellId === 'string') {
-      links.push({
-        id: `cell:${node.id}`,
-        kind: 'cell',
-        from: node.id,
-        to: node.cellId,
-      });
-    }
     if (node.kind === 'slot') {
       if (typeof node.binderId === 'string') {
         links.push({
@@ -375,16 +350,8 @@ function snapshotState(tracer, graph, rootId, note) {
           to: node.binderId,
         });
       }
-      if (typeof node.cellId === 'string') {
-        links.push({
-          id: `deref:${node.id}`,
-          kind: 'deref',
-          from: node.id,
-          to: node.cellId,
-        });
-      }
     }
-    if (node.kind === 'cell' && typeof node.valueId === 'string') {
+    if (node.kind === 'binder' && typeof node.valueId === 'string') {
       links.push({
         id: `value:${node.id}`,
         kind: 'value',

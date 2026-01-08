@@ -3,12 +3,11 @@ import { createIdGenerator, invariant, replaceNode } from '../utils.js';
 /**
  * @typedef {Object} GraphNode
  * @property {string} id Unique identifier for the node
- * @property {string} kind One of: pair | binder | slot | symbol | empty | cell
+ * @property {string} kind One of: pair | binder | slot | symbol | empty
  * @property {string} label Human-readable label rendered in the UI
  * @property {string[]} [children] Child node IDs (for pair nodes)
- * @property {string} [cellId] Node ID of the binder's indirection cell (binder/slot nodes)
  * @property {string} [binderId] Node ID of the binder owning this slot (slot nodes)
- * @property {string | null} [valueId] Node ID stored in an indirection cell (cell nodes)
+ * @property {string | null} [valueId] Node ID bound by a binder (binder nodes)
  */
 
 /**
@@ -83,18 +82,12 @@ export function cloneSubgraph(graph, rootId) {
     if (nodeMap.has(id)) return nodeMap.get(id);
     const source = getNode(sourceGraph, id);
     const children = source.children?.map(childId => cloneNode(childId));
-    const extraRefs = [];
-    if (source.kind === 'binder' && source.cellId) extraRefs.push(source.cellId);
-    extraRefs.forEach(refId => cloneNode(refId));
 
     const cloneRecord = { ...source, id: undefined, children };
-    if ((source.kind === 'binder' || source.kind === 'slot') && source.cellId) {
-      cloneRecord.cellId = nodeMap.get(source.cellId) ?? source.cellId;
-    }
     if (source.kind === 'slot' && source.binderId) {
       cloneRecord.binderId = nodeMap.get(source.binderId) ?? source.binderId;
     }
-    if (source.kind === 'cell' && source.valueId) {
+    if (source.kind === 'binder' && source.valueId) {
       cloneRecord.valueId = nodeMap.get(source.valueId) ?? source.valueId;
     }
 
