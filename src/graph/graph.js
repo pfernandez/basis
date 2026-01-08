@@ -6,35 +6,24 @@ import { createIdGenerator, invariant, replaceNode } from '../utils.js';
  * @property {string} kind One of: pair | binder | slot | symbol | empty | cell
  * @property {string} label Human-readable label rendered in the UI
  * @property {string[]} [children] Child node IDs (for pair nodes)
- * @property {string} [anchorKey] Stable key used by slots to re-enter this binder
- * @property {string} [aliasKey] Stable key referencing the binder a slot belongs to
  * @property {string} [cellId] Node ID of the binder's indirection cell (binder/slot nodes)
+ * @property {string} [binderId] Node ID of the binder owning this slot (slot nodes)
  * @property {string | null} [valueId] Node ID stored in an indirection cell (cell nodes)
- */
-
-/**
- * @typedef {Object} GraphLink
- * @property {string} id
- * @property {string} from
- * @property {string} to
- * @property {string} kind
  */
 
 /**
  * @typedef {Object} Graph
  * @property {GraphNode[]} nodes
- * @property {GraphLink[]} links
  */
 
 const nextNodeId = createIdGenerator('n');
-const nextLinkId = createIdGenerator('l');
 
 /**
  * Create an empty graph.
  * @returns {Graph}
  */
 export function createGraph() {
-  return { nodes: [], links: [] };
+  return { nodes: [] };
 }
 
 /**
@@ -48,21 +37,6 @@ export function addNode(graph, node) {
   const record = { ...node, id };
   return {
     graph: { ...graph, nodes: [...graph.nodes, record] },
-    id,
-  };
-}
-
-/**
- * Add a link (typically slot→binder) to the graph.
- * @param {Graph} graph
- * @param {Partial<GraphLink>} link
- * @returns {{ graph: Graph, id: string }}
- */
-export function addLink(graph, link) {
-  const id = link.id ?? nextLinkId();
-  const record = { ...link, id };
-  return {
-    graph: { ...graph, links: [...graph.links, record] },
     id,
   };
 }
@@ -94,19 +68,6 @@ export function updateNode(graph, id, updater) {
 }
 
 /**
- * Remove a node and any incident links.
- * @param {Graph} graph
- * @param {string} nodeId
- * @returns {Graph}
- */
-export function removeNode(graph, nodeId) {
-  return {
-    nodes: graph.nodes.filter(node => node.id !== nodeId),
-    links: graph.links.filter(link => link.from !== nodeId && link.to !== nodeId),
-  };
-}
-
-/**
  * Clone a subgraph rooted at the provided node.
  *
  * @param {Graph} graph
@@ -130,6 +91,9 @@ export function cloneSubgraph(graph, rootId) {
     if ((source.kind === 'binder' || source.kind === 'slot') && source.cellId) {
       cloneRecord.cellId = nodeMap.get(source.cellId) ?? source.cellId;
     }
+    if (source.kind === 'slot' && source.binderId) {
+      cloneRecord.binderId = nodeMap.get(source.binderId) ?? source.binderId;
+    }
     if (source.kind === 'cell' && source.valueId) {
       cloneRecord.valueId = nodeMap.get(source.valueId) ?? source.valueId;
     }
@@ -141,16 +105,5 @@ export function cloneSubgraph(graph, rootId) {
   }
 
   const newRootId = cloneNode(rootId);
-  let finalGraph = workingGraph;
-  sourceGraph.links
-    .filter(link => nodeMap.has(link.from))
-    .forEach(link => {
-      finalGraph = addLink(finalGraph, {
-        kind: link.kind,
-        from: nodeMap.get(link.from),
-        to: nodeMap.get(link.to) ?? link.to,
-      }).graph;
-    });
-
-  return { graph: finalGraph, rootId: newRootId };
+  return { graph: workingGraph, rootId: newRootId };
 }

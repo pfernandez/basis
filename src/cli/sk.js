@@ -7,6 +7,20 @@ import { getNode } from '../graph/graph.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+function countPointerLinks(graph) {
+  return graph.nodes.reduce((count, node) => {
+    if (node.kind === 'binder' && typeof node.cellId === 'string') return count + 1;
+    if (node.kind === 'slot') {
+      let next = count;
+      if (typeof node.binderId === 'string') next += 1;
+      if (typeof node.cellId === 'string') next += 1;
+      return next;
+    }
+    if (node.kind === 'cell' && typeof node.valueId === 'string') return count + 1;
+    return count;
+  }, 0);
+}
+
 function parseArgs(argv) {
   const defsArg = argv.find(arg => arg.startsWith('--defs='));
   const traceArg = argv.find(arg => arg.startsWith('--trace='));
@@ -43,7 +57,7 @@ function main() {
       evaluations.push({ expression: exprSource, snapshots });
       console.log(`Expression: ${exprSource}`);
       console.log(`  Focus: ${focus.label}`);
-      console.log(`  Nodes: ${result.graph.nodes.length}, Links: ${result.graph.links.length}`);
+      console.log(`  Nodes: ${result.graph.nodes.length}, Links: ${countPointerLinks(result.graph)}`);
     } catch (error) {
       console.error(`Failed to evaluate ${exprSource}: ${error.message}`);
     }

@@ -27,28 +27,6 @@ export function invariant(condition, message) {
 }
 
 /**
- * Build a parent index for quick child→parent lookups.
- *
- * @param {Array<{id: string, children?: string[]}>} nodes
- * @returns {Map<string, string[]>}
- */
-export function buildParentIndex(nodes) {
-  const index = new Map();
-  nodes.forEach(node => {
-    if (!node.children) return;
-    node.children.forEach(child => {
-      const parents = index.get(child);
-      if (parents) {
-        parents.push(node.id);
-      } else {
-        index.set(child, [node.id]);
-      }
-    });
-  });
-  return index;
-}
-
-/**
  * Replace a node entry immutably.
  *
  * @template T

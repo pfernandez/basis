@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { addLink, addNode, cloneSubgraph, createGraph, getNode, updateNode } from './graph.js';
+import { addNode, cloneSubgraph, createGraph, getNode, updateNode } from './graph.js';
 import { parseMany, parseSexpr } from './parser.js';
 import { invariant } from '../utils.js';
 import { serializeGraph } from './serializer.js';
@@ -149,7 +149,7 @@ export function evaluateExpression(expr, env, options = {}) {
  *
  * @param {Graph} graph
  * @param {any} expr
- * @param {{ id: string, anchorKey: string, cellId: string }[]} stack
+ * @param {{ id: string, cellId: string }[]} stack
  * @returns {{ graph: Graph, nodeId: string }}
  */
 function buildTemplate(graph, expr, stack) {
@@ -163,14 +163,9 @@ function buildTemplate(graph, expr, stack) {
       const binderResult = addNode(graph, {
         kind: 'binder',
         label: `λ${stack.length}`,
-        anchorKey: '',
       });
       const binderId = binderResult.id;
-      const anchorKey = `binder:${binderId}`;
-      let graphWithBinder = updateNode(binderResult.graph, binderId, node => ({
-        ...node,
-        anchorKey,
-      }));
+      let graphWithBinder = binderResult.graph;
 
       const cellResult = addNode(graphWithBinder, {
         kind: 'cell',
@@ -183,13 +178,8 @@ function buildTemplate(graph, expr, stack) {
         ...node,
         cellId,
       }));
-      graphWithBinder = addLink(graphWithBinder, {
-        kind: 'cell',
-        from: binderId,
-        to: cellId,
-      }).graph;
 
-      const nextStack = [...stack, { id: binderId, anchorKey, cellId }];
+      const nextStack = [...stack, { id: binderId, cellId }];
       const body = buildTemplate(graphWithBinder, expr[1], nextStack);
       const { graph: complete, id } = addNode(body.graph, {
         kind: 'pair',
@@ -214,20 +204,10 @@ function buildTemplate(graph, expr, stack) {
     const { graph: nextGraph, id } = addNode(graph, {
       kind: 'slot',
       label: expr,
-      aliasKey: binder.anchorKey,
+      binderId: binder.id,
       cellId: binder.cellId,
     });
-    let finalGraph = addLink(nextGraph, {
-      kind: 'reentry',
-      from: id,
-      to: binder.id,
-    }).graph;
-    finalGraph = addLink(finalGraph, {
-      kind: 'deref',
-      from: id,
-      to: binder.cellId,
-    }).graph;
-    return { graph: finalGraph, nodeId: id };
+    return { graph: nextGraph, nodeId: id };
   }
   const { graph: nextGraph, id } = addNode(graph, {
     kind: 'symbol',
@@ -267,15 +247,6 @@ function reduceGraph(graph, nodeId, env, tracer, options = {}) {
       ...current,
       valueId: valueEval.rootId,
     }));
-    nextGraph = {
-      ...nextGraph,
-      links: nextGraph.links.filter(link => !(link.kind === 'value' && link.from === cellId)),
-    };
-    nextGraph = addLink(nextGraph, {
-      kind: 'value',
-      from: cellId,
-      to: valueEval.rootId,
-    }).graph;
     return { graph: nextGraph, rootId: valueEval.rootId };
   }
   if (node.kind !== 'pair') {
@@ -340,15 +311,6 @@ function applyIfLambda(graph, parentPairId, candidateId, argumentId, tracer) {
     ...cell,
     valueId: clonedArg.rootId,
   }));
-  nextGraph = {
-    ...nextGraph,
-    links: nextGraph.links.filter(link => !(link.kind === 'value' && link.from === cellId)),
-  };
-  nextGraph = addLink(nextGraph, {
-    kind: 'value',
-    from: cellId,
-    to: clonedArg.rootId,
-  }).graph;
 
   snapshotState(tracer, nextGraph, lambdaBodyId, 'apply');
   return { graph: nextGraph, rootId: lambdaBodyId };
@@ -394,7 +356,43 @@ function collapsePair(graph, nodeId, tracer) {
 function snapshotState(tracer, graph, rootId, note) {
   if (typeof tracer !== 'function') return;
   const nodes = graph.nodes.map(node => ({ ...node, children: node.children ? [...node.children] : undefined }));
-  const links = graph.links.map(link => ({ ...link }));
+  const links = [];
+  nodes.forEach(node => {
+    if (node.kind === 'binder' && typeof node.cellId === 'string') {
+      links.push({
+        id: `cell:${node.id}`,
+        kind: 'cell',
+        from: node.id,
+        to: node.cellId,
+      });
+    }
+    if (node.kind === 'slot') {
+      if (typeof node.binderId === 'string') {
+        links.push({
+          id: `reentry:${node.id}`,
+          kind: 'reentry',
+          from: node.id,
+          to: node.binderId,
+        });
+      }
+      if (typeof node.cellId === 'string') {
+        links.push({
+          id: `deref:${node.id}`,
+          kind: 'deref',
+          from: node.id,
+          to: node.cellId,
+        });
+      }
+    }
+    if (node.kind === 'cell' && typeof node.valueId === 'string') {
+      links.push({
+        id: `value:${node.id}`,
+        kind: 'value',
+        from: node.id,
+        to: node.valueId,
+      });
+    }
+  });
   const treeLinks = [];
   nodes.forEach(node => {
     if (node.kind !== 'pair') return;
