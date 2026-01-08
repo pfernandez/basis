@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs';
 import { addNode, cloneSubgraph, createGraph, getNode, updateNode } from './graph.js';
 import { parseMany, parseSexpr } from './parser.js';
 import { invariant } from '../utils.js';
-import { serializeGraph } from './serializer.js';
 
 const EMPTY_LABEL = '()';
 
@@ -100,7 +99,8 @@ export function evaluateExpressions(expressions, env) {
  */
 export function evaluateExpression(expr, env, options = {}) {
   const tracer = options.tracer ?? null;
-  const maxSteps = options.maxSteps ?? 256;
+  const maxSteps = options.maxSteps ?? 10_000;
+  const cloneArguments = options.cloneArguments ?? true;
   const ast = typeof expr === 'string' ? parseSexpr(expr) : expr;
   const graph = createGraph();
   const { graph: withTree, nodeId } = buildTemplate(graph, ast, []);
@@ -108,37 +108,35 @@ export function evaluateExpression(expr, env, options = {}) {
 
   let currentGraph = withTree;
   let currentRoot = nodeId;
-  let previousSig = serializeGraph(currentGraph, currentRoot);
 
   // Phase 1: weak reduction (do not reduce inside lambda bodies).
   for (let i = 0; i < maxSteps; i += 1) {
-    const reduced = reduceGraph(currentGraph, currentRoot, env, tracer, { reduceUnderLambdas: false });
-    const signature = serializeGraph(reduced.graph, reduced.rootId);
-    if (signature === previousSig) {
-      currentGraph = reduced.graph;
-      currentRoot = reduced.rootId;
-      break;
-    }
-    previousSig = signature;
-    currentGraph = reduced.graph;
-    currentRoot = reduced.rootId;
+    const stepped = stepOnce(currentGraph, currentRoot, env, {
+      reduceUnderLambdas: false,
+      cloneArguments,
+    });
+    if (!stepped.didStep) break;
+    currentGraph = stepped.graph;
+    currentRoot = stepped.rootId;
+    snapshotState(tracer, currentGraph, currentRoot, stepped.note, stepped.focus);
     if (i === maxSteps - 1) {
       throw new Error(`Reduction exceeded maxSteps=${maxSteps}; expression may be non-terminating`);
     }
   }
 
   // Phase 2: full reduction (normalize under lambdas).
-  previousSig = serializeGraph(currentGraph, currentRoot);
   for (let i = 0; i < maxSteps; i += 1) {
-    const reduced = reduceGraph(currentGraph, currentRoot, env, tracer, { reduceUnderLambdas: true });
-    const signature = serializeGraph(reduced.graph, reduced.rootId);
-    if (signature === previousSig) {
-      snapshotState(tracer, reduced.graph, reduced.rootId, 'final');
-      return reduced;
+    const stepped = stepOnce(currentGraph, currentRoot, env, {
+      reduceUnderLambdas: true,
+      cloneArguments,
+    });
+    if (!stepped.didStep) {
+      snapshotState(tracer, currentGraph, currentRoot, 'final');
+      return { graph: currentGraph, rootId: currentRoot };
     }
-    previousSig = signature;
-    currentGraph = reduced.graph;
-    currentRoot = reduced.rootId;
+    currentGraph = stepped.graph;
+    currentRoot = stepped.rootId;
+    snapshotState(tracer, currentGraph, currentRoot, stepped.note, stepped.focus);
   }
 
   throw new Error(`Normalization exceeded maxSteps=${maxSteps}; expression may be non-terminating`);
@@ -203,128 +201,175 @@ function buildTemplate(graph, expr, stack) {
 }
 
 /**
- * Reduce a node by recursively evaluating its children.
+ * Perform one deterministic leftmost-outermost reduction step.
+ *
+ * The step selection is isolated to `findNextRedex` (observer logic). The
+ * substrate update is a single local rewrite (expand/apply/collapse).
  *
  * @param {Graph} graph
- * @param {string} nodeId
+ * @param {string} rootId
  * @param {Map<string, any>} env
- * @param {(snapshot: object) => void} tracer
- * @returns {{ graph: Graph, rootId: string }}
+ * @param {{ reduceUnderLambdas: boolean, cloneArguments: boolean }} options
+ * @returns {{ graph: Graph, rootId: string, didStep: boolean, note?: string, focus?: object }}
  */
-function reduceGraph(graph, nodeId, env, tracer, options = {}) {
-  const reduceUnderLambdas = options.reduceUnderLambdas ?? true;
-  snapshotState(tracer, graph, nodeId, 'reduce');
-  const node = getNode(graph, nodeId);
-  if (node.kind === 'symbol' && env.has(node.label)) {
-    const template = buildTemplate(graph, env.get(node.label), []);
-    return reduceGraph(template.graph, template.nodeId, env, tracer, options);
+function stepOnce(graph, rootId, env, options) {
+  const redex = findNextRedex(graph, rootId, env, options);
+  if (!redex) return { graph, rootId, didStep: false };
+
+  switch (redex.kind) {
+    case 'expand': {
+      const template = buildTemplate(graph, env.get(redex.name), []);
+      const replaced = replaceAt(template.graph, rootId, redex.path, template.nodeId);
+      return {
+        graph: replaced.graph,
+        rootId: replaced.rootId,
+        didStep: true,
+        note: 'expand',
+        focus: redex,
+      };
+    }
+    case 'collapse': {
+      const replaced = replaceAt(graph, rootId, redex.path, redex.replacementId);
+      return {
+        graph: replaced.graph,
+        rootId: replaced.rootId,
+        didStep: true,
+        note: 'collapse',
+        focus: redex,
+      };
+    }
+    case 'apply': {
+      let workingGraph = graph;
+      const clonedLambda = cloneSubgraph(workingGraph, redex.lambdaId);
+      workingGraph = clonedLambda.graph;
+
+      let argId = redex.argId;
+      if (options.cloneArguments) {
+        const clonedArg = cloneSubgraph(workingGraph, argId);
+        workingGraph = clonedArg.graph;
+        argId = clonedArg.rootId;
+      }
+
+      const lambdaRoot = getNode(workingGraph, clonedLambda.rootId);
+      invariant(lambdaRoot.kind === 'pair', 'Lambda root must be a pair node');
+      const lambdaBinderId = lambdaRoot.children?.[0];
+      const lambdaBodyId = lambdaRoot.children?.[1];
+      invariant(typeof lambdaBinderId === 'string' && typeof lambdaBodyId === 'string', 'Malformed lambda pair');
+      const lambdaBinder = getNode(workingGraph, lambdaBinderId);
+      invariant(lambdaBinder.kind === 'binder', 'Lambda binder must be a binder node');
+
+      workingGraph = updateNode(workingGraph, lambdaBinderId, binder => ({
+        ...binder,
+        valueId: argId,
+      }));
+
+      const replaced = replaceAt(workingGraph, rootId, redex.path, lambdaBodyId);
+      return {
+        graph: replaced.graph,
+        rootId: replaced.rootId,
+        didStep: true,
+        note: 'apply',
+        focus: redex,
+      };
+    }
+    default:
+      throw new Error(`Unknown redex kind: ${redex.kind}`);
   }
-  if (node.kind === 'slot') {
+}
+
+function replaceAt(graph, rootId, path, replacementId) {
+  if (!path.length) return { graph, rootId: replacementId };
+  const frame = path[path.length - 1];
+  if (frame.kind === 'pair') {
+    const parentId = frame.parentId;
+    const index = frame.index;
+    const nextGraph = updateNode(graph, parentId, node => {
+      invariant(node.kind === 'pair', 'pair path frame must target a pair node');
+      const children = Array.isArray(node.children) ? [...node.children] : [];
+      children[index] = replacementId;
+      return { ...node, children };
+    });
+    return { graph: nextGraph, rootId };
+  }
+  if (frame.kind === 'binder-value') {
+    const binderId = frame.binderId;
+    const nextGraph = updateNode(graph, binderId, node => {
+      invariant(node.kind === 'binder', 'binder-value frame must target a binder node');
+      return { ...node, valueId: replacementId };
+    });
+    return { graph: nextGraph, rootId };
+  }
+  throw new Error(`Unknown path frame kind: ${frame.kind}`);
+}
+
+function isLambdaPair(graph, nodeId) {
+  const node = getNode(graph, nodeId);
+  if (node.kind !== 'pair' || !Array.isArray(node.children) || node.children.length !== 2) return false;
+  const left = getNode(graph, node.children[0]);
+  return left.kind === 'binder';
+}
+
+function resolveHead(graph, nodeId, seenBinders) {
+  let currentId = nodeId;
+  while (true) {
+    const node = getNode(graph, currentId);
+    if (node.kind !== 'slot') return currentId;
     const binderId = node.binderId;
-    if (typeof binderId !== 'string') {
-      return { graph, rootId: nodeId };
-    }
+    if (typeof binderId !== 'string') return currentId;
+    if (seenBinders.has(binderId)) return currentId;
     const binder = getNode(graph, binderId);
-    if (binder.kind !== 'binder' || !binder.valueId) {
-      return { graph, rootId: nodeId };
-    }
-    const valueEval = reduceGraph(graph, binder.valueId, env, tracer, options);
-    const nextGraph = updateNode(valueEval.graph, binderId, current => ({
-      ...current,
-      valueId: valueEval.rootId,
-    }));
-    return { graph: nextGraph, rootId: valueEval.rootId };
+    if (binder.kind !== 'binder' || typeof binder.valueId !== 'string') return currentId;
+    seenBinders.add(binderId);
+    currentId = binder.valueId;
   }
-  if (node.kind !== 'pair') {
-    return { graph, rootId: nodeId };
-  }
-  if (!reduceUnderLambdas) {
-    const leftNode = getNode(graph, node.children[0]);
-    if (leftNode.kind === 'binder') {
-      return { graph, rootId: nodeId };
-    }
-  }
-  const leftEval = reduceGraph(graph, node.children[0], env, tracer, options);
-  const rightEval = reduceGraph(leftEval.graph, node.children[1], env, tracer, options);
-  const rewired = updateNode(rightEval.graph, node.id, current => ({
-    ...current,
-    children: [leftEval.rootId, rightEval.rootId],
-  }));
-  const application = applyIfLambda(rewired, node.id, leftEval.rootId, rightEval.rootId, tracer);
-  return collapsePair(application.graph, application.rootId, tracer);
 }
 
-/**
- * Apply an argument to a binder if the candidate is a lambda.
- *
- * @param {Graph} graph
- * @param {string} parentPairId
- * @param {string} candidateId
- * @param {string} argumentId
- * @param {(snapshot: object) => void} tracer
- * @returns {{ graph: Graph, rootId: string }}
- */
-function applyIfLambda(graph, parentPairId, candidateId, argumentId, tracer) {
-  const candidate = getNode(graph, candidateId);
-  if (candidate.kind !== 'pair') {
-    return { graph, rootId: parentPairId };
-  }
-  const binderId = candidate.children?.[0];
-  const bodyId = candidate.children?.[1];
-  if (!binderId || !bodyId) {
-    return { graph, rootId: parentPairId };
-  }
-  const binder = getNode(graph, binderId);
-  if (binder.kind !== 'binder') {
-    return { graph, rootId: parentPairId };
+function findNextRedex(graph, rootId, env, options) {
+  const reduceUnderLambdas = options.reduceUnderLambdas ?? true;
+
+  function visit(nodeId, path, seenBinders) {
+    const node = getNode(graph, nodeId);
+
+    if (node.kind === 'symbol' && env.has(node.label)) {
+      return { kind: 'expand', nodeId, name: node.label, path };
+    }
+
+    if (node.kind === 'pair' && Array.isArray(node.children) && node.children.length === 2) {
+      const [leftId, rightId] = node.children;
+      const leftResolvedId = resolveHead(graph, leftId, new Set());
+      const leftResolved = getNode(graph, leftResolvedId);
+      if (leftResolved.kind === 'empty') {
+        return { kind: 'collapse', nodeId, replacementId: rightId, path };
+      }
+      if (leftResolved.kind === 'pair' && isLambdaPair(graph, leftResolvedId)) {
+        return { kind: 'apply', nodeId, lambdaId: leftResolvedId, argId: rightId, path };
+      }
+
+      if (isLambdaPair(graph, nodeId)) {
+        if (!reduceUnderLambdas) return null;
+        return visit(rightId, [...path, { kind: 'pair', parentId: nodeId, index: 1 }], seenBinders);
+      }
+
+      const leftRedex = visit(leftId, [...path, { kind: 'pair', parentId: nodeId, index: 0 }], seenBinders);
+      if (leftRedex) return leftRedex;
+      return visit(rightId, [...path, { kind: 'pair', parentId: nodeId, index: 1 }], seenBinders);
+    }
+
+    if (node.kind === 'slot') {
+      const binderId = node.binderId;
+      if (typeof binderId !== 'string') return null;
+      if (seenBinders.has(binderId)) return null;
+      const binder = getNode(graph, binderId);
+      if (binder.kind !== 'binder' || typeof binder.valueId !== 'string') return null;
+      const nextSeen = new Set(seenBinders);
+      nextSeen.add(binderId);
+      return visit(binder.valueId, [...path, { kind: 'binder-value', binderId }], nextSeen);
+    }
+
+    return null;
   }
 
-  // Clone the lambda and argument so shared callees keep their original structure.
-  const clonedLambda = cloneSubgraph(graph, candidateId);
-  const clonedArg = cloneSubgraph(clonedLambda.graph, argumentId);
-  const lambdaRoot = getNode(clonedArg.graph, clonedLambda.rootId);
-  const lambdaBinderId = lambdaRoot.children?.[0];
-  const lambdaBodyId = lambdaRoot.children?.[1];
-  if (!lambdaBinderId || !lambdaBodyId) {
-    return { graph, rootId: parentPairId };
-  }
-  const lambdaBinder = getNode(clonedArg.graph, lambdaBinderId);
-  invariant(lambdaBinder.kind === 'binder', 'Lambda binder must be a binder node');
-  const nextGraph = updateNode(clonedArg.graph, lambdaBinderId, binder => ({
-    ...binder,
-    valueId: clonedArg.rootId,
-  }));
-
-  snapshotState(tracer, nextGraph, lambdaBodyId, 'apply');
-  return { graph: nextGraph, rootId: lambdaBodyId };
-}
-
-/**
- * Collapse a pair according to the (() x) → x rule.
- *
- * @param {Graph} graph
- * @param {string} nodeId
- * @param {(snapshot: object) => void} tracer
- * @returns {{ graph: Graph, rootId: string }}
- */
-function collapsePair(graph, nodeId, tracer) {
-  const node = getNode(graph, nodeId);
-  if (node.kind !== 'pair') {
-    return { graph, rootId: nodeId };
-  }
-  const leftCollapse = collapsePair(graph, node.children[0], tracer);
-  const rightCollapse = collapsePair(leftCollapse.graph, node.children[1], tracer);
-  const leftNode = getNode(rightCollapse.graph, leftCollapse.rootId);
-  if (leftNode.kind === 'empty') {
-    snapshotState(tracer, rightCollapse.graph, rightCollapse.rootId, 'collapse');
-    return { graph: rightCollapse.graph, rootId: rightCollapse.rootId };
-  }
-  const updated = updateNode(rightCollapse.graph, nodeId, current => ({
-    ...current,
-    children: [leftCollapse.rootId, rightCollapse.rootId],
-  }));
-  snapshotState(tracer, updated, nodeId, 'collapse');
-  return { graph: updated, rootId: nodeId };
+  return visit(rootId, [], new Set());
 }
 
 /**
@@ -334,9 +379,10 @@ function collapsePair(graph, nodeId, tracer) {
  * @param {Graph} graph
  * @param {string} rootId
  * @param {string} note
+ * @param {object} [focus]
  * @returns {void}
  */
-function snapshotState(tracer, graph, rootId, note) {
+function snapshotState(tracer, graph, rootId, note, focus = null) {
   if (typeof tracer !== 'function') return;
   const nodes = graph.nodes.map(node => ({ ...node, children: node.children ? [...node.children] : undefined }));
   const links = [];
@@ -387,6 +433,7 @@ function snapshotState(tracer, graph, rootId, note) {
     },
     rootId,
     note,
+    focus,
   };
   tracer(snapshot);
 }

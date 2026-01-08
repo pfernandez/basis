@@ -1,7 +1,10 @@
 import { getNode } from './graph.js';
 import { invariant } from '../utils.js';
 
-function nodeToAst(graph, nodeId) {
+function nodeToAst(graph, nodeId, stack = new Set()) {
+  if (stack.has(nodeId)) return '#cycle';
+  const nextStack = new Set(stack);
+  nextStack.add(nodeId);
   const node = getNode(graph, nodeId);
   switch (node.kind) {
     case 'pair':
@@ -9,10 +12,19 @@ function nodeToAst(graph, nodeId) {
         Array.isArray(node.children) && node.children.length === 2,
         'pair nodes must have two children',
       );
-      return node.children.map(child => nodeToAst(graph, child));
+      return node.children.map(child => nodeToAst(graph, child, nextStack));
     case 'symbol':
-    case 'slot':
       return node.label;
+    case 'slot': {
+      const binderId = node.binderId;
+      if (typeof binderId === 'string') {
+        const binder = getNode(graph, binderId);
+        if (binder.kind === 'binder' && typeof binder.valueId === 'string') {
+          return nodeToAst(graph, binder.valueId, nextStack);
+        }
+      }
+      return node.label;
+    }
     case 'binder':
     case 'empty':
       return [];
