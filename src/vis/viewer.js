@@ -1,3 +1,17 @@
+/**
+ * Trace viewer (browser-only)
+ * ---------------------------
+ *
+ * Renders snapshots emitted by `src/graph/evaluator.js` into a simple SVG+DOM view.
+ * This is intentionally lightweight; it is a debugging aid, not a "real" layout.
+ *
+ * Snapshot format:
+ * - `snapshot.graph.nodes`: nodes with `id`, `kind`, `label`, optional `children`
+ * - `snapshot.graph.links`: derived non-tree edges (e.g. slot→binder, binder→value)
+ * - `snapshot.note`: step label (init/apply/collapse/expand/final)
+ * - `snapshot.focus`: optional redex/event metadata for inspection
+ */
+
 const button = document.getElementById('render-button');
 const fetchButton = document.getElementById('fetch-button');
 const slider = document.getElementById('step-slider');

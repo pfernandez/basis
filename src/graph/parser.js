@@ -1,5 +1,17 @@
 /**
- * Parse Lisp-style S-expressions into plain JavaScript arrays.
+ * S-expression parser (minimal)
+ * -----------------------------
+ *
+ * This parser exists only to support small reference programs and tests.
+ *
+ * Supported:
+ * - Lists: `(a b c)` → `['a', 'b', 'c']`
+ * - Numbers: `42` → `42`
+ * - Symbols: everything else as strings
+ * - Line comments starting with `;`
+ *
+ * Not supported:
+ * - Quoting/backquote, strings, dotted pairs, reader macros, etc.
  */
 
 function clean(source) {

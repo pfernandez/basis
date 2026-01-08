@@ -1,3 +1,25 @@
+/**
+ * Graph substrate (persistent node store)
+ * --------------------------------------
+ *
+ * This module defines the minimal in-memory representation used by the evaluator:
+ * a flat node store plus immutable update helpers.
+ *
+ * Important design choices:
+ * - Nodes are stored in an array; there is no adjacency list and no stored "links".
+ *   Any non-tree edges (e.g. slot→binder, binder→value) are derived for tracing.
+ * - Updates are persistent: `updateNode` returns a new graph value.
+ * - `cloneSubgraph` clones only the *tree* reachable via `pair.children`.
+ *   Pointer edges (`slot.binderId`, `binder.valueId`) are preserved as references.
+ *
+ * Node kinds:
+ * - `pair`: binary cons/application node with exactly two children.
+ * - `binder`: lambda binder (parameter) holding an optional bound value pointer.
+ * - `slot`: variable occurrence pointing to its binder.
+ * - `symbol`: named reference used only for definition expansion (`env`).
+ * - `empty`: the distinguished empty leaf `()`.
+ */
+
 import { createIdGenerator, invariant, replaceNode } from '../utils.js';
 
 /**

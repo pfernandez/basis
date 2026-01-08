@@ -1,3 +1,18 @@
+/**
+ * Graph serializer (debug/test readout)
+ * ------------------------------------
+ *
+ * This converts a pointer graph back into a Lisp-ish S-expression string.
+ *
+ * Notes:
+ * - `binder` and `empty` are rendered as `()` since binders are not part of the
+ *   surface syntax (they are structural/operational).
+ * - Slots normally render as `#n`, but if a slot's binder is bound (`valueId`),
+ *   we serialize the bound value instead. This matches how the evaluator uses
+ *   binders as indirections (call-by-need style) and keeps tests readable.
+ * - Cycles are serialized as `#cycle` to avoid infinite recursion in debugging.
+ */
+
 import { getNode } from './graph.js';
 import { invariant } from '../utils.js';
 

@@ -1,4 +1,16 @@
 #!/usr/bin/env node
+/**
+ * SK evaluator CLI
+ * ---------------
+ *
+ * Runs the graph reducer against a small `(def …)`/`(defn …)` basis file and
+ * optionally writes a trace for `src/vis/viewer.js` to render.
+ *
+ * Usage:
+ *   `node src/cli/sk.js "(I a)" "((K a) b)"`
+ *   `node src/cli/sk.js --trace=src/vis/trace.json "(I a)"`
+ */
+
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { writeFileSync } from 'node:fs';

@@ -1,5 +1,8 @@
 /**
- * Common utilities shared across Basis modules.
+ * Small shared utilities
+ * ----------------------
+ *
+ * Keep this file tiny: anything that grows large should become a proper module.
  */
 
 /**

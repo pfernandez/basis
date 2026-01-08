@@ -1,9 +1,66 @@
+/**
+ * Graph evaluator (reference implementation)
+ * -----------------------------------------
+ *
+ * This module is a deliberately small, inspectable reducer for a "pairs + pointers"
+ * term graph. It exists to make the operational story easy to audit and visualize.
+ *
+ * Core ideas:
+ * - The substrate `s` is a persistent store of nodes connected by pointers.
+ * - Binding is *not* substitution. Each lambda has a dedicated binder node; all
+ *   occurrences (slots) point to that binder. Application is a single local update
+ *   `binder.valueId = argumentRoot`.
+ * - Collapse is the purely structural local rewrite: `(() x) → x` (implemented by
+ *   bypassing a pair whose left child is `empty`).
+ *
+ * Everything else is "observer / lens" machinery:
+ * - A deterministic schedule chooses which local event to perform next
+ *   (leftmost-outermost / normal-order).
+ * - Optional cloning toggles control sharing for the reference implementation.
+ * - Parsing, def/defn desugaring, and tracing are conveniences, not substrate rules.
+ */
+
 import { readFileSync } from 'node:fs';
 import { addNode, cloneSubgraph, createGraph, getNode, updateNode } from './graph.js';
 import { parseMany, parseSexpr } from './parser.js';
 import { invariant } from '../utils.js';
 
 const EMPTY_LABEL = '()';
+
+/**
+ * ---------------------------------------------------------------------------
+ * Types (JSDoc)
+ * ---------------------------------------------------------------------------
+ */
+
+/**
+ * A path frame describes how to replace a focused subterm while preserving
+ * structural sharing. Frames are produced by the observer (redex chooser).
+ *
+ * @typedef {{ kind: 'pair', parentId: string, index: 0 | 1 }} PairFrame
+ * @typedef {{ kind: 'binder-value', binderId: string }} BinderValueFrame
+ * @typedef {PairFrame | BinderValueFrame} PathFrame
+ */
+
+/**
+ * A single locally-enabled event selected by the observer.
+ *
+ * Notes:
+ * - `expand` is convenience-only: it inlines a named symbol from `env`.
+ * - `apply` performs one binder update and replaces the application with the body.
+ * - `collapse` performs the structural `(() x) → x` bypass.
+ *
+ * @typedef {{ kind: 'expand', nodeId: string, name: string, path: PathFrame[] }} ExpandEvent
+ * @typedef {{ kind: 'apply', nodeId: string, lambdaId: string, argId: string, path: PathFrame[] }} ApplyEvent
+ * @typedef {{ kind: 'collapse', nodeId: string, replacementId: string, path: PathFrame[] }} CollapseEvent
+ * @typedef {ExpandEvent | ApplyEvent | CollapseEvent} Event
+ */
+
+/**
+ * ---------------------------------------------------------------------------
+ * Public API: definition loading + evaluation
+ * ---------------------------------------------------------------------------
+ */
 
 /**
  * Load all `(def …)` / `(defn …)` forms from a file path.
@@ -16,7 +73,7 @@ export function loadDefinitions(path) {
   const forms = parseMany(source);
   const env = new Map();
   forms.forEach(form => {
-    const normalized = normalizeForm(form);
+    const normalized = normalizeDefinitionForm(form);
     env.set(normalized.name, normalized.body);
   });
   return env;
@@ -27,7 +84,7 @@ export function loadDefinitions(path) {
  * @param {any[]} form
  * @returns {{ name: string, body: any }}
  */
-function normalizeForm(form) {
+function normalizeDefinitionForm(form) {
   if (!Array.isArray(form) || form.length < 3) {
     throw new Error('Each form must be (def name body)');
   }
@@ -37,39 +94,42 @@ function normalizeForm(form) {
   }
   if (form[0] === 'defn') {
     const [, name, params, body] = form;
-    return { name, body: wrapParamsWithBinders(params, body) };
+    return { name, body: desugarParamsToLambdas(params, body) };
   }
   throw new Error(`Unsupported form ${form[0]}`);
 }
 
 /**
- * Wrap function parameters with empty binder pairs.
+ * Desugar `(defn name (x y …) body)` into nested lambdas `λx.λy.… body`.
+ *
+ * In this repo, lambdas are represented in S-expression skeletons as `[[], body]`
+ * (a pair whose left child is the empty list).
  *
  * @param {any[]} params
  * @param {any} body
  * @param {string[]} context
  * @returns {any}
  */
-function wrapParamsWithBinders(params, body, context = []) {
+function desugarParamsToLambdas(params, body, context = []) {
   invariant(Array.isArray(params), 'defn params must be a list');
   if (!params.length) {
-    return convertNamesToSlots(body, context);
+    return encodeNamesAsSlots(body, context);
   }
   const [first, ...rest] = params;
   const extended = [...context, first];
-  return [[], wrapParamsWithBinders(rest, body, extended)];
+  return [[], desugarParamsToLambdas(rest, body, extended)];
 }
 
 /**
- * Replace named parameters with De Bruijn-style slot references.
+ * Replace named parameters with De Bruijn-style slot references (`#0`, `#1`, …).
  *
  * @param {any} expr
  * @param {string[]} context
  * @returns {any}
  */
-function convertNamesToSlots(expr, context) {
+function encodeNamesAsSlots(expr, context) {
   if (Array.isArray(expr)) {
-    return expr.map(part => convertNamesToSlots(part, context));
+    return expr.map(part => encodeNamesAsSlots(part, context));
   }
   if (typeof expr === 'string' && !expr.startsWith('#')) {
     const index = context.lastIndexOf(expr);
@@ -94,7 +154,11 @@ export function evaluateExpressions(expressions, env) {
  *
  * @param {string | any[]} expr
  * @param {Map<string, any>} env
- * @param {{ tracer?: (snapshot: object) => void }} [options]
+ * @param {{
+ *   tracer?: (snapshot: object) => void,
+ *   maxSteps?: number,
+ *   cloneArguments?: boolean
+ * }} [options]
  * @returns {{ graph: Graph, rootId: string }}
  */
 export function evaluateExpression(expr, env, options = {}) {
@@ -103,44 +167,51 @@ export function evaluateExpression(expr, env, options = {}) {
   const cloneArguments = options.cloneArguments ?? true;
   const ast = typeof expr === 'string' ? parseSexpr(expr) : expr;
   const graph = createGraph();
-  const { graph: withTree, nodeId } = buildTemplate(graph, ast, []);
+  const { graph: withTree, nodeId } = buildGraphFromSexpr(graph, ast, []);
   snapshotState(tracer, withTree, nodeId, 'init');
 
   let currentGraph = withTree;
   let currentRoot = nodeId;
 
   // Phase 1: weak reduction (do not reduce inside lambda bodies).
-  for (let i = 0; i < maxSteps; i += 1) {
-    const stepped = stepOnce(currentGraph, currentRoot, env, {
-      reduceUnderLambdas: false,
-      cloneArguments,
-    });
-    if (!stepped.didStep) break;
-    currentGraph = stepped.graph;
-    currentRoot = stepped.rootId;
-    snapshotState(tracer, currentGraph, currentRoot, stepped.note, stepped.focus);
-    if (i === maxSteps - 1) {
-      throw new Error(`Reduction exceeded maxSteps=${maxSteps}; expression may be non-terminating`);
-    }
-  }
+  ({ graph: currentGraph, rootId: currentRoot } = runUntilStuck(
+    currentGraph,
+    currentRoot,
+    env,
+    tracer,
+    maxSteps,
+    { reduceUnderLambdas: false, cloneArguments },
+  ));
 
   // Phase 2: full reduction (normalize under lambdas).
+  const final = runUntilStuck(currentGraph, currentRoot, env, tracer, maxSteps, {
+    reduceUnderLambdas: true,
+    cloneArguments,
+  });
+  currentGraph = final.graph;
+  currentRoot = final.rootId;
+  snapshotState(tracer, currentGraph, currentRoot, 'final');
+  return { graph: currentGraph, rootId: currentRoot };
+}
+
+function runUntilStuck(graph, rootId, env, tracer, maxSteps, options) {
+  let currentGraph = graph;
+  let currentRoot = rootId;
   for (let i = 0; i < maxSteps; i += 1) {
-    const stepped = stepOnce(currentGraph, currentRoot, env, {
-      reduceUnderLambdas: true,
-      cloneArguments,
-    });
-    if (!stepped.didStep) {
-      snapshotState(tracer, currentGraph, currentRoot, 'final');
-      return { graph: currentGraph, rootId: currentRoot };
-    }
+    const stepped = stepNormalOrder(currentGraph, currentRoot, env, options);
+    if (!stepped.didStep) return { graph: currentGraph, rootId: currentRoot };
     currentGraph = stepped.graph;
     currentRoot = stepped.rootId;
     snapshotState(tracer, currentGraph, currentRoot, stepped.note, stepped.focus);
   }
-
-  throw new Error(`Normalization exceeded maxSteps=${maxSteps}; expression may be non-terminating`);
+  throw new Error(`Reduction exceeded maxSteps=${maxSteps}; expression may be non-terminating`);
 }
+
+/**
+ * ---------------------------------------------------------------------------
+ * Term construction: S-expression → pointer graph
+ * ---------------------------------------------------------------------------
+ */
 
 /**
  * Build the graph representation for an expression.
@@ -150,7 +221,7 @@ export function evaluateExpression(expr, env, options = {}) {
  * @param {{ id: string }[]} stack
  * @returns {{ graph: Graph, nodeId: string }}
  */
-function buildTemplate(graph, expr, stack) {
+function buildGraphFromSexpr(graph, expr, stack) {
   if (expr === null || (Array.isArray(expr) && expr.length === 0)) {
     const { graph: nextGraph, id } = addNode(graph, { kind: 'empty', label: EMPTY_LABEL });
     return { graph: nextGraph, nodeId: id };
@@ -165,7 +236,7 @@ function buildTemplate(graph, expr, stack) {
       });
       const binderId = binderResult.id;
       const nextStack = [...stack, { id: binderId }];
-      const body = buildTemplate(binderResult.graph, expr[1], nextStack);
+      const body = buildGraphFromSexpr(binderResult.graph, expr[1], nextStack);
       const { graph: complete, id } = addNode(body.graph, {
         kind: 'pair',
         label: '·',
@@ -173,8 +244,8 @@ function buildTemplate(graph, expr, stack) {
       });
       return { graph: complete, nodeId: id };
     }
-    const left = buildTemplate(graph, expr[0], stack);
-    const right = buildTemplate(left.graph, expr[1], stack);
+    const left = buildGraphFromSexpr(graph, expr[0], stack);
+    const right = buildGraphFromSexpr(left.graph, expr[1], stack);
     const { graph: complete, id } = addNode(right.graph, {
       kind: 'pair',
       label: '·',
@@ -201,9 +272,15 @@ function buildTemplate(graph, expr, stack) {
 }
 
 /**
+ * ---------------------------------------------------------------------------
+ * Machine: one step = one local event
+ * ---------------------------------------------------------------------------
+ */
+
+/**
  * Perform one deterministic leftmost-outermost reduction step.
  *
- * The step selection is isolated to `findNextRedex` (observer logic). The
+ * The step selection is isolated to `chooseNextEvent` (observer logic). The
  * substrate update is a single local rewrite (expand/apply/collapse).
  *
  * @param {Graph} graph
@@ -212,38 +289,38 @@ function buildTemplate(graph, expr, stack) {
  * @param {{ reduceUnderLambdas: boolean, cloneArguments: boolean }} options
  * @returns {{ graph: Graph, rootId: string, didStep: boolean, note?: string, focus?: object }}
  */
-function stepOnce(graph, rootId, env, options) {
-  const redex = findNextRedex(graph, rootId, env, options);
-  if (!redex) return { graph, rootId, didStep: false };
+function stepNormalOrder(graph, rootId, env, options) {
+  const event = chooseNextEvent(graph, rootId, env, options);
+  if (!event) return { graph, rootId, didStep: false };
 
-  switch (redex.kind) {
+  switch (event.kind) {
     case 'expand': {
-      const template = buildTemplate(graph, env.get(redex.name), []);
-      const replaced = replaceAt(template.graph, rootId, redex.path, template.nodeId);
+      const template = buildGraphFromSexpr(graph, env.get(event.name), []);
+      const replaced = replaceAtPath(template.graph, rootId, event.path, template.nodeId);
       return {
         graph: replaced.graph,
         rootId: replaced.rootId,
         didStep: true,
         note: 'expand',
-        focus: redex,
+        focus: event,
       };
     }
     case 'collapse': {
-      const replaced = replaceAt(graph, rootId, redex.path, redex.replacementId);
+      const replaced = replaceAtPath(graph, rootId, event.path, event.replacementId);
       return {
         graph: replaced.graph,
         rootId: replaced.rootId,
         didStep: true,
         note: 'collapse',
-        focus: redex,
+        focus: event,
       };
     }
     case 'apply': {
       let workingGraph = graph;
-      const clonedLambda = cloneSubgraph(workingGraph, redex.lambdaId);
+      const clonedLambda = cloneSubgraph(workingGraph, event.lambdaId);
       workingGraph = clonedLambda.graph;
 
-      let argId = redex.argId;
+      let argId = event.argId;
       if (options.cloneArguments) {
         const clonedArg = cloneSubgraph(workingGraph, argId);
         workingGraph = clonedArg.graph;
@@ -263,21 +340,21 @@ function stepOnce(graph, rootId, env, options) {
         valueId: argId,
       }));
 
-      const replaced = replaceAt(workingGraph, rootId, redex.path, lambdaBodyId);
+      const replaced = replaceAtPath(workingGraph, rootId, event.path, lambdaBodyId);
       return {
         graph: replaced.graph,
         rootId: replaced.rootId,
         didStep: true,
         note: 'apply',
-        focus: redex,
+        focus: event,
       };
     }
     default:
-      throw new Error(`Unknown redex kind: ${redex.kind}`);
+      throw new Error(`Unknown event kind: ${event.kind}`);
   }
 }
 
-function replaceAt(graph, rootId, path, replacementId) {
+function replaceAtPath(graph, rootId, path, replacementId) {
   if (!path.length) return { graph, rootId: replacementId };
   const frame = path[path.length - 1];
   if (frame.kind === 'pair') {
@@ -309,7 +386,12 @@ function isLambdaPair(graph, nodeId) {
   return left.kind === 'binder';
 }
 
-function resolveHead(graph, nodeId, seenBinders) {
+/**
+ * Resolve the "head" of an application by dereferencing slots through bound binders.
+ * This is used only for determining whether the left side is `empty` (collapse) or
+ * a lambda (apply), without forcing evaluation of the argument.
+ */
+function resolveApplicationHead(graph, nodeId, seenBinders) {
   let currentId = nodeId;
   while (true) {
     const node = getNode(graph, currentId);
@@ -324,7 +406,15 @@ function resolveHead(graph, nodeId, seenBinders) {
   }
 }
 
-function findNextRedex(graph, rootId, env, options) {
+/**
+ * Observer logic: choose the next locally-enabled event under a normal-order
+ * (leftmost-outermost) schedule.
+ *
+ * The returned event includes a `path` describing how to patch the graph locally.
+ *
+ * @returns {Event | null}
+ */
+function chooseNextEvent(graph, rootId, env, options) {
   const reduceUnderLambdas = options.reduceUnderLambdas ?? true;
 
   function visit(nodeId, path, seenBinders) {
@@ -336,7 +426,7 @@ function findNextRedex(graph, rootId, env, options) {
 
     if (node.kind === 'pair' && Array.isArray(node.children) && node.children.length === 2) {
       const [leftId, rightId] = node.children;
-      const leftResolvedId = resolveHead(graph, leftId, new Set());
+      const leftResolvedId = resolveApplicationHead(graph, leftId, new Set());
       const leftResolved = getNode(graph, leftResolvedId);
       if (leftResolved.kind === 'empty') {
         return { kind: 'collapse', nodeId, replacementId: rightId, path };
