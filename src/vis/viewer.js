@@ -31,6 +31,9 @@ const elements = {
   step: document.getElementById('step'),
   stepLabel: document.getElementById('step-label'),
   noteLabel: document.getElementById('note-label'),
+  showTree: document.getElementById('show-tree'),
+  showPointers: document.getElementById('show-pointers'),
+  foldSlots: document.getElementById('fold-slots'),
   file: document.getElementById('file'),
   focus: document.getElementById('focus'),
 };
@@ -66,7 +69,7 @@ function sizeForNode(node) {
 function colorForLink(link) {
   switch (link.kind) {
     case 'child':
-      return COLORS.childLink;
+      return link.__folded ? 'rgba(0, 0, 0, 0.5)' : COLORS.childLink;
     case 'reentry':
       return COLORS.reentryLink;
     case 'value':
@@ -83,7 +86,7 @@ function arrowLengthForLink(link) {
 
 function widthForLink(link) {
   if (link.__focus) return 3;
-  if (link.kind === 'child') return 1;
+  if (link.kind === 'child') return link.__folded ? 1.6 : 1;
   return 2;
 }
 
@@ -176,13 +179,54 @@ function normalizeTrace(data) {
   return [data];
 }
 
+function resolveBoundSlotTarget(nodeId, nodeById) {
+  let currentId = nodeId;
+  const seen = new Set();
+  for (let i = 0; i < 64; i += 1) {
+    if (seen.has(currentId)) return currentId;
+    seen.add(currentId);
+    const node = nodeById.get(currentId);
+    if (!node || node.kind !== 'slot') return currentId;
+    const binderId = node.binderId;
+    if (typeof binderId !== 'string') return currentId;
+    const binder = nodeById.get(binderId);
+    if (!binder || binder.kind !== 'binder' || typeof binder.valueId !== 'string') return currentId;
+    currentId = binder.valueId;
+  }
+  return currentId;
+}
+
 function snapshotToGraphData(snapshot) {
   const graph = snapshot?.graph ?? snapshot;
   if (!graph || !Array.isArray(graph.nodes)) {
     throw new Error('Trace must contain snapshots with { graph: { nodes, links } }');
   }
   const nodes = graph.nodes.map(internNode);
-  const edges = ensureEdges({ ...graph, nodes });
+
+  const nodeById = new Map(nodes.map(node => [node.id, node]));
+  const baseEdges = ensureEdges({ ...graph, nodes });
+
+  const view = {
+    showTree: elements.showTree?.checked ?? true,
+    showPointers: elements.showPointers?.checked ?? true,
+    foldSlots: elements.foldSlots?.checked ?? false,
+  };
+
+  const edges = baseEdges
+    .filter(edge => {
+      if (edge.kind === 'child') return view.showTree;
+      return view.showPointers;
+    })
+    .map(edge => {
+      // Always normalize `__folded` so cached link objects don't carry
+      // stale folding flags across view toggle changes.
+      if (edge.kind !== 'child') return { ...edge, __folded: false };
+      if (!view.foldSlots) return { ...edge, __folded: false };
+      const resolvedTo = resolveBoundSlotTarget(edge.to, nodeById);
+      if (resolvedTo === edge.to) return { ...edge, __folded: false };
+      return { ...edge, to: resolvedTo, __folded: true };
+    });
+
   const links = edges.map(internLink);
   return { nodes, links };
 }
@@ -336,6 +380,14 @@ function setupEvents() {
       return;
     }
   });
+
+  [elements.showTree, elements.showPointers, elements.foldSlots].forEach(control => {
+    if (!control) return;
+    control.addEventListener('change', () => {
+      stopPlaying();
+      renderStep(Number(elements.step.value));
+    });
+  });
 }
 
 const Graph = ForceGraph3D({
@@ -372,4 +424,3 @@ const Graph = ForceGraph3D({
 
 setupEvents();
 loadDefaultTrace();
-

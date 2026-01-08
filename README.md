@@ -76,6 +76,28 @@ npm install
 npm test
 ```
 
+### 3D trace viewer
+
+The graph reducer can emit a step-by-step JSON trace that you can watch in a
+browser using `3d-force-graph`.
+
+1) Generate a trace:
+
+```sh
+node src/cli/sk.js --trace=src/vis/trace.json "(I z)"
+```
+
+2) Serve the repo root (so the viewer can load `/node_modules/...`):
+
+```sh
+python -m http.server
+```
+
+3) Open `http://localhost:8000/src/vis/`.
+
+The viewer has basic controls for stepping/playing the trace, and toggles for
+showing tree vs pointer edges (and folding bound slots into the tree view).
+
 There are also small CLI scripts for enumeration, collapse-policy exploration,
 and evaluation (see package.json for entry points). Some scripts emit trace
 data that can be viewed interactively in the browser.
