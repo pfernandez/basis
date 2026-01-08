@@ -13,6 +13,8 @@ function nodeToAst(graph, nodeId) {
     case 'symbol':
     case 'slot':
       return node.label;
+    case 'cell':
+      return node.valueId ? nodeToAst(graph, node.valueId) : [];
     case 'binder':
     case 'empty':
       return [];

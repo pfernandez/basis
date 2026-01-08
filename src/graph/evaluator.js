@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { addLink, addNode, cloneSubgraph, createGraph, getNode, replaceSlotsWith, updateNode } from './graph.js';
+import { addLink, addNode, cloneSubgraph, createGraph, getNode, updateNode } from './graph.js';
 import { parseMany, parseSexpr } from './parser.js';
 import { invariant } from '../utils.js';
 import { serializeGraph } from './serializer.js';
@@ -110,20 +110,38 @@ export function evaluateExpression(expr, env, options = {}) {
   let currentRoot = nodeId;
   let previousSig = serializeGraph(currentGraph, currentRoot);
 
+  // Phase 1: weak reduction (do not reduce inside lambda bodies).
   for (let i = 0; i < maxSteps; i += 1) {
-    const reduced = reduceGraph(currentGraph, currentRoot, env, tracer);
+    const reduced = reduceGraph(currentGraph, currentRoot, env, tracer, { reduceUnderLambdas: false });
+    const signature = serializeGraph(reduced.graph, reduced.rootId);
+    if (signature === previousSig) {
+      currentGraph = reduced.graph;
+      currentRoot = reduced.rootId;
+      break;
+    }
+    previousSig = signature;
+    currentGraph = reduced.graph;
+    currentRoot = reduced.rootId;
+    if (i === maxSteps - 1) {
+      throw new Error(`Reduction exceeded maxSteps=${maxSteps}; expression may be non-terminating`);
+    }
+  }
+
+  // Phase 2: full reduction (normalize under lambdas).
+  previousSig = serializeGraph(currentGraph, currentRoot);
+  for (let i = 0; i < maxSteps; i += 1) {
+    const reduced = reduceGraph(currentGraph, currentRoot, env, tracer, { reduceUnderLambdas: true });
     const signature = serializeGraph(reduced.graph, reduced.rootId);
     if (signature === previousSig) {
       snapshotState(tracer, reduced.graph, reduced.rootId, 'final');
       return reduced;
     }
-    // Consider caching signatures or a structural hash if this ever shows up hot.
     previousSig = signature;
     currentGraph = reduced.graph;
     currentRoot = reduced.rootId;
   }
 
-  throw new Error(`Reduction exceeded maxSteps=${maxSteps}; expression may be non-terminating`);
+  throw new Error(`Normalization exceeded maxSteps=${maxSteps}; expression may be non-terminating`);
 }
 
 /**
@@ -131,7 +149,7 @@ export function evaluateExpression(expr, env, options = {}) {
  *
  * @param {Graph} graph
  * @param {any} expr
- * @param {{ id: string, anchorKey: string }[]} stack
+ * @param {{ id: string, anchorKey: string, cellId: string }[]} stack
  * @returns {{ graph: Graph, nodeId: string }}
  */
 function buildTemplate(graph, expr, stack) {
@@ -148,11 +166,30 @@ function buildTemplate(graph, expr, stack) {
         anchorKey: '',
       });
       const binderId = binderResult.id;
-      const graphWithBinder = updateNode(binderResult.graph, binderId, node => ({
+      const anchorKey = `binder:${binderId}`;
+      let graphWithBinder = updateNode(binderResult.graph, binderId, node => ({
         ...node,
-        anchorKey: `binder:${binderId}`,
+        anchorKey,
       }));
-      const nextStack = [...stack, { id: binderId, anchorKey: `binder:${binderId}` }];
+
+      const cellResult = addNode(graphWithBinder, {
+        kind: 'cell',
+        label: '□',
+        valueId: null,
+      });
+      const cellId = cellResult.id;
+      graphWithBinder = cellResult.graph;
+      graphWithBinder = updateNode(graphWithBinder, binderId, node => ({
+        ...node,
+        cellId,
+      }));
+      graphWithBinder = addLink(graphWithBinder, {
+        kind: 'cell',
+        from: binderId,
+        to: cellId,
+      }).graph;
+
+      const nextStack = [...stack, { id: binderId, anchorKey, cellId }];
       const body = buildTemplate(graphWithBinder, expr[1], nextStack);
       const { graph: complete, id } = addNode(body.graph, {
         kind: 'pair',
@@ -178,12 +215,18 @@ function buildTemplate(graph, expr, stack) {
       kind: 'slot',
       label: expr,
       aliasKey: binder.anchorKey,
+      cellId: binder.cellId,
     });
-    const { graph: finalGraph } = addLink(nextGraph, {
+    let finalGraph = addLink(nextGraph, {
       kind: 'reentry',
       from: id,
       to: binder.id,
-    });
+    }).graph;
+    finalGraph = addLink(finalGraph, {
+      kind: 'deref',
+      from: id,
+      to: binder.cellId,
+    }).graph;
     return { graph: finalGraph, nodeId: id };
   }
   const { graph: nextGraph, id } = addNode(graph, {
@@ -202,23 +245,55 @@ function buildTemplate(graph, expr, stack) {
  * @param {(snapshot: object) => void} tracer
  * @returns {{ graph: Graph, rootId: string }}
  */
-function reduceGraph(graph, nodeId, env, tracer) {
+function reduceGraph(graph, nodeId, env, tracer, options = {}) {
+  const reduceUnderLambdas = options.reduceUnderLambdas ?? true;
   snapshotState(tracer, graph, nodeId, 'reduce');
   const node = getNode(graph, nodeId);
   if (node.kind === 'symbol' && env.has(node.label)) {
     const template = buildTemplate(graph, env.get(node.label), []);
-    return reduceGraph(template.graph, template.nodeId, env, tracer);
+    return reduceGraph(template.graph, template.nodeId, env, tracer, options);
+  }
+  if (node.kind === 'slot') {
+    const cellId = node.cellId;
+    if (typeof cellId !== 'string') {
+      return { graph, rootId: nodeId };
+    }
+    const cell = getNode(graph, cellId);
+    if (cell.kind !== 'cell' || !cell.valueId) {
+      return { graph, rootId: nodeId };
+    }
+    const valueEval = reduceGraph(graph, cell.valueId, env, tracer, options);
+    let nextGraph = updateNode(valueEval.graph, cellId, current => ({
+      ...current,
+      valueId: valueEval.rootId,
+    }));
+    nextGraph = {
+      ...nextGraph,
+      links: nextGraph.links.filter(link => !(link.kind === 'value' && link.from === cellId)),
+    };
+    nextGraph = addLink(nextGraph, {
+      kind: 'value',
+      from: cellId,
+      to: valueEval.rootId,
+    }).graph;
+    return { graph: nextGraph, rootId: valueEval.rootId };
   }
   if (node.kind !== 'pair') {
     return { graph, rootId: nodeId };
   }
-  const leftEval = reduceGraph(graph, node.children[0], env, tracer);
-  const rightEval = reduceGraph(leftEval.graph, node.children[1], env, tracer);
+  if (!reduceUnderLambdas) {
+    const leftNode = getNode(graph, node.children[0]);
+    if (leftNode.kind === 'binder') {
+      return { graph, rootId: nodeId };
+    }
+  }
+  const leftEval = reduceGraph(graph, node.children[0], env, tracer, options);
+  const rightEval = reduceGraph(leftEval.graph, node.children[1], env, tracer, options);
   const rewired = updateNode(rightEval.graph, node.id, current => ({
     ...current,
     children: [leftEval.rootId, rightEval.rootId],
   }));
-  const application = applyIfLambda(rewired, node.id, leftEval.rootId, rightEval.rootId, env, tracer);
+  const application = applyIfLambda(rewired, node.id, leftEval.rootId, rightEval.rootId, tracer);
   return collapsePair(application.graph, application.rootId, tracer);
 }
 
@@ -257,19 +332,24 @@ function applyIfLambda(graph, parentPairId, candidateId, argumentId, tracer) {
     return { graph, rootId: parentPairId };
   }
   const lambdaBinder = getNode(clonedArg.graph, lambdaBinderId);
-  const lambdaBody = getNode(clonedArg.graph, lambdaBodyId);
-  const lambdaNodeIds = collectSubgraphNodeIds(clonedArg.graph, clonedLambda.rootId);
+  invariant(lambdaBinder.kind === 'binder', 'Lambda binder must be a binder node');
+  invariant(typeof lambdaBinder.cellId === 'string', 'Binder is missing an indirection cell');
 
-  if (lambdaBody.kind === 'slot' && lambdaBody.aliasKey === lambdaBinder.anchorKey) {
-    snapshotState(tracer, clonedArg.graph, clonedArg.rootId, 'apply');
-    return { graph: clonedArg.graph, rootId: clonedArg.rootId };
-  }
-  const nextGraph = replaceSlotsWith(
-    clonedArg.graph,
-    lambdaBinder.anchorKey,
-    clonedArg.rootId,
-    lambdaNodeIds,
-  );
+  const cellId = lambdaBinder.cellId;
+  let nextGraph = updateNode(clonedArg.graph, cellId, cell => ({
+    ...cell,
+    valueId: clonedArg.rootId,
+  }));
+  nextGraph = {
+    ...nextGraph,
+    links: nextGraph.links.filter(link => !(link.kind === 'value' && link.from === cellId)),
+  };
+  nextGraph = addLink(nextGraph, {
+    kind: 'value',
+    from: cellId,
+    to: clonedArg.rootId,
+  }).graph;
+
   snapshotState(tracer, nextGraph, lambdaBodyId, 'apply');
   return { graph: nextGraph, rootId: lambdaBodyId };
 }
@@ -313,33 +393,35 @@ function collapsePair(graph, nodeId, tracer) {
  */
 function snapshotState(tracer, graph, rootId, note) {
   if (typeof tracer !== 'function') return;
+  const nodes = graph.nodes.map(node => ({ ...node, children: node.children ? [...node.children] : undefined }));
+  const links = graph.links.map(link => ({ ...link }));
+  const treeLinks = [];
+  nodes.forEach(node => {
+    if (node.kind !== 'pair') return;
+    if (!Array.isArray(node.children) || node.children.length !== 2) return;
+    treeLinks.push({
+      id: `t:${node.id}:0`,
+      kind: 'child',
+      from: node.id,
+      to: node.children[0],
+      index: 0,
+    });
+    treeLinks.push({
+      id: `t:${node.id}:1`,
+      kind: 'child',
+      from: node.id,
+      to: node.children[1],
+      index: 1,
+    });
+  });
   const snapshot = {
     graph: {
-      nodes: graph.nodes.map(node => ({ ...node, children: node.children ? [...node.children] : undefined })),
-      links: graph.links.map(link => ({ ...link })),
+      nodes,
+      links,
+      edges: [...treeLinks, ...links],
     },
     rootId,
     note,
   };
   tracer(snapshot);
-}
-
-/**
- * Collect the IDs of all nodes reachable from a root by following pair children.
- *
- * @param {Graph} graph
- * @param {string} rootId
- * @returns {Set<string>}
- */
-function collectSubgraphNodeIds(graph, rootId) {
-  const seen = new Set();
-  const stack = [rootId];
-  while (stack.length) {
-    const next = stack.pop();
-    if (seen.has(next)) continue;
-    seen.add(next);
-    const node = getNode(graph, next);
-    (node.children ?? []).forEach(childId => stack.push(childId));
-  }
-  return seen;
 }

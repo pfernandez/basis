@@ -1,13 +1,15 @@
-import { createIdGenerator, invariant, buildParentIndex, replaceNode } from '../utils.js';
+import { createIdGenerator, invariant, replaceNode } from '../utils.js';
 
 /**
  * @typedef {Object} GraphNode
  * @property {string} id Unique identifier for the node
- * @property {string} kind One of: pair | binder | slot | symbol | empty
+ * @property {string} kind One of: pair | binder | slot | symbol | empty | cell
  * @property {string} label Human-readable label rendered in the UI
  * @property {string[]} [children] Child node IDs (for pair nodes)
  * @property {string} [anchorKey] Stable key used by slots to re-enter this binder
  * @property {string} [aliasKey] Stable key referencing the binder a slot belongs to
+ * @property {string} [cellId] Node ID of the binder's indirection cell (binder/slot nodes)
+ * @property {string | null} [valueId] Node ID stored in an indirection cell (cell nodes)
  */
 
 /**
@@ -92,24 +94,6 @@ export function updateNode(graph, id, updater) {
 }
 
 /**
- * Replace a child reference on a pair node.
- * @param {Graph} graph
- * @param {string} parentId
- * @param {string} oldChildId
- * @param {string} newChildId
- * @returns {Graph}
- */
-export function replaceChild(graph, parentId, oldChildId, newChildId) {
-  return updateNode(graph, parentId, node => {
-    if (!node.children) return node;
-    return {
-      ...node,
-      children: node.children.map(child => (child === oldChildId ? newChildId : child)),
-    };
-  });
-}
-
-/**
  * Remove a node and any incident links.
  * @param {Graph} graph
  * @param {string} nodeId
@@ -138,7 +122,19 @@ export function cloneSubgraph(graph, rootId) {
     if (nodeMap.has(id)) return nodeMap.get(id);
     const source = getNode(sourceGraph, id);
     const children = source.children?.map(childId => cloneNode(childId));
-    const clone = addNode(workingGraph, { ...source, id: undefined, children });
+    const extraRefs = [];
+    if (source.kind === 'binder' && source.cellId) extraRefs.push(source.cellId);
+    extraRefs.forEach(refId => cloneNode(refId));
+
+    const cloneRecord = { ...source, id: undefined, children };
+    if ((source.kind === 'binder' || source.kind === 'slot') && source.cellId) {
+      cloneRecord.cellId = nodeMap.get(source.cellId) ?? source.cellId;
+    }
+    if (source.kind === 'cell' && source.valueId) {
+      cloneRecord.valueId = nodeMap.get(source.valueId) ?? source.valueId;
+    }
+
+    const clone = addNode(workingGraph, cloneRecord);
     workingGraph = clone.graph;
     nodeMap.set(id, clone.id);
     return clone.id;
@@ -147,41 +143,14 @@ export function cloneSubgraph(graph, rootId) {
   const newRootId = cloneNode(rootId);
   let finalGraph = workingGraph;
   sourceGraph.links
-    .filter(link => nodeMap.has(link.from) && nodeMap.has(link.to))
+    .filter(link => nodeMap.has(link.from))
     .forEach(link => {
       finalGraph = addLink(finalGraph, {
         kind: link.kind,
         from: nodeMap.get(link.from),
-        to: nodeMap.get(link.to),
+        to: nodeMap.get(link.to) ?? link.to,
       }).graph;
     });
 
   return { graph: finalGraph, rootId: newRootId };
-}
-
-/**
- * Replace every slot targeting `binderKey` with the provided subtree root.
- *
- * @param {Graph} graph
- * @param {string} binderKey
- * @param {string} replacementRootId
- * @param {Set<string>} [limitToNodeIds] Optional set of node IDs to restrict replacement to
- * @returns {Graph}
- */
-export function replaceSlotsWith(graph, binderKey, replacementRootId, limitToNodeIds = null) {
-  const parentIndex = buildParentIndex(graph.nodes);
-  const slotIds = graph.nodes
-    .filter(node => node.kind === 'slot' && node.aliasKey === binderKey)
-    .filter(node => !limitToNodeIds || limitToNodeIds.has(node.id))
-    .map(node => node.id);
-
-  let nextGraph = graph;
-  slotIds.forEach(slotId => {
-    const parents = parentIndex.get(slotId) ?? [];
-    parents.forEach(parentId => {
-      nextGraph = replaceChild(nextGraph, parentId, slotId, replacementRootId);
-    });
-    nextGraph = removeNode(nextGraph, slotId);
-  });
-  return nextGraph;
 }
