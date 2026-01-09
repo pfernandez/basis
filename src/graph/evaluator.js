@@ -43,6 +43,19 @@ const EMPTY_LABEL = '()';
  */
 
 /**
+ * The observer `o` (lens) is an explicit traversal state: a pointer stack of
+ * "where to look next" work items. This makes evaluation closer to an explicit
+ * `(o, s)` machine state, rather than a reducer that secretly re-scans the term.
+ *
+ * The current strategy is deliberately simple and deterministic: the observer is
+ * reset to the root after every rewrite ("fall back to the origin"), so the
+ * semantics match the previous global scan.
+ *
+ * @typedef {{ nodeId: string, path: PathFrame[], seenBinders: Set<string> }} WorkItem
+ * @typedef {{ rootId: string, stack: WorkItem[] }} Observer
+ */
+
+/**
  * A single locally-enabled event selected by the observer.
  *
  * Notes:
@@ -197,11 +210,13 @@ export function evaluateExpression(expr, env, options = {}) {
 function runUntilStuck(graph, rootId, env, tracer, maxSteps, options) {
   let currentGraph = graph;
   let currentRoot = rootId;
+  let observer = createObserver(rootId);
   for (let i = 0; i < maxSteps; i += 1) {
-    const stepped = stepNormalOrder(currentGraph, currentRoot, env, options);
+    const stepped = stepNormalOrder(currentGraph, currentRoot, env, options, observer);
     if (!stepped.didStep) return { graph: currentGraph, rootId: currentRoot };
     currentGraph = stepped.graph;
     currentRoot = stepped.rootId;
+    observer = stepped.observer;
     snapshotState(tracer, currentGraph, currentRoot, stepped.note, stepped.focus);
   }
   throw new Error(`Reduction exceeded maxSteps=${maxSteps}; expression may be non-terminating`);
@@ -287,11 +302,17 @@ function buildGraphFromSexpr(graph, expr, stack) {
  * @param {string} rootId
  * @param {Map<string, any>} env
  * @param {{ reduceUnderLambdas: boolean, cloneArguments: boolean }} options
- * @returns {{ graph: Graph, rootId: string, didStep: boolean, note?: string, focus?: object }}
+ * @param {Observer} observer
+ * @returns {{ graph: Graph, rootId: string, observer: Observer, didStep: boolean, note?: string, focus?: object }}
  */
-function stepNormalOrder(graph, rootId, env, options) {
-  const event = chooseNextEvent(graph, rootId, env, options);
-  if (!event) return { graph, rootId, didStep: false };
+function stepNormalOrder(graph, rootId, env, options, observer) {
+  // The deterministic baseline strategy: the observer always starts from the
+  // current root. (In other words: this schedule "falls back to the origin"
+  // after every rewrite.)
+  const startObserver = observer?.rootId === rootId ? observer : createObserver(rootId);
+  const observed = observeNextEvent(startObserver, graph, env, options);
+  const event = observed.event;
+  if (!event) return { graph, rootId, observer: observed.observer, didStep: false };
 
   switch (event.kind) {
     case 'expand': {
@@ -300,6 +321,7 @@ function stepNormalOrder(graph, rootId, env, options) {
       return {
         graph: replaced.graph,
         rootId: replaced.rootId,
+        observer: createObserver(replaced.rootId),
         didStep: true,
         note: 'expand',
         focus: event,
@@ -310,6 +332,7 @@ function stepNormalOrder(graph, rootId, env, options) {
       return {
         graph: replaced.graph,
         rootId: replaced.rootId,
+        observer: createObserver(replaced.rootId),
         didStep: true,
         note: 'collapse',
         focus: event,
@@ -344,6 +367,7 @@ function stepNormalOrder(graph, rootId, env, options) {
       return {
         graph: replaced.graph,
         rootId: replaced.rootId,
+        observer: createObserver(replaced.rootId),
         didStep: true,
         note: 'apply',
         focus: event,
@@ -407,21 +431,40 @@ function resolveApplicationHead(graph, nodeId, seenBinders) {
 }
 
 /**
+ * Create a fresh observer rooted at `rootId`.
+ *
+ * @param {string} rootId
+ * @returns {Observer}
+ */
+function createObserver(rootId) {
+  return {
+    rootId,
+    stack: [{ nodeId: rootId, path: [], seenBinders: new Set() }],
+  };
+}
+
+/**
  * Observer logic: choose the next locally-enabled event under a normal-order
  * (leftmost-outermost) schedule.
  *
- * The returned event includes a `path` describing how to patch the graph locally.
+ * This is implemented as an explicit pointer stack (zipper-like traversal state)
+ * so the "lens" is a concrete piece of data rather than implicit recursion.
  *
- * @returns {Event | null}
+ * @param {Observer} observer
+ * @returns {{ event: Event | null, observer: Observer }}
  */
-function chooseNextEvent(graph, rootId, env, options) {
+function observeNextEvent(observer, graph, env, options) {
   const reduceUnderLambdas = options.reduceUnderLambdas ?? true;
+  const stack = [...(observer.stack ?? [])];
 
-  function visit(nodeId, path, seenBinders) {
+  while (stack.length) {
+    const item = stack.pop();
+    if (!item) break;
+    const { nodeId, path, seenBinders } = item;
     const node = getNode(graph, nodeId);
 
     if (node.kind === 'symbol' && env.has(node.label)) {
-      return { kind: 'expand', nodeId, name: node.label, path };
+      return { event: { kind: 'expand', nodeId, name: node.label, path }, observer: { rootId: observer.rootId, stack } };
     }
 
     if (node.kind === 'pair' && Array.isArray(node.children) && node.children.length === 2) {
@@ -429,37 +472,60 @@ function chooseNextEvent(graph, rootId, env, options) {
       const leftResolvedId = resolveApplicationHead(graph, leftId, new Set());
       const leftResolved = getNode(graph, leftResolvedId);
       if (leftResolved.kind === 'empty') {
-        return { kind: 'collapse', nodeId, replacementId: rightId, path };
+        return {
+          event: { kind: 'collapse', nodeId, replacementId: rightId, path },
+          observer: { rootId: observer.rootId, stack },
+        };
       }
       if (leftResolved.kind === 'pair' && isLambdaPair(graph, leftResolvedId)) {
-        return { kind: 'apply', nodeId, lambdaId: leftResolvedId, argId: rightId, path };
+        return {
+          event: { kind: 'apply', nodeId, lambdaId: leftResolvedId, argId: rightId, path },
+          observer: { rootId: observer.rootId, stack },
+        };
       }
 
       if (isLambdaPair(graph, nodeId)) {
-        if (!reduceUnderLambdas) return null;
-        return visit(rightId, [...path, { kind: 'pair', parentId: nodeId, index: 1 }], seenBinders);
+        if (!reduceUnderLambdas) continue;
+        stack.push({
+          nodeId: rightId,
+          path: [...path, { kind: 'pair', parentId: nodeId, index: 1 }],
+          seenBinders,
+        });
+        continue;
       }
 
-      const leftRedex = visit(leftId, [...path, { kind: 'pair', parentId: nodeId, index: 0 }], seenBinders);
-      if (leftRedex) return leftRedex;
-      return visit(rightId, [...path, { kind: 'pair', parentId: nodeId, index: 1 }], seenBinders);
+      // Depth-first, left-to-right traversal: push right, then left.
+      stack.push({
+        nodeId: rightId,
+        path: [...path, { kind: 'pair', parentId: nodeId, index: 1 }],
+        seenBinders,
+      });
+      stack.push({
+        nodeId: leftId,
+        path: [...path, { kind: 'pair', parentId: nodeId, index: 0 }],
+        seenBinders,
+      });
+      continue;
     }
 
     if (node.kind === 'slot') {
       const binderId = node.binderId;
-      if (typeof binderId !== 'string') return null;
-      if (seenBinders.has(binderId)) return null;
+      if (typeof binderId !== 'string') continue;
+      if (seenBinders.has(binderId)) continue;
       const binder = getNode(graph, binderId);
-      if (binder.kind !== 'binder' || typeof binder.valueId !== 'string') return null;
+      if (binder.kind !== 'binder' || typeof binder.valueId !== 'string') continue;
       const nextSeen = new Set(seenBinders);
       nextSeen.add(binderId);
-      return visit(binder.valueId, [...path, { kind: 'binder-value', binderId }], nextSeen);
+      stack.push({
+        nodeId: binder.valueId,
+        path: [...path, { kind: 'binder-value', binderId }],
+        seenBinders: nextSeen,
+      });
+      continue;
     }
-
-    return null;
   }
 
-  return visit(rootId, [], new Set());
+  return { event: null, observer: { rootId: observer.rootId, stack } };
 }
 
 /**
