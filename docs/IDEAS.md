@@ -36,8 +36,104 @@ Legend:
 
 ## INBOX
 
-_Empty for now._
 (When you have a new thought, drop it here; the next refactor folds it into CANON.)
+
+### Conservation of Structure, Binders as Currying, Folding, Dynamics
+
+% --- Insert as a new subsection near where you introduce "frame(first,rest)"
+%     and where you discuss histories vs. observables / slices / coordinates.
+%     This section is written to be self-contained and not depend on SKI jargon.
+
+\subsection{Lens--Substrate Factorization and the Status of Binders}
+\label{subsec:lens-substrate}
+
+A recurring theme in this work is that \emph{structure is conserved} while
+\emph{readout} changes. This can be made precise by separating the world-state
+into two components: a conserved \emph{substrate} and a movable \emph{lens}
+(also: frame, slice, focus, observer). The lens is the device that ``curries''
+a partially ordered causal structure into a sequential account suitable for
+analysis.
+
+\paragraph{Substrate.}
+Let $s$ denote the underlying conserved structure---a persistent graph (or
+equivalently a persistent cons-built motif store) supporting local rewrites.
+In the intended semantics, $s$ is never destroyed: evolution may extend $s$ or
+change which part of $s$ is currently addressed, but past structure remains
+as an immutable subgraph of the total store. This is the sense in which
+``the past cannot be changed; it can only be reassociated.''
+
+\paragraph{Lens.}
+Let $\ell$ denote a \emph{lens state}: the additional information required to
+produce a sequential account of evolution. Concretely, $\ell$ selects the
+next locally enabled event(s) or advances a frontier through the causal
+structure (for example, by a zipper-like traversal with an explicit context
+stack). The role of $\ell$ is not to add new physical content but to specify
+a \emph{coordinate choice}---a particular reading of an intrinsically
+nonlinear causal object.
+
+\paragraph{World state as an ordered pair.}
+We therefore treat the total state as an ordered pair
+\[
+(\ell, s),
+\]
+where $\ell$ is the first component (focus/observer) and $s$ is the second
+component (context/substrate). This ordering is intentional: the first
+component is the \emph{active} structure (the current frame), while the second
+component is the \emph{inert} conserved context in which the frame is situated.
+In particular, this aligns with the conventional decomposition of a frame as
+\[
+\mathrm{frame}(\mathrm{first},\mathrm{rest}),
+\]
+where $\mathrm{first}=\ell$ is the current focus and $\mathrm{rest}=s$ is the
+conserved remainder providing all contextual meaning.
+
+\paragraph{Dynamics as lens motion.}
+A single step of evolution can be described as a pure transformation
+\[
+\mathrm{step} : (\ell, s) \mapsto (\ell', s').
+\]
+In the conservative regime emphasized here, the substrate change $s \mapsto s'$
+is best understood as \emph{persistent extension or readdressing} rather than
+mutation. In the strongest ``conservation of structure'' reading one may even
+take $s'=s$ at the semantic level (identity on the substrate), with the
+nontrivial content carried entirely by the updated lens $\ell'$ and an
+associated trace (event log) recording how $\ell$ moved.
+
+\paragraph{Binders as curried history.}
+Binders arise when one insists on representing evolution as a one-dimensional
+sequence. They are an artifact of \emph{currying history}: converting a causal
+object with commuting diamonds (independent events) into a linear schedule.
+Intuitively, a binder records ``which deferred dependency will be fulfilled
+later'' in a representation that has only a single forward time coordinate.
+
+Under the lens--substrate factorization, binders are not fundamental
+entities of the substrate. Rather, they implement, within a sequential
+presentation, the bookkeeping that the lens $\ell$ would otherwise carry
+explicitly as it advances a frontier through the causal structure.
+
+\paragraph{Folding the lattice and eliminating binders.}
+The ``removal'' of binders corresponds to \emph{folding} the sequentialized
+representation back onto the intrinsic causal object. Formally, this is a
+quotienting operation that identifies sequences differing only by swaps of
+independent events. Equivalently, one replaces linear schedules by an event
+structure/poset of causal dependence. In this quotient, the multiplicity of
+equivalent sequential accounts disappears; what remains is the invariant causal
+content (the dependency relation) together with the lens's choice of reading.
+
+In this sense, binders are needed only so long as history is represented as a
+curried linear term. Once the causal lattice is represented directly (or once
+$\ell$ is made explicit and first-class), binder-like nodes can be replaced by
+pure indirections carried by the lens: local references that preserve dependence
+without global substitution.
+
+\paragraph{Invariance viewpoint.}
+This decomposition supports the invariance principle suggested throughout the
+paper: different concrete representations (parentheses, node identities, sharing
+choices within a class) and different fair lens schedules may produce distinct
+sequential traces while agreeing on the same folded causal object. The
+mathematical task is therefore not to privilege one schedule as ``the'' physics,
+but to identify a class of equivalent representations and show that the intended
+observables factor through the quotient.
 
 ---
 
