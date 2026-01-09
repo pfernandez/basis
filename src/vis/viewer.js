@@ -12,16 +12,16 @@
 /* global ForceGraph3D */
 
 const COLORS = Object.freeze({
-  pair: '#2D0A5B', // deep purple
+  pair: '#000000', // base (structure)
   binder: '#FF2DAA', // hot pink
-  slot: '#B5179E', // purple/pink
-  symbol: '#3F37C9', // violet-blue
+  slot: '#2D0A5B', // deep purple
+  symbol: '#111111', // black-ish
   empty: '#BDBDBD', // neutral
-  focus: '#111111', // black highlight
-  childLink: 'rgba(0, 0, 0, 0.12)',
+  focus: '#FF2DAA', // highlight
+  childLink: 'rgba(0, 0, 0, 0.38)',
   reentryLink: '#FF2DAA',
   valueLink: '#2D0A5B',
-  expandLink: '#3F37C9',
+  expandLink: 'rgba(0, 0, 0, 0.55)',
 });
 
 const elements = {
@@ -45,7 +45,6 @@ let playTimer = null;
 // Keep stable object identities across snapshot updates so node positions
 // don't "jump" between steps.
 const nodeCache = new Map(); // id -> node object (mutated by the engine)
-const linkCache = new Map(); // id -> link object
 
 function colorForNode(node) {
   if (node.__focus) return COLORS.focus;
@@ -69,7 +68,7 @@ function sizeForNode(node) {
 function colorForLink(link) {
   switch (link.kind) {
     case 'child':
-      return link.__folded ? 'rgba(0, 0, 0, 0.5)' : COLORS.childLink;
+      return link.__folded ? 'rgba(0, 0, 0, 0.78)' : COLORS.childLink;
     case 'reentry':
       return COLORS.reentryLink;
     case 'value':
@@ -81,13 +80,13 @@ function colorForLink(link) {
 
 function arrowLengthForLink(link) {
   if (link.kind === 'child') return 0;
-  return 4;
+  return 6;
 }
 
 function widthForLink(link) {
-  if (link.__focus) return 3;
-  if (link.kind === 'child') return link.__folded ? 1.6 : 1;
-  return 2;
+  if (link.__focus) return 4;
+  if (link.kind === 'child') return link.__folded ? 2.4 : 1.6;
+  return 2.6;
 }
 
 function internNode(raw) {
@@ -103,22 +102,18 @@ function internNode(raw) {
 
 function internLink(raw) {
   const id = raw.id ?? `${raw.kind}:${raw.from}->${raw.to}`;
-  const existing = linkCache.get(id);
-  if (existing) {
-    Object.assign(existing, raw, { id });
-    return existing;
-  }
-  const link = { ...raw, id };
-  linkCache.set(id, link);
-  return link;
+  // Important: do NOT cache/reuse link objects across steps.
+  //
+  // `3d-force-graph` mutates link records while (re)initializing the physics
+  // simulation. If we reuse and mutate link objects ourselves between steps,
+  // we can race the library's async update and end up with links that reference
+  // nodes that "don't exist" in the currently-initializing simulation.
+  return { ...raw, id };
 }
 
 function clearFocusFlags() {
   nodeCache.forEach(node => {
     node.__focus = false;
-  });
-  linkCache.forEach(link => {
-    link.__focus = false;
   });
 }
 
@@ -410,7 +405,7 @@ const Graph = ForceGraph3D({
   .linkDirectionalArrowLength(arrowLengthForLink)
   .linkDirectionalArrowColor(colorForLink)
   .linkDirectionalArrowRelPos(1)
-  .linkOpacity(0.85)
+  .linkOpacity(1)
   .onNodeClick(node => {
     // Smoothly aim the camera at clicked nodes for inspection.
     const distance = 140;
