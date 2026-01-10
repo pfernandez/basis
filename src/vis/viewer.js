@@ -9,7 +9,7 @@
  * local pointer rewrites happen in a way that is easy to inspect.
  */
 
-/* global ForceGraph3D */
+/* global ForceGraph3D, d3 */
 
 import * as THREE from '/node_modules/three/build/three.module.js';
 
@@ -59,6 +59,9 @@ const CONFIG = Object.freeze({
     stubFactor: 0.4,
   }),
   layout: Object.freeze({
+    modeDefault: 'constrained',
+    hierarchyNodeSizeX: 18,
+    hierarchyNodeSizeY: 26,
     pairConstraintStrength: 1,
     pairLeg: 42,
     pointerPoints: 24,
@@ -129,6 +132,7 @@ const elements = {
   showPointers: document.getElementById('show-pointers'),
   foldSlots: document.getElementById('fold-slots'),
   showAxes: document.getElementById('show-axes'),
+  layoutMode: document.getElementById('layout-mode'),
   linkThickness: document.getElementById('link-thickness'),
   showLabels: document.getElementById('show-labels'),
   file: document.getElementById('file'),
@@ -201,6 +205,10 @@ function isPointerLink(link) {
 }
 
 function initUiControls() {
+  if (elements.layoutMode) {
+    elements.layoutMode.value = CONFIG.layout.modeDefault;
+  }
+
   if (elements.linkThickness) {
     const slider = elements.linkThickness;
     slider.min = String(CONFIG.ui.linkThickness.min);
@@ -886,12 +894,13 @@ function pinIdFromSnapshot(snapshot) {
   return typeof rootId === 'string' ? rootId : null;
 }
 
-function pinNodeToOrigin(nodeId, nodes) {
+function pinNodeToOrigin(nodeId, nodes, options = {}) {
   if (typeof nodeId !== 'string') return;
   const node = nodeCache.get(nodeId);
   if (!node) return;
 
-  if (pinnedNodeId && pinnedNodeId !== nodeId) {
+  const releasePrevious = options.releasePrevious ?? true;
+  if (releasePrevious && pinnedNodeId && pinnedNodeId !== nodeId) {
     const prev = nodeCache.get(pinnedNodeId);
     if (prev) {
       prev.fx = undefined;
@@ -979,6 +988,119 @@ function buildStructureConstraints(nodes) {
   });
 
   return constraints;
+}
+
+function layoutModeFromUi() {
+  const value = elements.layoutMode?.value;
+  return value === 'hierarchy' ? 'hierarchy' : 'constrained';
+}
+
+function hierarchyApiAvailable() {
+  return (
+    typeof d3 === 'object' &&
+    d3 !== null &&
+    typeof d3.hierarchy === 'function' &&
+    typeof d3.tree === 'function'
+  );
+}
+
+function releaseFixedPositions(nodes) {
+  nodes.forEach(node => {
+    node.fx = undefined;
+    node.fy = undefined;
+  });
+}
+
+function fixToCurrentPositions(nodes) {
+  nodes.forEach(node => {
+    if (!Number.isFinite(node.x) || !Number.isFinite(node.y)) return;
+    node.fx = node.x;
+    node.fy = node.y;
+  });
+}
+
+function topmostAncestorId(nodeId, primaryParent) {
+  if (typeof nodeId !== 'string') return null;
+  let current = nodeId;
+  const seen = new Set();
+  for (let i = 0; i < 256; i += 1) {
+    if (seen.has(current)) break;
+    seen.add(current);
+    const parentId = primaryParent.get(current)?.parentId;
+    if (typeof parentId !== 'string') break;
+    current = parentId;
+  }
+  return current;
+}
+
+function hierarchyData(rootId, nodeById, primaryParent) {
+  const seen = new Set();
+
+  function childrenFor(nodeId) {
+    const node = nodeById.get(nodeId);
+    if (node?.kind !== 'pair') return [];
+    if (!Array.isArray(node.children) || node.children.length !== 2) return [];
+    return node.children.filter(childId => {
+      if (typeof childId !== 'string') return false;
+      return primaryParent.get(childId)?.parentId === nodeId;
+    });
+  }
+
+  function build(nodeId) {
+    const data = { id: nodeId };
+    if (seen.has(nodeId)) return data;
+    seen.add(nodeId);
+    const children = childrenFor(nodeId).map(build);
+    if (children.length) data.children = children;
+    return data;
+  }
+
+  if (typeof rootId !== 'string') return null;
+  return build(rootId);
+}
+
+function applyHierarchyLayout(pinId, nodes) {
+  if (!hierarchyApiAvailable()) return false;
+  structureForce.setConstraints([]);
+  const primaryParent = primaryPairParentByChild(nodes);
+  const rootId = topmostAncestorId(pinId, primaryParent);
+  if (typeof rootId !== 'string') return false;
+
+  const nodeById = new Map(nodes.map(node => [node.id, node]));
+  const data = hierarchyData(rootId, nodeById, primaryParent);
+  if (!data) return false;
+
+  const root = d3.hierarchy(data);
+  const layout = d3
+    .tree()
+    .nodeSize([
+      CONFIG.layout.hierarchyNodeSizeX,
+      CONFIG.layout.hierarchyNodeSizeY,
+    ]);
+  layout(root);
+
+  root.each(entry => {
+    const node = nodeById.get(entry.data.id);
+    if (!node) return;
+    node.x = entry.x;
+    node.y = -entry.y;
+  });
+
+  nodes.forEach(node => {
+    if (Number.isFinite(node.x) && Number.isFinite(node.y)) return;
+    node.x = 0;
+    node.y = 0;
+  });
+
+  pinNodeToOrigin(pinId, nodes, { releasePrevious: false });
+  fixToCurrentPositions(nodes);
+  return true;
+}
+
+function applyConstrainedLayout(pinId, nodes) {
+  releaseFixedPositions(nodes);
+  pinNodeToOrigin(pinId, nodes, { releasePrevious: true });
+  structureForce.setConstraints(buildStructureConstraints(nodes));
 }
 
 function startStepTransition(nextGraphData) {
@@ -1094,8 +1216,13 @@ function renderStep(index) {
   clearFocusFlags();
   const graphData = snapshotToGraphData(snapshot, clamped);
   const pinId = pinIdFromSnapshot(snapshot);
-  pinNodeToOrigin(pinId, graphData.nodes);
-  structureForce.setConstraints(buildStructureConstraints(graphData.nodes));
+  const layoutMode = layoutModeFromUi();
+  if (layoutMode === 'hierarchy') {
+    const ok = applyHierarchyLayout(pinId, graphData.nodes);
+    if (!ok) applyConstrainedLayout(pinId, graphData.nodes);
+  } else {
+    applyConstrainedLayout(pinId, graphData.nodes);
+  }
   const focused = focusIdsFromSnapshot(snapshot);
   focused.forEach(id => {
     const node = nodeCache.get(id);
@@ -1229,6 +1356,7 @@ function setupEvents() {
     elements.showTree,
     elements.showPointers,
     elements.foldSlots,
+    elements.layoutMode,
   ].forEach(control => {
     if (!control) return;
     control.addEventListener('change', () => {

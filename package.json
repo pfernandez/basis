@@ -29,6 +29,7 @@
   "author": "Paul Fernandez",
   "license": "Apache-2.0",
   "dependencies": {
-    "3d-force-graph": "^1.79.0"
+    "3d-force-graph": "^1.79.0",
+    "d3-hierarchy": "^3.1.2"
   }
 }

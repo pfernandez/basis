@@ -26,6 +26,13 @@
       </div>
       <div class="row meta">
         <label>
+          layout
+          <select id="layout-mode">
+            <option value="constrained" selected>constrained</option>
+            <option value="hierarchy">hierarchy</option>
+          </select>
+        </label>
+        <label>
           thickness
           <input id="link-thickness" type="range" />
         </label>
@@ -41,6 +48,8 @@
 
     <!-- Uses the locally-installed package (run a local server from repo root). -->
     <script src="/node_modules/3d-force-graph/dist/3d-force-graph.min.js"></script>
+    <script src="/node_modules/d3-array/dist/d3-array.min.js"></script>
+    <script src="/node_modules/d3-hierarchy/dist/d3-hierarchy.min.js"></script>
     <script type="module" src="./viewer.js"></script>
   </body>
 </html>
