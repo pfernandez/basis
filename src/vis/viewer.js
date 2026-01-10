@@ -18,6 +18,12 @@ const CONFIG = Object.freeze({
     enabled: false,
     size: 110,
   }),
+  grid: Object.freeze({
+    enabled: false,
+    divisions: 24,
+    opacity: 0.12,
+    size: 720,
+  }),
   camera: Object.freeze({
     clickDistance: 140,
     clickMs: 600,
@@ -114,6 +120,14 @@ const CONFIG = Object.freeze({
   }),
   ui: Object.freeze({
     labelsEnabled: true,
+    labelSprite: Object.freeze({
+      fontFamily: 'monospace',
+      fontPx: 52,
+      opacity: 0.9,
+      paddingPx: 12,
+      worldUnitsPerPx: 0.06,
+      yOffset: 2.6,
+    }),
     linkThickness: Object.freeze({
       default: 1,
       max: 6,
@@ -138,6 +152,7 @@ const elements = {
   showPointers: document.getElementById('show-pointers'),
   foldSlots: document.getElementById('fold-slots'),
   showAxes: document.getElementById('show-axes'),
+  showGrid: document.getElementById('show-grid'),
   layoutMode: document.getElementById('layout-mode'),
   linkThickness: document.getElementById('link-thickness'),
   showLabels: document.getElementById('show-labels'),
@@ -232,6 +247,10 @@ function initUiControls() {
 
   if (elements.showAxes) {
     elements.showAxes.checked = CONFIG.axes.enabled;
+  }
+
+  if (elements.showGrid) {
+    elements.showGrid.checked = CONFIG.grid.enabled;
   }
 
   labelsEnabled = elements.showLabels?.checked ?? CONFIG.ui.labelsEnabled;
@@ -422,6 +441,100 @@ const UP_VECTOR = new THREE.Vector3(0, 1, 0);
 const TMP_DIR = new THREE.Vector3();
 const TMP_QUATERNION = new THREE.Quaternion();
 
+function labelTextForNode(node) {
+  if (!labelsEnabled) return '';
+  if (!node) return '';
+  if (node.kind === 'symbol') return String(node.__displayLabel ?? node.id);
+  if (node.kind === 'slot') return String(node.__displayLabel ?? '');
+  if (node.kind === 'binder') return defaultLabelForKind(node.kind);
+  return '';
+}
+
+function colorCssForNode(node) {
+  return colorForNode(node);
+}
+
+function createLabelTexture(text) {
+  const fontPx = CONFIG.ui.labelSprite.fontPx;
+  const paddingPx = CONFIG.ui.labelSprite.paddingPx;
+  const fontFamily = CONFIG.ui.labelSprite.fontFamily;
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  ctx.font = `${fontPx}px ${fontFamily}`;
+  const metrics = ctx.measureText(text);
+  const width = Math.ceil(metrics.width) + paddingPx * 2;
+  const height = fontPx + paddingPx * 2;
+
+  canvas.width = Math.max(1, width);
+  canvas.height = Math.max(1, height);
+
+  ctx.font = `${fontPx}px ${fontFamily}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+  return { texture, width: canvas.width, height: canvas.height };
+}
+
+function makeLabelSprite() {
+  const material = new THREE.SpriteMaterial({
+    transparent: true,
+    opacity: CONFIG.ui.labelSprite.opacity,
+    depthTest: false,
+  });
+  const sprite = new THREE.Sprite(material);
+  sprite.userData.text = '';
+  sprite.visible = false;
+  return sprite;
+}
+
+function updateLabelSprite(sprite, node) {
+  if (!sprite || !node) return;
+  const text = labelTextForNode(node);
+  sprite.visible = Boolean(text);
+  if (!text) return;
+
+  const cssColor = colorCssForNode(node);
+  sprite.material.color.set(cssColor);
+
+  if (sprite.userData.text !== text) {
+    const prevMap = sprite.material.map;
+    const result = createLabelTexture(text);
+    if (result) {
+      if (prevMap) prevMap.dispose();
+      sprite.material.map = result.texture;
+      sprite.material.needsUpdate = true;
+      const scale = CONFIG.ui.labelSprite.worldUnitsPerPx;
+      sprite.scale.set(result.width * scale, result.height * scale, 1);
+      sprite.userData.text = text;
+    }
+  }
+}
+
+function sphereMeshForNodeObject(nodeObject) {
+  if (!nodeObject) return null;
+  if (nodeObject.isMesh) return nodeObject;
+  const sphere = nodeObject.userData?.sphere;
+  if (sphere?.isMesh) return sphere;
+  return null;
+}
+
+function labelSpriteForNodeObject(nodeObject) {
+  if (!nodeObject) return null;
+  if (nodeObject.isSprite) return nodeObject;
+  const label = nodeObject.userData?.label;
+  if (label?.isSprite) return label;
+  return null;
+}
+
 function parseCssColor(css) {
   if (typeof css !== 'string') {
     return { color: new THREE.Color('#000000'), opacity: 1 };
@@ -458,14 +571,24 @@ function linkMaterialFor(link) {
 }
 
 function makeNodeObject(node) {
+  const group = new THREE.Group();
   const material = new THREE.MeshLambertMaterial({
     color: new THREE.Color(colorForNode(node)),
   });
   const mesh = new THREE.Mesh(NODE_GEOMETRY, material);
+  group.userData.sphere = mesh;
+  group.add(mesh);
+
+  const label = makeLabelSprite();
+  group.userData.label = label;
+  group.add(label);
+
   const appear = Number.isFinite(node.__appear) ? node.__appear : 1;
   const radius = sizeForNode(node) * appear;
   mesh.scale.set(radius, radius, radius);
-  return mesh;
+  updateLabelSprite(label, node);
+  label.position.set(0, radius + CONFIG.ui.labelSprite.yOffset, 0);
+  return group;
 }
 
 function updateNodeObject(nodeObject, coords, node) {
@@ -478,8 +601,17 @@ function updateNodeObject(nodeObject, coords, node) {
   if (node) node.z = z;
   const appear = Number.isFinite(node.__appear) ? node.__appear : 1;
   const radius = sizeForNode(node) * appear;
-  nodeObject.scale.set(radius, radius, radius);
-  nodeObject.material.color.set(colorForNode(node));
+  const sphere = sphereMeshForNodeObject(nodeObject) ?? nodeObject;
+  sphere.scale.set(radius, radius, radius);
+  if (sphere.material?.color) {
+    sphere.material.color.set(colorForNode(node));
+  }
+
+  const label = labelSpriteForNodeObject(nodeObject);
+  if (label) {
+    updateLabelSprite(label, node);
+    label.position.set(0, radius + CONFIG.ui.labelSprite.yOffset, 0);
+  }
   return true;
 }
 
@@ -1656,6 +1788,10 @@ function setupEvents() {
     axesHelper.visible = elements.showAxes.checked;
   });
 
+  elements.showGrid?.addEventListener('change', () => {
+    gridHelper.visible = elements.showGrid.checked;
+  });
+
   elements.showLabels?.addEventListener('change', () => {
     labelsEnabled = elements.showLabels.checked;
     Graph.refresh();
@@ -1735,6 +1871,27 @@ const Graph = ForceGraph3D({
 const axesHelper = new THREE.AxesHelper(CONFIG.axes.size);
 axesHelper.visible = elements.showAxes?.checked ?? CONFIG.axes.enabled;
 Graph.scene().add(axesHelper);
+
+function opacityMaterial(material, opacity) {
+  if (!material) return;
+  if (Array.isArray(material)) {
+    material.forEach(entry => opacityMaterial(entry, opacity));
+    return;
+  }
+  material.transparent = opacity < 1;
+  material.opacity = opacity;
+}
+
+const gridHelper = new THREE.GridHelper(
+  CONFIG.grid.size,
+  CONFIG.grid.divisions,
+  0x000000,
+  0x000000,
+);
+gridHelper.rotation.x = Math.PI / 2;
+opacityMaterial(gridHelper.material, CONFIG.grid.opacity);
+gridHelper.visible = elements.showGrid?.checked ?? CONFIG.grid.enabled;
+Graph.scene().add(gridHelper);
 
 Graph.d3Force('structure', structureForce);
 Graph.d3Force(
