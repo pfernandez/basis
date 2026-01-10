@@ -101,6 +101,8 @@ const CONFIG = Object.freeze({
     }),
   }),
   physics: Object.freeze({
+    chargeStrength: 0,
+    centerStrength: 0,
     collisionAlphaFactor: 0.5,
     collisionIterations: 2,
     collisionStrength: 0.08,
@@ -150,6 +152,7 @@ let activeTransition = null;
 let pinnedNodeId = null;
 let labelsEnabled = CONFIG.ui.labelsEnabled;
 let linkThicknessScale = CONFIG.ui.linkThickness.default;
+const viewOffset = { x: 0, y: 0 };
 
 // Keep stable object identities across snapshot updates so node positions
 // don't "jump" between steps.
@@ -460,7 +463,7 @@ function makeNodeObject(node) {
 }
 
 function updateNodeObject(nodeObject, coords, node) {
-  nodeObject.position.set(coords.x, coords.y, 0);
+  nodeObject.position.set(coords.x + viewOffset.x, coords.y + viewOffset.y, 0);
   if (node) node.z = 0;
   const appear = Number.isFinite(node.__appear) ? node.__appear : 1;
   const radius = sizeForNode(node) * appear;
@@ -471,8 +474,8 @@ function updateNodeObject(nodeObject, coords, node) {
 
 function normalizeLinkEndpoint(pos) {
   return {
-    x: pos.x,
-    y: pos.y,
+    x: pos.x + viewOffset.x,
+    y: pos.y + viewOffset.y,
     z: 0,
   };
 }
@@ -894,6 +897,45 @@ function pinIdFromSnapshot(snapshot) {
   return typeof rootId === 'string' ? rootId : null;
 }
 
+function viewOffsetForPin(pinId) {
+  if (typeof pinId !== 'string') return { x: 0, y: 0 };
+  const pinned = nodeCache.get(pinId);
+  if (!pinned || !hasFinitePosition(pinned)) return { x: 0, y: 0 };
+  return { x: -pinned.x, y: -pinned.y };
+}
+
+function pinNodeInPlace(pinId, nodes) {
+  if (typeof pinId !== 'string') return;
+  const node = nodeCache.get(pinId);
+  if (!node) return;
+
+  if (pinnedNodeId && pinnedNodeId !== pinId) {
+    const prev = nodeCache.get(pinnedNodeId);
+    if (prev) {
+      prev.fx = undefined;
+      prev.fy = undefined;
+    }
+  }
+  pinnedNodeId = pinId;
+
+  if (!hasFinitePosition(node)) {
+    node.x = 0;
+    node.y = 0;
+    node.vx = 0;
+    node.vy = 0;
+  }
+  node.fx = node.x;
+  node.fy = node.y;
+  node.vx = 0;
+  node.vy = 0;
+
+  nodes?.forEach(other => {
+    if (other === node) return;
+    if (!Number.isFinite(other.vx)) other.vx = 0;
+    if (!Number.isFinite(other.vy)) other.vy = 0;
+  });
+}
+
 function pinNodeToOrigin(nodeId, nodes, options = {}) {
   if (typeof nodeId !== 'string') return;
   const node = nodeCache.get(nodeId);
@@ -988,6 +1030,48 @@ function buildStructureConstraints(nodes) {
   });
 
   return constraints;
+}
+
+function hasFinitePosition(node) {
+  return (
+    node &&
+    Number.isFinite(node.x) &&
+    Number.isFinite(node.y)
+  );
+}
+
+function seedPositionsFromConstraints(nodes, constraints) {
+  if (!Array.isArray(nodes) || !nodes.length) return;
+  if (!Array.isArray(constraints) || !constraints.length) return;
+
+  function seedNode(child, parent, offset) {
+    if (!child || !parent || !offset) return false;
+    if (!hasFinitePosition(parent)) return false;
+    if (hasFinitePosition(child)) return false;
+    child.x = parent.x + offset.dx;
+    child.y = parent.y + offset.dy;
+    child.vx = 0;
+    child.vy = 0;
+    return true;
+  }
+
+  let seeded = true;
+  for (let pass = 0; pass < 32 && seeded; pass += 1) {
+    seeded = false;
+    constraints.forEach(constraint => {
+      if (seedNode(constraint.child, constraint.parent, constraint)) {
+        seeded = true;
+      }
+    });
+  }
+
+  nodes.forEach(node => {
+    if (hasFinitePosition(node)) return;
+    node.x = 0;
+    node.y = 0;
+    node.vx = 0;
+    node.vy = 0;
+  });
 }
 
 function layoutModeFromUi() {
@@ -1099,11 +1183,21 @@ function applyHierarchyLayout(pinId, nodes) {
 
 function applyConstrainedLayout(pinId, nodes) {
   releaseFixedPositions(nodes);
-  pinNodeToOrigin(pinId, nodes, { releasePrevious: true });
-  structureForce.setConstraints(buildStructureConstraints(nodes));
+  if (typeof pinId === 'string') {
+    const pinned = nodeCache.get(pinId);
+    if (pinned && !hasFinitePosition(pinned)) {
+      pinned.x = 0;
+      pinned.y = 0;
+      pinned.vx = 0;
+      pinned.vy = 0;
+    }
+  }
+  const constraints = buildStructureConstraints(nodes);
+  seedPositionsFromConstraints(nodes, constraints);
+  structureForce.setConstraints(constraints);
 }
 
-function startStepTransition(nextGraphData) {
+function startStepTransition(nextGraphData, nextViewOffset) {
   if (!lastGraphData) {
     nextGraphData.nodes.forEach(node => {
       node.__appear = 1;
@@ -1111,6 +1205,10 @@ function startStepTransition(nextGraphData) {
     nextGraphData.links.forEach(link => {
       link.__appear = 1;
     });
+    if (nextViewOffset) {
+      viewOffset.x = nextViewOffset.x;
+      viewOffset.y = nextViewOffset.y;
+    }
     activeTransition = null;
     return;
   }
@@ -1146,6 +1244,8 @@ function startStepTransition(nextGraphData) {
     startMs: performance.now(),
     nodes: newNodes,
     links: newLinks,
+    viewFrom: { ...viewOffset },
+    viewTo: nextViewOffset ? { ...nextViewOffset } : { ...viewOffset },
   };
 }
 
@@ -1160,6 +1260,18 @@ function tickStepTransition(nowMs) {
   activeTransition.links.forEach(link => {
     link.__appear = t;
   });
+  if (activeTransition.viewFrom && activeTransition.viewTo) {
+    viewOffset.x = lerp(
+      activeTransition.viewFrom.x,
+      activeTransition.viewTo.x,
+      t,
+    );
+    viewOffset.y = lerp(
+      activeTransition.viewFrom.y,
+      activeTransition.viewTo.y,
+      t,
+    );
+  }
   if (t >= 1) activeTransition = null;
 }
 
@@ -1191,6 +1303,9 @@ function setTrace(nextTrace) {
   elements.step.max = Math.max(0, trace.length - 1);
   elements.step.value = 0;
   renderStep(0);
+
+  const firstNodeCount = trace[0]?.graph?.nodes?.length;
+  resetCamera(firstNodeCount);
 }
 
 function updateHud(stepIndex, snapshot) {
@@ -1207,6 +1322,29 @@ function updateHud(stepIndex, snapshot) {
   }
 }
 
+function configureForcesForCurrentSimulation() {
+  // Keep the layout deterministic relative to the pinned focus/root.
+  // The default d3 `center` force recenters the *center-of-mass*, which moves
+  // the focus away from the origin.
+  Graph.d3Force('center', null);
+
+  const chargeForce = Graph.d3Force('charge');
+  if (chargeForce && typeof chargeForce.strength === 'function') {
+    chargeForce.strength(CONFIG.physics.chargeStrength);
+  }
+
+  const linkForce = Graph.d3Force('link');
+  if (linkForce && typeof linkForce.strength === 'function') {
+    linkForce
+      .strength(link => {
+        return link.kind === 'history'
+          ? CONFIG.physics.historyLinkStrength
+          : 0;
+      })
+      .distance(() => CONFIG.layout.pairLeg);
+  }
+}
+
 function renderStep(index) {
   if (!trace.length) return;
   const clamped = Math.max(0, Math.min(index, trace.length - 1));
@@ -1219,9 +1357,13 @@ function renderStep(index) {
   const layoutMode = layoutModeFromUi();
   if (layoutMode === 'hierarchy') {
     const ok = applyHierarchyLayout(pinId, graphData.nodes);
-    if (!ok) applyConstrainedLayout(pinId, graphData.nodes);
+    if (!ok) {
+      applyConstrainedLayout(pinId, graphData.nodes);
+      pinNodeInPlace(pinId, graphData.nodes);
+    }
   } else {
     applyConstrainedLayout(pinId, graphData.nodes);
+    pinNodeInPlace(pinId, graphData.nodes);
   }
   const focused = focusIdsFromSnapshot(snapshot);
   focused.forEach(id => {
@@ -1232,8 +1374,10 @@ function renderStep(index) {
     if (focused.has(link.from) || focused.has(link.to)) link.__focus = true;
   });
 
-  startStepTransition(graphData);
+  const nextViewOffset = viewOffsetForPin(pinId);
+  startStepTransition(graphData, nextViewOffset);
   Graph.graphData(graphData);
+  configureForcesForCurrentSimulation();
   Graph.d3ReheatSimulation();
   lastGraphData = graphData;
 
@@ -1252,8 +1396,6 @@ function stopPlaying() {
 function startPlaying() {
   if (!trace.length) return;
   playing = true;
-  const snapshot = trace[Number(elements.step.value)];
-  resetCamera(snapshot?.graph?.nodes?.length);
   elements.playPause.textContent = 'Pause';
   playTimer = setInterval(() => {
     const next = Number(elements.step.value) + 1;
@@ -1425,14 +1567,22 @@ const Graph = ForceGraph3D({
     stopPlaying();
     // Smoothly aim the camera at clicked nodes for inspection.
     const distance = CONFIG.camera.clickDistance;
-    const distRatio = 1 + distance / Math.hypot(node.x || 0, node.y || 0);
+    const target = {
+      x: (node.x || 0) + viewOffset.x,
+      y: (node.y || 0) + viewOffset.y,
+      z: 0,
+    };
+    const distRatio = 1 + distance / Math.max(1e-6, Math.hypot(
+      target.x,
+      target.y,
+    ));
     Graph.cameraPosition(
       {
-        x: (node.x || 0) * distRatio,
-        y: (node.y || 0) * distRatio,
+        x: target.x * distRatio,
+        y: target.y * distRatio,
         z: distance,
       },
-      node,
+      target,
       CONFIG.camera.clickMs,
     );
   });
@@ -1446,15 +1596,6 @@ Graph.d3Force(
   'collide',
   collisionForce,
 );
-
-const linkForce = Graph.d3Force('link');
-if (linkForce && typeof linkForce.strength === 'function') {
-  linkForce
-    .strength(link => {
-      return link.kind === 'history' ? CONFIG.physics.historyLinkStrength : 0;
-    })
-    .distance(() => CONFIG.layout.pairLeg);
-}
 
 function resizeGraphToContainer() {
   const rect = elements.graph.getBoundingClientRect();
