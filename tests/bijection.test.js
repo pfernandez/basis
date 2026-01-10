@@ -33,19 +33,29 @@ test('Dyck words map bijectively to Catalan trees for n = 0..5', () => {
   }
 });
 
-test('Motzkin words round-trip through motzkinToTree/renderMotzkinTree for n = 0..5', () => {
-  for (let n = 0; n <= 5; n += 1) {
-    const motzkinWords = generateMotzkinWords(n);
-    motzkinWords.forEach((word) => {
-      const rendered = renderMotzkinTree(motzkinToTree(word));
-      assert.equal(rendered, word, `Motzkin word failed round-trip at n=${n}`);
-      const binary = renderTree(motzkinTreeToCatalanTree(motzkinToTree(word)));
-      assert.doesNotThrow(
-        () => {
-          dyckToTree(binary);
-        },
-        `Motzkin → Catalan conversion produced invalid Dyck word at n=${n}`,
-      );
-    });
-  }
-});
+test(
+  'Motzkin words round-trip through motzkinToTree/renderMotzkinTree ' +
+    'for n = 0..5',
+  () => {
+    for (let n = 0; n <= 5; n += 1) {
+      const motzkinWords = generateMotzkinWords(n);
+      motzkinWords.forEach(word => {
+        const tree = motzkinToTree(word);
+        const rendered = renderMotzkinTree(tree);
+        assert.equal(
+          rendered,
+          word,
+          `Motzkin word failed round-trip at n=${n}`,
+        );
+
+        const binary = renderTree(motzkinTreeToCatalanTree(tree));
+        assert.doesNotThrow(
+          () => {
+            dyckToTree(binary);
+          },
+          `Motzkin → Catalan conversion produced invalid Dyck word at n=${n}`,
+        );
+      });
+    }
+  },
+);

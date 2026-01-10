@@ -2,43 +2,83 @@
  * Graph serializer (debug/test readout)
  * ------------------------------------
  *
- * This converts a pointer graph back into a Lisp-ish S-expression string.
+ * Converts a pointer graph back into a Lisp-ish S-expression string.
  *
  * Notes:
- * - `binder` and `empty` are rendered as `()` since binders are not part of the
- *   surface syntax (they are structural/operational).
- * - Slots normally render as `#n`, but if a slot's binder is bound (`valueId`),
- *   we serialize the bound value instead. This matches how the evaluator uses
- *   binders as indirections (call-by-need style) and keeps tests readable.
- * - Cycles are serialized as `#cycle` to avoid infinite recursion in debugging.
+ * - `binder` and `empty` render as `()` because binders are operational-only.
+ * - Slots normally render as `#n` computed from the surrounding lambda
+ *   structure, but if a slot's binder is bound (`valueId`), we serialize the
+ *   bound value
+ *   instead. This matches indirection-based binding (call-by-need style) and
+ *   keeps tests readable.
+ * - Cycles serialize as `#cycle` to avoid infinite recursion while debugging.
  */
 
 import { getNode } from './graph.js';
 import { invariant } from '../utils.js';
 
-function nodeToAst(graph, nodeId, stack = new Set()) {
-  if (stack.has(nodeId)) return '#cycle';
-  const nextStack = new Set(stack);
-  nextStack.add(nodeId);
+function isPair(node) {
+  return node.kind === 'pair' && Array.isArray(node.children);
+}
+
+function pairChildren(node) {
+  invariant(
+    isPair(node) && node.children.length === 2,
+    'pair must have 2 children',
+  );
+  return node.children;
+}
+
+function isLambdaPair(graph, pairNode) {
+  if (!isPair(pairNode) || pairNode.children.length !== 2) return false;
+  const [leftId] = pairNode.children;
+  return getNode(graph, leftId).kind === 'binder';
+}
+
+function slotIndex(binderStack, binderId) {
+  const index = binderStack.lastIndexOf(binderId);
+  if (index === -1) return null;
+  return binderStack.length - 1 - index;
+}
+
+function nodeToAst(graph, nodeId, binderStack, seenNodeIds) {
+  if (seenNodeIds.has(nodeId)) return '#cycle';
+
+  const nextSeen = new Set(seenNodeIds);
+  nextSeen.add(nodeId);
+
   const node = getNode(graph, nodeId);
   switch (node.kind) {
-    case 'pair':
-      invariant(
-        Array.isArray(node.children) && node.children.length === 2,
-        'pair nodes must have two children',
-      );
-      return node.children.map(child => nodeToAst(graph, child, nextStack));
+    case 'pair': {
+      const [leftId, rightId] = pairChildren(node);
+      if (isLambdaPair(graph, node)) {
+        // Lambda pair: `(() body)` where the binder itself is operational-only.
+        const body = nodeToAst(
+          graph,
+          rightId,
+          [...binderStack, leftId],
+          nextSeen,
+        );
+        return [[], body];
+      }
+      return [
+        nodeToAst(graph, leftId, binderStack, nextSeen),
+        nodeToAst(graph, rightId, binderStack, nextSeen),
+      ];
+    }
     case 'symbol':
-      return node.label;
+      return node.label ?? '#sym';
     case 'slot': {
       const binderId = node.binderId;
-      if (typeof binderId === 'string') {
-        const binder = getNode(graph, binderId);
-        if (binder.kind === 'binder' && typeof binder.valueId === 'string') {
-          return nodeToAst(graph, binder.valueId, nextStack);
-        }
+      if (typeof binderId !== 'string') return '#free';
+
+      const binder = getNode(graph, binderId);
+      if (binder.kind === 'binder' && typeof binder.valueId === 'string') {
+        return nodeToAst(graph, binder.valueId, binderStack, nextSeen);
       }
-      return node.label;
+
+      const index = slotIndex(binderStack, binderId);
+      return typeof index === 'number' ? `#${index}` : '#free';
     }
     case 'binder':
     case 'empty':
@@ -57,7 +97,10 @@ function astToString(ast) {
 }
 
 export function serializeGraph(graph, rootId) {
-  invariant(graph && typeof graph === 'object', 'serializeGraph requires a graph object');
+  invariant(
+    graph && typeof graph === 'object',
+    'serializeGraph requires a graph',
+  );
   invariant(typeof rootId === 'string', 'serializeGraph requires a rootId');
-  return astToString(nodeToAst(graph, rootId));
+  return astToString(nodeToAst(graph, rootId, [], new Set()));
 }

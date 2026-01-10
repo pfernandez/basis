@@ -3,8 +3,8 @@
  * SK evaluator CLI
  * ---------------
  *
- * Runs the graph reducer against a small `(def …)`/`(defn …)` basis file and
- * optionally writes a trace for `src/vis/viewer.js` to render.
+ * Runs the graph reducer against a small `(def …)`/`(defn …)` basis file
+ * and optionally writes a trace for `src/vis/viewer.js` to render.
  *
  * Usage:
  *   `node src/cli/sk.js "(I a)" "((K a) b)"`
@@ -19,10 +19,24 @@ import { getNode } from '../graph/graph.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+function describeNode(node) {
+  if (!node) return '<missing>';
+  if (node.kind === 'symbol') return String(node.label ?? node.id);
+  if (node.kind === 'empty') return '()';
+  if (node.kind === 'pair') return `pair(${node.id})`;
+  if (node.kind === 'binder') return `binder(${node.id})`;
+  if (node.kind === 'slot') return `slot(${node.binderId ?? '?'})`;
+  return `${node.kind}(${node.id})`;
+}
+
 function countPointerLinks(graph) {
   return graph.nodes.reduce((count, node) => {
-    if (node.kind === 'slot' && typeof node.binderId === 'string') return count + 1;
-    if (node.kind === 'binder' && typeof node.valueId === 'string') return count + 1;
+    if (node.kind === 'slot' && typeof node.binderId === 'string') {
+      return count + 1;
+    }
+    if (node.kind === 'binder' && typeof node.valueId === 'string') {
+      return count + 1;
+    }
     return count;
   }, 0);
 }
@@ -34,7 +48,9 @@ function parseArgs(argv) {
     ? defsArg.slice('--defs='.length)
     : join(__dirname, '../../programs/sk-basis.lisp');
   const tracePath = traceArg ? traceArg.slice('--trace='.length) : null;
-  const inputs = argv.filter(arg => !arg.startsWith('--defs=') && !arg.startsWith('--trace='));
+  const inputs = argv.filter(
+    arg => !arg.startsWith('--defs=') && !arg.startsWith('--trace='),
+  );
   return { defsPath, tracePath, inputs };
 }
 
@@ -62,8 +78,11 @@ function main() {
       const focus = getNode(result.graph, result.rootId);
       evaluations.push({ expression: exprSource, snapshots });
       console.log(`Expression: ${exprSource}`);
-      console.log(`  Focus: ${focus.label}`);
-      console.log(`  Nodes: ${result.graph.nodes.length}, Links: ${countPointerLinks(result.graph)}`);
+      console.log(`  Focus: ${describeNode(focus)}`);
+      console.log(
+        `  Nodes: ${result.graph.nodes.length}, ` +
+          `Links: ${countPointerLinks(result.graph)}`,
+      );
     } catch (error) {
       console.error(`Failed to evaluate ${exprSource}: ${error.message}`);
     }

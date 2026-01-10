@@ -17,7 +17,6 @@
             },
             {
               "kind": "pair",
-              "label": "·",
               "children": [
                 "n0",
                 "n1"
@@ -62,7 +61,6 @@
             },
             {
               "kind": "pair",
-              "label": "·",
               "children": [
                 "n5",
                 "n1"
@@ -71,19 +69,16 @@
             },
             {
               "kind": "binder",
-              "label": "λ0",
               "valueId": null,
               "id": "n3"
             },
             {
               "kind": "slot",
-              "label": "#0",
               "binderId": "n3",
               "id": "n4"
             },
             {
               "kind": "pair",
-              "label": "·",
               "children": [
                 "n3",
                 "n4"
@@ -166,7 +161,6 @@
             },
             {
               "kind": "pair",
-              "label": "·",
               "children": [
                 "n5",
                 "n1"
@@ -175,19 +169,16 @@
             },
             {
               "kind": "binder",
-              "label": "λ0",
               "valueId": null,
               "id": "n3"
             },
             {
               "kind": "slot",
-              "label": "#0",
               "binderId": "n3",
               "id": "n4"
             },
             {
               "kind": "pair",
-              "label": "·",
               "children": [
                 "n3",
                 "n4"
@@ -196,19 +187,16 @@
             },
             {
               "kind": "binder",
-              "label": "λ0",
               "valueId": "n9",
               "id": "n6"
             },
             {
               "kind": "slot",
-              "label": "#0",
               "binderId": "n6",
               "id": "n7"
             },
             {
               "kind": "pair",
-              "label": "·",
               "children": [
                 "n6",
                 "n7"
@@ -329,7 +317,6 @@
             },
             {
               "kind": "pair",
-              "label": "·",
               "children": [
                 "n5",
                 "n1"
@@ -338,19 +325,16 @@
             },
             {
               "kind": "binder",
-              "label": "λ0",
               "valueId": null,
               "id": "n3"
             },
             {
               "kind": "slot",
-              "label": "#0",
               "binderId": "n3",
               "id": "n4"
             },
             {
               "kind": "pair",
-              "label": "·",
               "children": [
                 "n3",
                 "n4"
@@ -359,19 +343,16 @@
             },
             {
               "kind": "binder",
-              "label": "λ0",
               "valueId": "n9",
               "id": "n6"
             },
             {
               "kind": "slot",
-              "label": "#0",
               "binderId": "n6",
               "id": "n7"
             },
             {
               "kind": "pair",
-              "label": "·",
               "children": [
                 "n6",
                 "n7"

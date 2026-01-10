@@ -1,6 +1,6 @@
-; Core SK basis encoded with explicit re-entry references (De Bruijn `#n`).
-; The interpreter rebuilds real binder pointers from these annotations so the
-; collapse rule can run without any trusted overrides.
+; Core SK basis written with `(def ...)` and `(defn ...)` sugar.
+; The loader desugars `defn` into nested lambdas and compiles bound variables
+; directly into `slot -> binder` pointers (no intermediate De Bruijn rewrite).
 ; Identity, constant, and S combinators defined with defn sugar.
 (defn I (x) x)
 (def id I)
@@ -25,9 +25,11 @@
 (defn true (x y) x)
 (defn false (x y) y)
 
-; Thunked conditional to keep evaluation local/structural under strict collapse.
-; The evaluator is eager and reduces both branches; passing thunks lets us avoid
-; forcing the "other" branch (use as: ((if p) (K then) (K else)) arg).
+; Conditional in Church encoding: `if p th el = (p th) el`.
+; Under the current normal-order / call-by-need reducer, the unused branch is
+; not forced. We still often pass thunks for robustness under stricter
+; schedules:
+; use as: ((((if p) (K then)) (K else)) arg).
 (defn if (p th el) ((p th) el))
 
 ; Boolean algebra built from true/false, written without referencing globals so
@@ -63,16 +65,15 @@
 
 ; TODO: Church lists (nil/cons/is-nil/head/tail/fold/map) under strict collapse
 
-; Applicative-order fixpoint combinator helpers
+; Fixpoint combinator helpers (Theta-style)
 (defn APPLY-SELF (x v) ((x x) v))
 (defn THETA (f x) (f (APPLY-SELF x)))
 (def apply-self APPLY-SELF)
 (def theta THETA)
 
-; Applicative-order fixpoint combinator.
-; The classic Y = λf.(λx.f(x x))(λx.f(x x)) diverges under strict (collapse-now)
-; evaluation: each (x x) must collapse before f sees its argument. Z uses THETA
-; so self-application is only demanded once the body consumes its input.
-; If you ever want the lazy variant, Y = (THETA THETA) is the unsafe form.
+; Fixpoint combinator.
+; Z is the call-by-value-friendly variant; it is a safe default if you
+; experiment with stricter schedules. (Under classic normal-order λ-calculus,
+; Y is the usual choice; here we keep Z as `fix` for consistency.)
 (defn Z (f) ((THETA f) (THETA f)))
 (def fix Z)

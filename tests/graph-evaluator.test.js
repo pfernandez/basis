@@ -103,12 +103,12 @@ test('thunked if selects only one branch', () => {
   assert.equal(render('((((if false) (K a)) (K b)) z)'), 'b');
 });
 
-test('APPLY-SELF and THETA behave under applicative order', () => {
+test('APPLY-SELF and THETA behave under this reducer', () => {
   assert.equal(render('((apply-self K) a)'), '(() (() #1))'); // K
   assert.equal(render('((theta (K a)) b)'), 'a');
 });
 
-test('Z builds an applicative fixpoint for contractive functions', () => {
+test('Z builds a fixpoint for contractive functions', () => {
   assert.equal(render('(fix (K a))'), 'a');
   assert.equal(render('((fix (K a)) b)'), '(a b)');
 });
@@ -119,7 +119,9 @@ test('trace snapshots capture re-entry links', () => {
     tracer: snapshot => snapshots.push(snapshot),
   });
   assert.ok(
-    snapshots.some(snap => Array.isArray(snap.graph.links) && snap.graph.links.length > 0),
+    snapshots.some(
+      snap => Array.isArray(snap.graph.links) && snap.graph.links.length > 0,
+    ),
     'expected at least one snapshot with re-entry links',
   );
 });

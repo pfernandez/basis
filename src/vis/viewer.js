@@ -46,6 +46,56 @@ let playTimer = null;
 // don't "jump" between steps.
 const nodeCache = new Map(); // id -> node object (mutated by the engine)
 
+function defaultLabelForKind(kind) {
+  switch (kind) {
+    case 'pair':
+      return '·';
+    case 'binder':
+      return 'λ';
+    case 'slot':
+      return '#';
+    case 'empty':
+      return '()';
+    default:
+      return '';
+  }
+}
+
+function computeSlotIndexLabels(rootId, nodeById) {
+  const labels = new Map(); // slotId -> "#n"
+  if (typeof rootId !== 'string') return labels;
+
+  const seen = new Set();
+  function walk(nodeId, binderStack) {
+    if (seen.has(nodeId)) return;
+    seen.add(nodeId);
+    const node = nodeById.get(nodeId);
+    if (!node) return;
+
+    if (node.kind === 'pair' && Array.isArray(node.children) && node.children.length === 2) {
+      const [leftId, rightId] = node.children;
+      const left = nodeById.get(leftId);
+      if (left?.kind === 'binder') {
+        walk(rightId, [...binderStack, leftId]);
+      } else {
+        walk(leftId, binderStack);
+        walk(rightId, binderStack);
+      }
+      return;
+    }
+
+    if (node.kind === 'slot' && typeof node.binderId === 'string') {
+      const index = binderStack.lastIndexOf(node.binderId);
+      if (index !== -1) {
+        labels.set(nodeId, `#${binderStack.length - 1 - index}`);
+      }
+    }
+  }
+
+  walk(rootId, []);
+  return labels;
+}
+
 function colorForNode(node) {
   if (node.__focus) return COLORS.focus;
   return COLORS[node.kind] ?? '#111111';
@@ -199,6 +249,28 @@ function snapshotToGraphData(snapshot) {
   const nodes = graph.nodes.map(internNode);
 
   const nodeById = new Map(nodes.map(node => [node.id, node]));
+  const slotLabels = computeSlotIndexLabels(snapshot?.rootId ?? graph.rootId, nodeById);
+  nodes.forEach(node => {
+    if (node.kind === 'symbol') {
+      node.__displayLabel = String(node.label ?? node.id);
+      return;
+    }
+    if (node.kind === 'slot') {
+      const computed = slotLabels.get(node.id);
+      if (computed) {
+        node.__displayLabel = computed;
+        return;
+      }
+      const binder = typeof node.binderId === 'string' ? nodeById.get(node.binderId) : null;
+      if (binder?.kind === 'binder' && typeof binder.valueId === 'string') {
+        node.__displayLabel = 'bound';
+        return;
+      }
+      node.__displayLabel = 'slot';
+      return;
+    }
+    node.__displayLabel = defaultLabelForKind(node.kind);
+  });
   const baseEdges = ensureEdges({ ...graph, nodes });
 
   const view = {
@@ -393,9 +465,17 @@ const Graph = ForceGraph3D({
   .nodeColor(colorForNode)
   .nodeVal(sizeForNode)
   .nodeLabel(node => {
-    const parts = [`${node.kind}: ${node.label}`, node.id];
-    if (node.kind === 'slot' && typeof node.binderId === 'string') parts.push(`binderId=${node.binderId}`);
-    if (node.kind === 'binder' && typeof node.valueId === 'string') parts.push(`valueId=${node.valueId}`);
+    const displayLabel =
+      typeof node.__displayLabel === 'string'
+        ? node.__displayLabel
+        : typeof node.label === 'string'
+          ? node.label
+          : defaultLabelForKind(node.kind);
+    const parts = [`${node.kind}: ${displayLabel}`, node.id];
+    if (node.kind === 'slot' && typeof node.binderId === 'string')
+      parts.push(`binderId=${node.binderId}`);
+    if (node.kind === 'binder' && typeof node.valueId === 'string')
+      parts.push(`valueId=${node.valueId}`);
     return parts.join('<br>');
   })
   .linkSource('from')
@@ -409,12 +489,15 @@ const Graph = ForceGraph3D({
   .onNodeClick(node => {
     // Smoothly aim the camera at clicked nodes for inspection.
     const distance = 140;
-    const distRatio = 1 + distance / Math.hypot(node.x || 0, node.y || 0, node.z || 0);
+    const distRatio = 
+      1 + distance / Math.hypot(node.x || 0, node.y || 0, node.z || 0);
     Graph.cameraPosition(
-      { x: (node.x || 0) * distRatio, y: (node.y || 0) * distRatio, z: (node.z || 0) * distRatio },
+      {
+        x: (node.x || 0) * distRatio,
+        y: (node.y || 0) * distRatio, z: (node.z || 0) * distRatio
+      },
       node,
-      600,
-    );
+      600);
   });
 
 setupEvents();

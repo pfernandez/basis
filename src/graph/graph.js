@@ -2,22 +2,15 @@
  * Graph substrate (persistent node store)
  * --------------------------------------
  *
- * This module defines the minimal in-memory representation used by the evaluator:
+ * This module defines the minimal in-memory representation used by the reducer:
  * a flat node store plus immutable update helpers.
  *
- * Important design choices:
- * - Nodes are stored in an array; there is no adjacency list and no stored "links".
- *   Any non-tree edges (e.g. slot→binder, binder→value) are derived for tracing.
+ * Design choices:
+ * - Nodes are stored in an array; we do not store derived "links" or adjacency.
  * - Updates are persistent: `updateNode` returns a new graph value.
  * - `cloneSubgraph` clones only the *tree* reachable via `pair.children`.
- *   Pointer edges (`slot.binderId`, `binder.valueId`) are preserved as references.
- *
- * Node kinds:
- * - `pair`: binary cons/application node with exactly two children.
- * - `binder`: lambda binder (parameter) holding an optional bound value pointer.
- * - `slot`: variable occurrence pointing to its binder.
- * - `symbol`: named reference used only for definition expansion (`env`).
- * - `empty`: the distinguished empty leaf `()`.
+ *   Pointer edges (`slot.binderId`, `binder.valueId`) are preserved as
+ *   references (or remapped if the target was cloned).
  */
 
 import { createIdGenerator, invariant, replaceNode } from '../utils.js';
@@ -26,10 +19,10 @@ import { createIdGenerator, invariant, replaceNode } from '../utils.js';
  * @typedef {Object} GraphNode
  * @property {string} id Unique identifier for the node
  * @property {string} kind One of: pair | binder | slot | symbol | empty
- * @property {string} label Human-readable label rendered in the UI
- * @property {string[]} [children] Child node IDs (for pair nodes)
- * @property {string} [binderId] Node ID of the binder owning this slot (slot nodes)
- * @property {string | null} [valueId] Node ID bound by a binder (binder nodes)
+ * @property {string} [label] Required only for `symbol` nodes
+ * @property {string[]} [children] Required only for `pair` nodes
+ * @property {string} [binderId] Required only for `slot` nodes
+ * @property {string | null} [valueId] Required only for `binder` nodes
  */
 
 /**
@@ -37,7 +30,137 @@ import { createIdGenerator, invariant, replaceNode } from '../utils.js';
  * @property {GraphNode[]} nodes
  */
 
+const NODE_KIND_KEYS = Object.freeze({
+  pair: ['id', 'kind', 'children'],
+  binder: ['id', 'kind', 'valueId'],
+  slot: ['id', 'kind', 'binderId'],
+  symbol: ['id', 'kind', 'label'],
+  empty: ['id', 'kind'],
+});
+
 const nextNodeId = createIdGenerator('n');
+
+function assertOnlyExpectedKeys(node) {
+  const allowed = NODE_KIND_KEYS[node.kind];
+  invariant(
+    Array.isArray(allowed),
+    `Unknown node kind: ${String(node.kind)}`,
+  );
+
+  const allowedSet = new Set(allowed);
+  Object.keys(node).forEach(key => {
+    invariant(
+      allowedSet.has(key),
+      `Unexpected property "${key}" on ${node.kind} node ${node.id ?? '?'}`,
+    );
+  });
+
+  allowed.forEach(key => {
+    invariant(
+      key in node,
+      `Missing required property "${key}" on ` +
+        `${node.kind} node ${node.id ?? '?'}`,
+    );
+  });
+}
+
+/**
+ * Assert that a node record has the exact expected shape for its `kind`.
+ *
+ * This enforces a strict separation between the substrate (pointers only) and
+ * any presentation/debug metadata (which must live outside the node store).
+ *
+ * @param {any} node
+ * @returns {void}
+ */
+export function assertValidNode(node) {
+  invariant(node && typeof node === 'object', 'Graph nodes must be objects');
+  invariant(
+    typeof node.id === 'string' && node.id.length > 0,
+    'Graph nodes must have a string id',
+  );
+  invariant(
+    typeof node.kind === 'string',
+    `Graph node ${node.id} is missing kind`,
+  );
+
+  assertOnlyExpectedKeys(node);
+
+  switch (node.kind) {
+    case 'pair': {
+      invariant(
+        Array.isArray(node.children) && node.children.length === 2,
+        `pair ${node.id} must have 2 children`,
+      );
+      node.children.forEach((childId, index) => {
+        invariant(
+          typeof childId === 'string',
+          `pair ${node.id} child[${index}] must be a string id`,
+        );
+      });
+      return;
+    }
+    case 'binder': {
+      invariant(
+        node.valueId === null || typeof node.valueId === 'string',
+        `binder ${node.id} valueId must be string|null`,
+      );
+      return;
+    }
+    case 'slot': {
+      invariant(
+        typeof node.binderId === 'string',
+        `slot ${node.id} binderId must be a string id`,
+      );
+      return;
+    }
+    case 'symbol': {
+      invariant(
+        typeof node.label === 'string',
+        `symbol ${node.id} label must be a string`,
+      );
+      return;
+    }
+    case 'empty': {
+      return;
+    }
+    default:
+      throw new Error(`Unknown node kind: ${node.kind}`);
+  }
+}
+
+function withFreshId(node) {
+  const id = node.id ?? nextNodeId();
+  const record = { ...node, id };
+  assertValidNode(record);
+  return { record, id };
+}
+
+function clonedPointer(nodeMap, maybeId) {
+  if (typeof maybeId !== 'string') return null;
+  return nodeMap.get(maybeId) ?? maybeId;
+}
+
+function cloneNonPairNodeRecord(source, nodeMap) {
+  switch (source.kind) {
+    case 'binder':
+      return {
+        kind: 'binder',
+        valueId: clonedPointer(nodeMap, source.valueId),
+      };
+    case 'slot':
+      return {
+        kind: 'slot',
+        binderId: nodeMap.get(source.binderId) ?? source.binderId,
+      };
+    case 'symbol':
+      return { kind: 'symbol', label: source.label };
+    case 'empty':
+      return { kind: 'empty' };
+    default:
+      throw new Error(`Unsupported node kind: ${source.kind}`);
+  }
+}
 
 /**
  * Create an empty graph.
@@ -54,12 +177,8 @@ export function createGraph() {
  * @returns {{ graph: Graph, id: string }}
  */
 export function addNode(graph, node) {
-  const id = node.id ?? nextNodeId();
-  const record = { ...node, id };
-  return {
-    graph: { ...graph, nodes: [...graph.nodes, record] },
-    id,
-  };
+  const { record, id } = withFreshId(node);
+  return { graph: { ...graph, nodes: [...graph.nodes, record] }, id };
 }
 
 /**
@@ -84,41 +203,52 @@ export function getNode(graph, id) {
 export function updateNode(graph, id, updater) {
   return {
     ...graph,
-    nodes: replaceNode(graph.nodes, id, updater),
+    nodes: replaceNode(graph.nodes, id, node => {
+      const updated = updater(node);
+      assertValidNode(updated);
+      return updated;
+    }),
   };
 }
 
 /**
- * Clone a subgraph rooted at the provided node.
+ * Clone a subgraph rooted at `rootId`.
+ *
+ * Only the tree reachable via `pair.children` is cloned. Pointer edges are
+ * preserved as references (or remapped if the target was already cloned).
  *
  * @param {Graph} graph
  * @param {string} rootId
  * @returns {{ graph: Graph, rootId: string }}
  */
 export function cloneSubgraph(graph, rootId) {
-  const nodeMap = new Map();
   const sourceGraph = graph;
-  let workingGraph = graph;
+  const nodeMap = new Map(); // sourceId -> cloneId
 
-  function cloneNode(id) {
-    if (nodeMap.has(id)) return nodeMap.get(id);
-    const source = getNode(sourceGraph, id);
-    const children = source.children?.map(childId => cloneNode(childId));
+  function cloneNode(graphValue, nodeId) {
+    const existing = nodeMap.get(nodeId);
+    if (existing) return { graph: graphValue, nodeId: existing };
 
-    const cloneRecord = { ...source, id: undefined, children };
-    if (source.kind === 'slot' && source.binderId) {
-      cloneRecord.binderId = nodeMap.get(source.binderId) ?? source.binderId;
+    const source = getNode(sourceGraph, nodeId);
+
+    if (source.kind === 'pair') {
+      const [leftId, rightId] = source.children;
+      const left = cloneNode(graphValue, leftId);
+      const right = cloneNode(left.graph, rightId);
+      const pair = addNode(right.graph, {
+        kind: 'pair',
+        children: [left.nodeId, right.nodeId],
+      });
+      nodeMap.set(nodeId, pair.id);
+      return { graph: pair.graph, nodeId: pair.id };
     }
-    if (source.kind === 'binder' && source.valueId) {
-      cloneRecord.valueId = nodeMap.get(source.valueId) ?? source.valueId;
-    }
 
-    const clone = addNode(workingGraph, cloneRecord);
-    workingGraph = clone.graph;
-    nodeMap.set(id, clone.id);
-    return clone.id;
+    const cloneRecord = cloneNonPairNodeRecord(source, nodeMap);
+    const created = addNode(graphValue, cloneRecord);
+    nodeMap.set(nodeId, created.id);
+    return { graph: created.graph, nodeId: created.id };
   }
 
-  const newRootId = cloneNode(rootId);
-  return { graph: workingGraph, rootId: newRootId };
+  const cloned = cloneNode(graph, rootId);
+  return { graph: cloned.graph, rootId: cloned.nodeId };
 }
