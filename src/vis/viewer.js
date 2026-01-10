@@ -9,9 +9,9 @@
  * local pointer rewrites happen in a way that is easy to inspect.
  */
 
-/* global ForceGraph3D, d3 */
-
-import * as THREE from '/node_modules/three/build/three.module.js';
+import ForceGraph3D from '3d-force-graph';
+import { hierarchy, tree } from 'd3-hierarchy';
+import * as THREE from 'three';
 
 const CONFIG = Object.freeze({
   axes: Object.freeze({
@@ -66,6 +66,10 @@ const CONFIG = Object.freeze({
     pairLeg: 42,
     pointerPoints: 24,
     valueConstraintStrength: 0.22,
+    zstack: Object.freeze({
+      pointerLiftMax: 42,
+      sliceDistance: 63,
+    }),
   }),
   links: Object.freeze({
     radii: Object.freeze({
@@ -152,6 +156,7 @@ let activeTransition = null;
 let pinnedNodeId = null;
 let labelsEnabled = CONFIG.ui.labelsEnabled;
 let linkThicknessScale = CONFIG.ui.linkThickness.default;
+let activeLayoutMode = CONFIG.layout.modeDefault;
 const viewOffset = { x: 0, y: 0 };
 
 // Keep stable object identities across snapshot updates so node positions
@@ -161,7 +166,8 @@ let historyLinks = [];
 const structureForce = makeStructureForce();
 const collisionForce = makeCollisionForce(node => {
   const appear = Number.isFinite(node.__appear) ? node.__appear : 1;
-  return collisionRadiusForNode(node) * appear;
+  const collide = Number.isFinite(node.__collide) ? node.__collide : 1;
+  return collisionRadiusForNode(node) * appear * collide;
 });
 
 const HISTORY_DASH_MATERIAL = new THREE.LineDashedMaterial({
@@ -463,8 +469,13 @@ function makeNodeObject(node) {
 }
 
 function updateNodeObject(nodeObject, coords, node) {
-  nodeObject.position.set(coords.x + viewOffset.x, coords.y + viewOffset.y, 0);
-  if (node) node.z = 0;
+  const z = node && Number.isFinite(node.__z) ? node.__z : 0;
+  nodeObject.position.set(
+    coords.x + viewOffset.x,
+    coords.y + viewOffset.y,
+    z,
+  );
+  if (node) node.z = z;
   const appear = Number.isFinite(node.__appear) ? node.__appear : 1;
   const radius = sizeForNode(node) * appear;
   nodeObject.scale.set(radius, radius, radius);
@@ -473,16 +484,21 @@ function updateNodeObject(nodeObject, coords, node) {
 }
 
 function normalizeLinkEndpoint(pos) {
+  const z = Number.isFinite(pos.z) ? pos.z : 0;
   return {
     x: pos.x + viewOffset.x,
     y: pos.y + viewOffset.y,
-    z: 0,
+    z,
   };
 }
 
 function pointerLiftZ(start, end, link) {
   const dist = Math.hypot(end.x - start.x, end.y - start.y);
-  const lift = dist / 2;
+  const rawLift = dist / 2;
+  const maxLift = activeLayoutMode === 'zstack'
+    ? CONFIG.layout.zstack.pointerLiftMax
+    : rawLift;
+  const lift = Math.min(rawLift, maxLift);
   const sign = link.kind === 'value' ? -1 : 1;
   return sign * lift;
 }
@@ -494,6 +510,8 @@ function pointAlongPointerArc(start, end, liftZ, fraction) {
 
   const radius = dist / 2;
   const sign = Math.sign(liftZ) || 1;
+  const startZ = Number.isFinite(start.z) ? start.z : 0;
+  const endZ = Number.isFinite(end.z) ? end.z : 0;
   const ux = (end.x - start.x) / dist;
   const uy = (end.y - start.y) / dist;
   const cx = (start.x + end.x) / 2;
@@ -506,7 +524,7 @@ function pointAlongPointerArc(start, end, liftZ, fraction) {
   return {
     x: cx - radius * cos * ux,
     y: cy - radius * cos * uy,
-    z: sign * radius * sin,
+    z: lerp(startZ, endZ, t) + sign * radius * sin,
   };
 }
 
@@ -576,12 +594,16 @@ function updateLinkObject(linkObject, endpoints, link) {
 
   if (link.kind === 'history') {
     let shownEnd = lerpPos(start, end, appear);
-    const dist = Math.hypot(shownEnd.x - start.x, shownEnd.y - start.y);
+    const dist = Math.hypot(
+      shownEnd.x - start.x,
+      shownEnd.y - start.y,
+      shownEnd.z - start.z,
+    );
     if (dist < 1e-3) {
       shownEnd = {
         x: start.x + HISTORY_STUB,
         y: start.y + HISTORY_STUB,
-        z: 0,
+        z: start.z,
       };
     }
     updateHistoryDashedLine(linkObject, start, shownEnd);
@@ -971,15 +993,21 @@ function pinNodeToOrigin(nodeId, nodes, options = {}) {
   node.fy = 0;
 }
 
-function primaryPairParentByChild(nodes) {
+function primaryPairParentByChild(nodes, allowedIds) {
   const primary = new Map(); // childId -> {parentId, index}
+
+  function allowed(id) {
+    return !allowedIds || allowedIds.has(id);
+  }
 
   nodes.forEach(node => {
     if (node.kind !== 'pair') return;
     if (!Array.isArray(node.children) || node.children.length !== 2) return;
+    if (!allowed(node.id)) return;
 
     node.children.forEach((childId, index) => {
       if (typeof childId !== 'string') return;
+      if (!allowed(childId)) return;
       const candidate = { parentId: node.id, index };
       const existing = primary.get(childId);
       if (!existing || String(candidate.parentId) < String(existing.parentId)) {
@@ -991,9 +1019,9 @@ function primaryPairParentByChild(nodes) {
   return primary;
 }
 
-function buildStructureConstraints(nodes) {
+function buildStructureConstraints(nodes, allowedIds) {
   const nodeById = new Map(nodes.map(node => [node.id, node]));
-  const primaryParent = primaryPairParentByChild(nodes);
+  const primaryParent = primaryPairParentByChild(nodes, allowedIds);
   const constraints = [];
 
   primaryParent.forEach(({ parentId, index }, childId) => {
@@ -1013,6 +1041,8 @@ function buildStructureConstraints(nodes) {
   nodes.forEach(node => {
     if (node.kind !== 'binder') return;
     if (typeof node.valueId !== 'string') return;
+    if (allowedIds && !allowedIds.has(node.id)) return;
+    if (allowedIds && !allowedIds.has(node.valueId)) return;
     const value = nodeById.get(node.valueId);
     if (!value) return;
 
@@ -1076,16 +1106,9 @@ function seedPositionsFromConstraints(nodes, constraints) {
 
 function layoutModeFromUi() {
   const value = elements.layoutMode?.value;
-  return value === 'hierarchy' ? 'hierarchy' : 'constrained';
-}
-
-function hierarchyApiAvailable() {
-  return (
-    typeof d3 === 'object' &&
-    d3 !== null &&
-    typeof d3.hierarchy === 'function' &&
-    typeof d3.tree === 'function'
-  );
+  if (value === 'hierarchy') return 'hierarchy';
+  if (value === 'zstack') return 'zstack';
+  return 'constrained';
 }
 
 function releaseFixedPositions(nodes) {
@@ -1144,7 +1167,6 @@ function hierarchyData(rootId, nodeById, primaryParent) {
 }
 
 function applyHierarchyLayout(pinId, nodes) {
-  if (!hierarchyApiAvailable()) return false;
   structureForce.setConstraints([]);
   const primaryParent = primaryPairParentByChild(nodes);
   const rootId = topmostAncestorId(pinId, primaryParent);
@@ -1154,13 +1176,11 @@ function applyHierarchyLayout(pinId, nodes) {
   const data = hierarchyData(rootId, nodeById, primaryParent);
   if (!data) return false;
 
-  const root = d3.hierarchy(data);
-  const layout = d3
-    .tree()
-    .nodeSize([
-      CONFIG.layout.hierarchyNodeSizeX,
-      CONFIG.layout.hierarchyNodeSizeY,
-    ]);
+  const root = hierarchy(data);
+  const layout = tree().nodeSize([
+    CONFIG.layout.hierarchyNodeSizeX,
+    CONFIG.layout.hierarchyNodeSizeY,
+  ]);
   layout(root);
 
   root.each(entry => {
@@ -1178,6 +1198,10 @@ function applyHierarchyLayout(pinId, nodes) {
 
   pinNodeToOrigin(pinId, nodes, { releasePrevious: false });
   fixToCurrentPositions(nodes);
+  nodes.forEach(node => {
+    node.__collide = 1;
+    node.__zTarget = 0;
+  });
   return true;
 }
 
@@ -1195,9 +1219,116 @@ function applyConstrainedLayout(pinId, nodes) {
   const constraints = buildStructureConstraints(nodes);
   seedPositionsFromConstraints(nodes, constraints);
   structureForce.setConstraints(constraints);
+  nodes.forEach(node => {
+    node.__collide = 1;
+    node.__zTarget = 0;
+  });
 }
 
-function startStepTransition(nextGraphData, nextViewOffset) {
+function rootIdFromSnapshot(snapshot) {
+  const graph = snapshot?.graph ?? snapshot;
+  const rootId = snapshot?.rootId ?? graph?.rootId;
+  return typeof rootId === 'string' ? rootId : null;
+}
+
+function liveIdsFromRoot(rootId, nodeById) {
+  const live = new Set();
+  if (typeof rootId !== 'string') return live;
+
+  const queue = [rootId];
+  while (queue.length) {
+    const nodeId = queue.pop();
+    if (typeof nodeId !== 'string') continue;
+    if (live.has(nodeId)) continue;
+    live.add(nodeId);
+    const node = nodeById.get(nodeId);
+    if (!node) continue;
+
+    if (
+      node.kind === 'pair' &&
+      Array.isArray(node.children) &&
+      node.children.length === 2
+    ) {
+      node.children.forEach(childId => queue.push(childId));
+    }
+    if (node.kind === 'binder' && typeof node.valueId === 'string') {
+      queue.push(node.valueId);
+    }
+    if (node.kind === 'slot' && typeof node.binderId === 'string') {
+      queue.push(node.binderId);
+    }
+  }
+
+  return live;
+}
+
+function applyZStackLayout(pinId, nodes, snapshot, stepIndex) {
+  const nodeById = new Map(nodes.map(node => [node.id, node]));
+  const rootId = rootIdFromSnapshot(snapshot);
+  const live = liveIdsFromRoot(rootId, nodeById);
+  if (typeof pinId === 'string') live.add(pinId);
+
+  if (typeof pinId === 'string') {
+    const pinned = nodeById.get(pinId);
+    if (pinned && !hasFinitePosition(pinned)) {
+      pinned.x = 0;
+      pinned.y = 0;
+      pinned.vx = 0;
+      pinned.vy = 0;
+    }
+  }
+
+  nodes.forEach(node => {
+    const isLive = live.has(node.id);
+    node.__live = isLive;
+    node.__collide = isLive ? 1 : 0;
+
+    if (isLive) {
+      node.__lastLiveStep = stepIndex;
+      node.__frozenX = undefined;
+      node.__frozenY = undefined;
+      if (node.id !== pinId) {
+        node.fx = undefined;
+        node.fy = undefined;
+      }
+      node.__zTarget = 0;
+      return;
+    }
+
+    if (typeof node.__lastLiveStep !== 'number') {
+      node.__lastLiveStep = stepIndex;
+    }
+    node.__frozenX = Number.isFinite(node.x) ? node.x : 0;
+    node.__frozenY = Number.isFinite(node.y) ? node.y : 0;
+    node.fx = node.__frozenX;
+    node.fy = node.__frozenY;
+    node.vx = 0;
+    node.vy = 0;
+
+    const lastLive =
+      typeof node.__lastLiveStep === 'number' ? node.__lastLiveStep : stepIndex;
+    const age = Math.max(0, stepIndex - lastLive);
+    node.__zTarget = -CONFIG.layout.zstack.sliceDistance * age;
+  });
+
+  const constraints = buildStructureConstraints(nodes, live);
+  seedPositionsFromConstraints(nodes, constraints);
+  structureForce.setConstraints(constraints);
+}
+
+function computeZMoves(nodes) {
+  const moves = [];
+  nodes.forEach(node => {
+    const target = Number.isFinite(node.__zTarget) ? node.__zTarget : 0;
+    const current = Number.isFinite(node.__z) ? node.__z : target;
+    if (!Number.isFinite(node.__z)) node.__z = current;
+    if (current === target) return;
+    moves.push({ node, from: current, to: target });
+  });
+  return moves;
+}
+
+function startStepTransition(nextGraphData, nextViewOffset, zMoves) {
   if (!lastGraphData) {
     nextGraphData.nodes.forEach(node => {
       node.__appear = 1;
@@ -1205,6 +1336,11 @@ function startStepTransition(nextGraphData, nextViewOffset) {
     nextGraphData.links.forEach(link => {
       link.__appear = 1;
     });
+    if (Array.isArray(zMoves)) {
+      zMoves.forEach(({ node, to }) => {
+        node.__z = to;
+      });
+    }
     if (nextViewOffset) {
       viewOffset.x = nextViewOffset.x;
       viewOffset.y = nextViewOffset.y;
@@ -1244,6 +1380,7 @@ function startStepTransition(nextGraphData, nextViewOffset) {
     startMs: performance.now(),
     nodes: newNodes,
     links: newLinks,
+    zMoves: Array.isArray(zMoves) ? zMoves : [],
     viewFrom: { ...viewOffset },
     viewTo: nextViewOffset ? { ...nextViewOffset } : { ...viewOffset },
   };
@@ -1259,6 +1396,9 @@ function tickStepTransition(nowMs) {
   });
   activeTransition.links.forEach(link => {
     link.__appear = t;
+  });
+  activeTransition.zMoves?.forEach(move => {
+    move.node.__z = lerp(move.from, move.to, t);
   });
   if (activeTransition.viewFrom && activeTransition.viewTo) {
     viewOffset.x = lerp(
@@ -1355,12 +1495,16 @@ function renderStep(index) {
   const graphData = snapshotToGraphData(snapshot, clamped);
   const pinId = pinIdFromSnapshot(snapshot);
   const layoutMode = layoutModeFromUi();
+  activeLayoutMode = layoutMode;
   if (layoutMode === 'hierarchy') {
     const ok = applyHierarchyLayout(pinId, graphData.nodes);
     if (!ok) {
       applyConstrainedLayout(pinId, graphData.nodes);
       pinNodeInPlace(pinId, graphData.nodes);
     }
+  } else if (layoutMode === 'zstack') {
+    applyZStackLayout(pinId, graphData.nodes, snapshot, clamped);
+    pinNodeInPlace(pinId, graphData.nodes);
   } else {
     applyConstrainedLayout(pinId, graphData.nodes);
     pinNodeInPlace(pinId, graphData.nodes);
@@ -1375,7 +1519,8 @@ function renderStep(index) {
   });
 
   const nextViewOffset = viewOffsetForPin(pinId);
-  startStepTransition(graphData, nextViewOffset);
+  const zMoves = computeZMoves(graphData.nodes);
+  startStepTransition(graphData, nextViewOffset, zMoves);
   Graph.graphData(graphData);
   configureForcesForCurrentSimulation();
   Graph.d3ReheatSimulation();
@@ -1570,7 +1715,7 @@ const Graph = ForceGraph3D({
     const target = {
       x: (node.x || 0) + viewOffset.x,
       y: (node.y || 0) + viewOffset.y,
-      z: 0,
+      z: Number.isFinite(node.z) ? node.z : 0,
     };
     const distRatio = 1 + distance / Math.max(1e-6, Math.hypot(
       target.x,

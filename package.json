@@ -24,6 +24,9 @@
     "sk": "node src/cli/sk.js",
     "policies": "node src/catalan/policy-explorer.js",
     "bijections": "node src/catalan/bijection.js",
+    "vis:dev": "vite",
+    "vis:build": "vite build",
+    "vis:preview": "vite preview",
     "test": "node --test tests/*.test.js"
   },
   "author": "Paul Fernandez",
@@ -31,5 +34,8 @@
   "dependencies": {
     "3d-force-graph": "^1.79.0",
     "d3-hierarchy": "^3.1.2"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
   }
 }

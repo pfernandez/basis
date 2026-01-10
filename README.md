@@ -87,13 +87,13 @@ browser using `3d-force-graph`.
 node src/cli/sk.js --trace=src/vis/trace.json "(I z)"
 ```
 
-2) Serve the repo root (so the viewer can load `/node_modules/...`):
+2) Start the viewer (Vite + hot reload):
 
 ```sh
-python -m http.server
+npm run vis:dev
 ```
 
-3) Open `http://localhost:8000/src/vis/`.
+3) Open `http://localhost:8000/` (it should also auto-open).
 
 The viewer has basic controls for stepping/playing the trace, and toggles for
 showing tree vs pointer edges (and folding bound slots into the tree view).
