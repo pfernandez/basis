@@ -13,18 +13,109 @@
 
 import * as THREE from '/node_modules/three/build/three.module.js';
 
-const COLORS = Object.freeze({
-  pair: '#000000', // base (structure)
-  binder: '#FF2DAA', // hot pink
-  slot: '#2D0A5B', // deep purple
-  symbol: '#111111', // black-ish
-  empty: '#BDBDBD', // neutral
-  focus: '#FF2DAA', // highlight
-  childLink: 'rgba(0, 0, 0, 0.72)',
-  reentryLink: 'rgba(255, 45, 170, 0.42)',
-  valueLink: 'rgba(45, 10, 91, 0.42)',
-  historyLink: 'rgba(0, 0, 0, 0.26)',
-  expandLink: 'rgba(0, 0, 0, 0.72)',
+const CONFIG = Object.freeze({
+  axes: Object.freeze({
+    enabled: false,
+    size: 110,
+  }),
+  camera: Object.freeze({
+    clickDistance: 140,
+    clickMs: 600,
+    initialDistanceBase: 160,
+    initialXFactor: -0.55,
+    initialYFactor: 0.35,
+  }),
+  colors: Object.freeze({
+    pair: '#000000',
+    binder: '#FF2DAA',
+    slot: '#2D0A5B',
+    symbol: '#111111',
+    empty: '#BDBDBD',
+    focus: '#FF2DAA',
+    childLink: 'rgba(0, 0, 0, 0.72)',
+    childLinkFolded: 'rgba(0, 0, 0, 0.78)',
+    reentryLink: 'rgba(255, 45, 170, 0.42)',
+    valueLink: 'rgba(45, 10, 91, 0.42)',
+    historyLink: 'rgba(0, 0, 0, 0.26)',
+    expandLink: 'rgba(0, 0, 0, 0.72)',
+  }),
+  geometry: Object.freeze({
+    linkRadialSegments: 8,
+    sphereSegments: 18,
+  }),
+  graph: Object.freeze({
+    backgroundColor: '#ffffff',
+    controlType: 'orbit',
+    linkOpacity: 1,
+    numDimensions: 2,
+  }),
+  history: Object.freeze({
+    dash: Object.freeze({
+      color: 0x000000,
+      dashSize: 2.2,
+      gapSize: 1.4,
+      opacity: 0.28,
+    }),
+    stubFactor: 0.4,
+  }),
+  layout: Object.freeze({
+    pairConstraintStrength: 1,
+    pairLeg: 42,
+    pointerPoints: 24,
+    valueConstraintStrength: 0.22,
+  }),
+  links: Object.freeze({
+    radii: Object.freeze({
+      child: 0.22,
+      childFolded: 0.3,
+      default: 0.18,
+      focus: 0.36,
+      pointer: 0.16,
+      value: 0.16,
+    }),
+    widths: Object.freeze({
+      child: 1.6,
+      childFolded: 2.4,
+      default: 2.6,
+      focus: 4,
+      history: 0,
+      pointer: 0,
+    }),
+  }),
+  nodes: Object.freeze({
+    collision: Object.freeze({
+      binder: 1.7,
+      default: 1.2,
+      empty: 0.6,
+      slot: 1.1,
+    }),
+    sizes: Object.freeze({
+      binder: 1.4,
+      default: 1,
+      empty: 0.35,
+      focus: 2.5,
+      slot: 0.8,
+    }),
+  }),
+  physics: Object.freeze({
+    collisionAlphaFactor: 0.5,
+    collisionIterations: 2,
+    collisionStrength: 0.08,
+    historyLinkStrength: 0.12,
+  }),
+  ui: Object.freeze({
+    labelsEnabled: true,
+    linkThickness: Object.freeze({
+      default: 1,
+      max: 6,
+      min: 0.25,
+      step: 0.05,
+    }),
+  }),
+  timingMs: Object.freeze({
+    step: 900,
+    transition: 500,
+  }),
 });
 
 const elements = {
@@ -37,20 +128,15 @@ const elements = {
   showTree: document.getElementById('show-tree'),
   showPointers: document.getElementById('show-pointers'),
   foldSlots: document.getElementById('fold-slots'),
+  showAxes: document.getElementById('show-axes'),
+  linkThickness: document.getElementById('link-thickness'),
+  showLabels: document.getElementById('show-labels'),
   file: document.getElementById('file'),
   focus: document.getElementById('focus'),
 };
 
-const STEP_MS = 900;
-const STEP_TRANSITION_MS = 500;
-
-const PAIR_LEG = 42;
-const PAIR_OFFSET = PAIR_LEG / Math.SQRT2;
-const PAIR_CONSTRAINT_STRENGTH = 0.18;
-const VALUE_CONSTRAINT_STRENGTH = 0.22;
-const COLLISION_STRENGTH = 0.08;
-const COLLISION_ITERATIONS = 2;
-const HISTORY_STUB = PAIR_LEG * 0.4;
+const PAIR_OFFSET = CONFIG.layout.pairLeg / Math.SQRT2;
+const HISTORY_STUB = CONFIG.layout.pairLeg * CONFIG.history.stubFactor;
 
 let trace = [];
 let playing = false;
@@ -58,6 +144,8 @@ let playTimer = null;
 let lastGraphData = null;
 let activeTransition = null;
 let pinnedNodeId = null;
+let labelsEnabled = CONFIG.ui.labelsEnabled;
+let linkThicknessScale = CONFIG.ui.linkThickness.default;
 
 // Keep stable object identities across snapshot updates so node positions
 // don't "jump" between steps.
@@ -70,11 +158,11 @@ const collisionForce = makeCollisionForce(node => {
 });
 
 const HISTORY_DASH_MATERIAL = new THREE.LineDashedMaterial({
-  color: 0x000000,
+  color: CONFIG.history.dash.color,
   transparent: true,
-  opacity: 0.28,
-  dashSize: 2.2,
-  gapSize: 1.4,
+  opacity: CONFIG.history.dash.opacity,
+  dashSize: CONFIG.history.dash.dashSize,
+  gapSize: CONFIG.history.dash.gapSize,
 });
 
 function defaultLabelForKind(kind) {
@@ -110,6 +198,28 @@ function lerpPos(a, b, t) {
 
 function isPointerLink(link) {
   return link.kind === 'reentry';
+}
+
+function initUiControls() {
+  if (elements.linkThickness) {
+    const slider = elements.linkThickness;
+    slider.min = String(CONFIG.ui.linkThickness.min);
+    slider.max = String(CONFIG.ui.linkThickness.max);
+    slider.step = String(CONFIG.ui.linkThickness.step);
+    slider.value = String(CONFIG.ui.linkThickness.default);
+  }
+
+  if (elements.showLabels) {
+    elements.showLabels.checked = CONFIG.ui.labelsEnabled;
+  }
+
+  if (elements.showAxes) {
+    elements.showAxes.checked = CONFIG.axes.enabled;
+  }
+
+  labelsEnabled = elements.showLabels?.checked ?? CONFIG.ui.labelsEnabled;
+  linkThicknessScale =
+    Number(elements.linkThickness?.value) || CONFIG.ui.linkThickness.default;
 }
 
 function makeHistoryDashedLine() {
@@ -149,7 +259,11 @@ function computeSlotIndexLabels(rootId, nodeById) {
     const node = nodeById.get(nodeId);
     if (!node) return;
 
-    if (node.kind === 'pair' && Array.isArray(node.children) && node.children.length === 2) {
+    if (
+      node.kind === 'pair' &&
+      Array.isArray(node.children) &&
+      node.children.length === 2
+    ) {
       const [leftId, rightId] = node.children;
       const left = nodeById.get(leftId);
       if (left?.kind === 'binder') {
@@ -174,45 +288,29 @@ function computeSlotIndexLabels(rootId, nodeById) {
 }
 
 function colorForNode(node) {
-  if (node.__focus) return COLORS.focus;
-  return COLORS[node.kind] ?? '#111111';
+  if (node.__focus) return CONFIG.colors.focus;
+  return CONFIG.colors[node.kind] ?? CONFIG.colors.symbol;
 }
 
 function sizeForNode(node) {
-  if (node.__focus) return 2.5;
-  switch (node.kind) {
-    case 'empty':
-      return 0.35;
-    case 'slot':
-      return 0.8;
-    case 'binder':
-      return 1.4;
-    default:
-      return 1.0;
-  }
+  if (node.__focus) return CONFIG.nodes.sizes.focus;
+  return CONFIG.nodes.sizes[node.kind] ?? CONFIG.nodes.sizes.default;
 }
 
 function collisionRadiusForNode(node) {
-  switch (node.kind) {
-    case 'empty':
-      return 0.6;
-    case 'slot':
-      return 1.1;
-    case 'binder':
-      return 1.7;
-    default:
-      return 1.2;
-  }
+  return CONFIG.nodes.collision[node.kind] ?? CONFIG.nodes.collision.default;
 }
 
 function makeCollisionForce(radiusForNode) {
   let nodes = [];
 
   function force(alpha) {
-    const k = COLLISION_STRENGTH * alpha * 0.5;
+    const k = CONFIG.physics.collisionStrength *
+      alpha *
+      CONFIG.physics.collisionAlphaFactor;
     if (!k) return;
 
-    for (let iter = 0; iter < COLLISION_ITERATIONS; iter += 1) {
+    for (let iter = 0; iter < CONFIG.physics.collisionIterations; iter += 1) {
       for (let i = 0; i < nodes.length; i += 1) {
         const a = nodes[i];
         const ra = radiusForNode(a);
@@ -260,15 +358,17 @@ function makeCollisionForce(radiusForNode) {
 function colorForLink(link) {
   switch (link.kind) {
     case 'child':
-      return link.__folded ? 'rgba(0, 0, 0, 0.78)' : COLORS.childLink;
+      return link.__folded
+        ? CONFIG.colors.childLinkFolded
+        : CONFIG.colors.childLink;
     case 'reentry':
-      return COLORS.reentryLink;
+      return CONFIG.colors.reentryLink;
     case 'value':
-      return COLORS.valueLink;
+      return CONFIG.colors.valueLink;
     case 'history':
-      return COLORS.historyLink;
+      return CONFIG.colors.historyLink;
     default:
-      return COLORS.expandLink;
+      return CONFIG.colors.expandLink;
   }
 }
 
@@ -277,15 +377,33 @@ function arrowLengthForLink(link) {
 }
 
 function widthForLink(link) {
-  if (link.__focus) return 4;
-  if (link.kind === 'history') return 0;
-  if (isPointerLink(link)) return 0;
-  if (link.kind === 'child') return link.__folded ? 2.4 : 1.6;
-  return 2.6;
+  if (link.__focus) return CONFIG.links.widths.focus;
+  if (link.kind === 'history') return CONFIG.links.widths.history;
+  if (isPointerLink(link)) return CONFIG.links.widths.pointer;
+  if (link.kind === 'child') {
+    return link.__folded
+      ? CONFIG.links.widths.childFolded
+      : CONFIG.links.widths.child;
+  }
+  return CONFIG.links.widths.default;
 }
 
-const NODE_GEOMETRY = new THREE.SphereGeometry(1, 18, 18);
+const NODE_GEOMETRY = new THREE.SphereGeometry(
+  1,
+  CONFIG.geometry.sphereSegments,
+  CONFIG.geometry.sphereSegments,
+);
+const LINK_GEOMETRY = new THREE.CylinderGeometry(
+  1,
+  1,
+  1,
+  CONFIG.geometry.linkRadialSegments,
+  1,
+);
 const LINK_MATERIALS = new Map();
+const UP_VECTOR = new THREE.Vector3(0, 1, 0);
+const TMP_DIR = new THREE.Vector3();
+const TMP_QUATERNION = new THREE.Quaternion();
 
 function parseCssColor(css) {
   if (typeof css !== 'string') {
@@ -313,7 +431,7 @@ function linkMaterialFor(link) {
   const cached = LINK_MATERIALS.get(key);
   if (cached) return cached;
   const { color, opacity } = parseCssColor(css);
-  const material = new THREE.LineBasicMaterial({
+  const material = new THREE.MeshLambertMaterial({
     color,
     transparent: opacity < 1,
     opacity,
@@ -381,18 +499,63 @@ function pointAlongPointerArc(start, end, liftZ, fraction) {
   };
 }
 
+function baseRadiusForLink(link) {
+  if (link.__focus) return CONFIG.links.radii.focus;
+  if (isPointerLink(link)) return CONFIG.links.radii.pointer;
+  if (link.kind === 'value') return CONFIG.links.radii.value;
+  if (link.kind === 'child') {
+    return link.__folded
+      ? CONFIG.links.radii.childFolded
+      : CONFIG.links.radii.child;
+  }
+  return CONFIG.links.radii.default;
+}
+
+function radiusForLink(link) {
+  return baseRadiusForLink(link) * linkThicknessScale;
+}
+
+function updateCylinderMesh(mesh, start, end, radius, material) {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const dz = end.z - start.z;
+  const length = Math.hypot(dx, dy, dz);
+  if (!Number.isFinite(length) || length <= 1e-6 || radius <= 0) {
+    mesh.visible = false;
+    return;
+  }
+
+  mesh.visible = true;
+  mesh.material = material;
+  mesh.position.set(
+    (start.x + end.x) / 2,
+    (start.y + end.y) / 2,
+    (start.z + end.z) / 2,
+  );
+
+  TMP_DIR.set(dx / length, dy / length, dz / length);
+  TMP_QUATERNION.setFromUnitVectors(UP_VECTOR, TMP_DIR);
+  mesh.quaternion.copy(TMP_QUATERNION);
+  mesh.scale.set(radius, length, radius);
+}
+
 function makeLinkObject(link) {
   if (link.kind === 'history') return makeHistoryDashedLine();
-  const points = isPointerLink(link) ? 24 : 2;
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute(
-    'position',
-    new THREE.BufferAttribute(new Float32Array(points * 3), 3),
-  );
-  const line = new THREE.Line(geometry, linkMaterialFor(link));
-  line.frustumCulled = false;
-  line.__points = points;
-  return line;
+  const segmentCount = isPointerLink(link)
+    ? Math.max(1, CONFIG.layout.pointerPoints - 1)
+    : 1;
+  const group = new THREE.Group();
+  group.frustumCulled = false;
+  group.__segments = [];
+
+  for (let i = 0; i < segmentCount; i += 1) {
+    const mesh = new THREE.Mesh(LINK_GEOMETRY, linkMaterialFor(link));
+    mesh.frustumCulled = false;
+    group.add(mesh);
+    group.__segments.push(mesh);
+  }
+
+  return group;
 }
 
 function updateLinkObject(linkObject, endpoints, link) {
@@ -414,29 +577,36 @@ function updateLinkObject(linkObject, endpoints, link) {
     return true;
   }
 
-  const positions = linkObject.geometry.attributes.position.array;
-  const points = Number(linkObject.__points) || positions.length / 3;
+  const segments = linkObject.__segments;
+  if (!Array.isArray(segments) || !segments.length) return true;
+  const material = linkMaterialFor(link);
+  const radius = radiusForLink(link);
 
   if (isPointerLink(link)) {
     const liftZ = pointerLiftZ(start, end, link);
+    const points = Math.max(2, CONFIG.layout.pointerPoints);
+    const path = [];
     for (let i = 0; i < points; i += 1) {
       const t = points === 1 ? appear : (i / (points - 1)) * appear;
-      const p = pointAlongPointerArc(start, end, liftZ, t);
-      positions[i * 3] = p.x;
-      positions[i * 3 + 1] = p.y;
-      positions[i * 3 + 2] = p.z;
+      path.push(pointAlongPointerArc(start, end, liftZ, t));
     }
+
+    const segmentCount = Math.min(segments.length, path.length - 1);
+    for (let i = 0; i < segmentCount; i += 1) {
+      updateCylinderMesh(segments[i], path[i], path[i + 1], radius, material);
+    }
+    for (let i = segmentCount; i < segments.length; i += 1) {
+      segments[i].visible = false;
+    }
+    return true;
   } else {
-    for (let i = 0; i < points; i += 1) {
-      const t = points === 1 ? appear : (i / (points - 1)) * appear;
-      positions[i * 3] = lerp(start.x, end.x, t);
-      positions[i * 3 + 1] = lerp(start.y, end.y, t);
-      positions[i * 3 + 2] = lerp(start.z, end.z, t);
+    const shownEnd = lerpPos(start, end, appear);
+    updateCylinderMesh(segments[0], start, shownEnd, radius, material);
+    for (let i = 1; i < segments.length; i += 1) {
+      segments[i].visible = false;
     }
   }
 
-  linkObject.geometry.attributes.position.needsUpdate = true;
-  linkObject.geometry.computeBoundingSphere();
   return true;
 }
 
@@ -592,7 +762,13 @@ function resolveBoundSlotTarget(nodeId, nodeById) {
     const binderId = node.binderId;
     if (typeof binderId !== 'string') return currentId;
     const binder = nodeById.get(binderId);
-    if (!binder || binder.kind !== 'binder' || typeof binder.valueId !== 'string') return currentId;
+    if (
+      !binder ||
+      binder.kind !== 'binder' ||
+      typeof binder.valueId !== 'string'
+    ) {
+      return currentId;
+    }
     currentId = binder.valueId;
   }
   return currentId;
@@ -601,12 +777,17 @@ function resolveBoundSlotTarget(nodeId, nodeById) {
 function snapshotToGraphData(snapshot, stepIndex) {
   const graph = snapshot?.graph ?? snapshot;
   if (!graph || !Array.isArray(graph.nodes)) {
-    throw new Error('Trace must contain snapshots with { graph: { nodes, links } }');
+    throw new Error(
+      'Trace must contain snapshots with { graph: { nodes, links } }',
+    );
   }
   const nodes = graph.nodes.map(internNode);
 
   const nodeById = new Map(nodes.map(node => [node.id, node]));
-  const slotLabels = computeSlotIndexLabels(snapshot?.rootId ?? graph.rootId, nodeById);
+  const slotLabels = computeSlotIndexLabels(
+    snapshot?.rootId ?? graph.rootId,
+    nodeById,
+  );
   nodes.forEach(node => {
     if (node.kind === 'symbol') {
       node.__displayLabel = String(node.label ?? node.id);
@@ -618,7 +799,8 @@ function snapshotToGraphData(snapshot, stepIndex) {
         node.__displayLabel = computed;
         return;
       }
-      const binder = typeof node.binderId === 'string' ? nodeById.get(node.binderId) : null;
+      const binder =
+        typeof node.binderId === 'string' ? nodeById.get(node.binderId) : null;
       if (binder?.kind === 'binder' && typeof binder.valueId === 'string') {
         node.__displayLabel = 'bound';
         return;
@@ -773,7 +955,7 @@ function buildStructureConstraints(nodes) {
       child,
       dx: offset.x,
       dy: offset.y,
-      strength: PAIR_CONSTRAINT_STRENGTH,
+      strength: CONFIG.layout.pairConstraintStrength,
     });
   });
 
@@ -784,13 +966,15 @@ function buildStructureConstraints(nodes) {
     if (!value) return;
 
     const parentEntry = primaryParent.get(node.id);
-    const offset = parentEntry ? pairOffsetForIndex(parentEntry.index) : { x: 0, y: -PAIR_LEG };
+    const offset = parentEntry
+      ? pairOffsetForIndex(parentEntry.index)
+      : { x: 0, y: -CONFIG.layout.pairLeg };
     constraints.push({
       parent: node,
       child: value,
       dx: offset.x,
       dy: offset.y,
-      strength: VALUE_CONSTRAINT_STRENGTH,
+      strength: CONFIG.layout.valueConstraintStrength,
     });
   });
 
@@ -809,8 +993,12 @@ function startStepTransition(nextGraphData) {
     return;
   }
 
-  const prevNodeIds = new Set((lastGraphData?.nodes ?? []).map(node => node.id));
-  const prevLinkIds = new Set((lastGraphData?.links ?? []).map(link => link.id));
+  const prevNodeIds = new Set(
+    (lastGraphData?.nodes ?? []).map(node => node.id),
+  );
+  const prevLinkIds = new Set(
+    (lastGraphData?.links ?? []).map(link => link.id),
+  );
 
   const newNodes = [];
   nextGraphData.nodes.forEach(node => {
@@ -841,7 +1029,9 @@ function startStepTransition(nextGraphData) {
 
 function tickStepTransition(nowMs) {
   if (!activeTransition) return;
-  const t = clamp01((nowMs - activeTransition.startMs) / STEP_TRANSITION_MS);
+  const t = clamp01(
+    (nowMs - activeTransition.startMs) / CONFIG.timingMs.transition,
+  );
   activeTransition.nodes.forEach(node => {
     node.__appear = t;
   });
@@ -853,10 +1043,10 @@ function tickStepTransition(nowMs) {
 
 function initialCameraOffset(nodeCount) {
   const n = Math.max(1, Number(nodeCount) || 1);
-  const distance = 160 * Math.cbrt(n);
+  const distance = CONFIG.camera.initialDistanceBase * Math.cbrt(n);
   return {
-    x: -0.55 * distance,
-    y: 0.35 * distance,
+    x: CONFIG.camera.initialXFactor * distance,
+    y: CONFIG.camera.initialYFactor * distance,
     z: distance,
   };
 }
@@ -885,7 +1075,8 @@ function updateHud(stepIndex, snapshot) {
   const total = trace.length;
   const note = snapshot?.note ? String(snapshot.note) : '';
   const expr = snapshot?.expression ? String(snapshot.expression) : '';
-  elements.stepLabel.textContent = `${Math.min(stepIndex + 1, total)} / ${total}`;
+  const stepText = `${Math.min(stepIndex + 1, total)} / ${total}`;
+  elements.stepLabel.textContent = stepText;
   elements.noteLabel.textContent = [note, expr].filter(Boolean).join(' • ');
   if (snapshot?.focus) {
     elements.focus.textContent = JSON.stringify(snapshot.focus, null, 2);
@@ -944,7 +1135,7 @@ function startPlaying() {
       return;
     }
     renderStep(next);
-  }, STEP_MS);
+  }, CONFIG.timingMs.step);
 }
 
 function togglePlaying() {
@@ -966,7 +1157,11 @@ async function loadDefaultTrace() {
   } catch (err) {
     setTrace([]);
     elements.stepLabel.textContent = '0 / 0';
-    elements.noteLabel.textContent = `Failed to load trace.json (${err.message}). Serve from repo root.`;
+    const message = [
+      `Failed to load trace.json (${err.message}).`,
+      'Serve from repo root.',
+    ].join(' ');
+    elements.noteLabel.textContent = message;
   }
 }
 
@@ -1041,17 +1236,35 @@ function setupEvents() {
       renderStep(Number(elements.step.value));
     });
   });
+
+  elements.showAxes?.addEventListener('change', () => {
+    axesHelper.visible = elements.showAxes.checked;
+  });
+
+  elements.showLabels?.addEventListener('change', () => {
+    labelsEnabled = elements.showLabels.checked;
+    Graph.refresh();
+  });
+
+  elements.linkThickness?.addEventListener('input', () => {
+    linkThicknessScale =
+      Number(elements.linkThickness.value) || CONFIG.ui.linkThickness.default;
+    Graph.refresh();
+  });
 }
 
+initUiControls();
+
 const Graph = ForceGraph3D({
-  controlType: 'orbit',
+  controlType: CONFIG.graph.controlType,
 })(elements.graph)
-  .backgroundColor('#ffffff')
+  .backgroundColor(CONFIG.graph.backgroundColor)
   .nodeId('id')
-  .numDimensions(2)
+  .numDimensions(CONFIG.graph.numDimensions)
   .nodeThreeObject(makeNodeObject)
   .nodePositionUpdate(updateNodeObject)
   .nodeLabel(node => {
+    if (!labelsEnabled) return '';
     const displayLabel =
       typeof node.__displayLabel === 'string'
         ? node.__displayLabel
@@ -1075,7 +1288,7 @@ const Graph = ForceGraph3D({
   .linkPositionUpdate((linkObject, { start, end }, link) =>
     updateLinkObject(linkObject, { start, end }, link),
   )
-  .linkOpacity(1)
+  .linkOpacity(CONFIG.graph.linkOpacity)
   .onEngineTick(() => {
     const nowMs = performance.now();
     tickStepTransition(nowMs);
@@ -1083,7 +1296,7 @@ const Graph = ForceGraph3D({
   .onNodeClick(node => {
     stopPlaying();
     // Smoothly aim the camera at clicked nodes for inspection.
-    const distance = 140;
+    const distance = CONFIG.camera.clickDistance;
     const distRatio = 1 + distance / Math.hypot(node.x || 0, node.y || 0);
     Graph.cameraPosition(
       {
@@ -1092,9 +1305,13 @@ const Graph = ForceGraph3D({
         z: distance,
       },
       node,
-      600,
+      CONFIG.camera.clickMs,
     );
   });
+
+const axesHelper = new THREE.AxesHelper(CONFIG.axes.size);
+axesHelper.visible = elements.showAxes?.checked ?? CONFIG.axes.enabled;
+Graph.scene().add(axesHelper);
 
 Graph.d3Force('structure', structureForce);
 Graph.d3Force(
@@ -1106,11 +1323,9 @@ const linkForce = Graph.d3Force('link');
 if (linkForce && typeof linkForce.strength === 'function') {
   linkForce
     .strength(link => {
-      return link.kind === 'history' ? 0.12 : 0;
+      return link.kind === 'history' ? CONFIG.physics.historyLinkStrength : 0;
     })
-    .distance(link => {
-      return link.kind === 'history' ? PAIR_LEG : PAIR_LEG;
-    });
+    .distance(() => CONFIG.layout.pairLeg);
 }
 
 function resizeGraphToContainer() {
