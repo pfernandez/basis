@@ -6,13 +6,13 @@
         "graph": {
           "nodes": [
             {
-              "kind": "symbol",
-              "label": "I",
+              "kind": "binder",
+              "valueId": null,
               "id": "n0"
             },
             {
-              "kind": "symbol",
-              "label": "z",
+              "kind": "slot",
+              "binderId": "n0",
               "id": "n1"
             },
             {
@@ -22,9 +22,29 @@
                 "n1"
               ],
               "id": "n2"
+            },
+            {
+              "kind": "symbol",
+              "label": "z",
+              "id": "n3"
+            },
+            {
+              "kind": "pair",
+              "children": [
+                "n2",
+                "n3"
+              ],
+              "id": "n4"
             }
           ],
-          "links": [],
+          "links": [
+            {
+              "id": "reentry:n1",
+              "kind": "reentry",
+              "from": "n1",
+              "to": "n0"
+            }
+          ],
           "edges": [
             {
               "id": "t:n2:0",
@@ -39,10 +59,30 @@
               "from": "n2",
               "to": "n1",
               "index": 1
+            },
+            {
+              "id": "t:n4:0",
+              "kind": "child",
+              "from": "n4",
+              "to": "n2",
+              "index": 0
+            },
+            {
+              "id": "t:n4:1",
+              "kind": "child",
+              "from": "n4",
+              "to": "n3",
+              "index": 1
+            },
+            {
+              "id": "reentry:n1",
+              "kind": "reentry",
+              "from": "n1",
+              "to": "n0"
             }
           ]
         },
-        "rootId": "n2",
+        "rootId": "n4",
         "note": "init",
         "focus": null
       },
@@ -50,183 +90,78 @@
         "graph": {
           "nodes": [
             {
-              "kind": "symbol",
-              "label": "I",
+              "kind": "binder",
+              "valueId": null,
               "id": "n0"
             },
             {
-              "kind": "symbol",
-              "label": "z",
+              "kind": "slot",
+              "binderId": "n0",
               "id": "n1"
             },
             {
               "kind": "pair",
               "children": [
-                "n5",
+                "n0",
                 "n1"
               ],
               "id": "n2"
-            },
-            {
-              "kind": "binder",
-              "valueId": null,
-              "id": "n3"
-            },
-            {
-              "kind": "slot",
-              "binderId": "n3",
-              "id": "n4"
-            },
-            {
-              "kind": "pair",
-              "children": [
-                "n3",
-                "n4"
-              ],
-              "id": "n5"
-            }
-          ],
-          "links": [
-            {
-              "id": "reentry:n4",
-              "kind": "reentry",
-              "from": "n4",
-              "to": "n3"
-            }
-          ],
-          "edges": [
-            {
-              "id": "t:n2:0",
-              "kind": "child",
-              "from": "n2",
-              "to": "n5",
-              "index": 0
-            },
-            {
-              "id": "t:n2:1",
-              "kind": "child",
-              "from": "n2",
-              "to": "n1",
-              "index": 1
-            },
-            {
-              "id": "t:n5:0",
-              "kind": "child",
-              "from": "n5",
-              "to": "n3",
-              "index": 0
-            },
-            {
-              "id": "t:n5:1",
-              "kind": "child",
-              "from": "n5",
-              "to": "n4",
-              "index": 1
-            },
-            {
-              "id": "reentry:n4",
-              "kind": "reentry",
-              "from": "n4",
-              "to": "n3"
-            }
-          ]
-        },
-        "rootId": "n2",
-        "note": "expand",
-        "focus": {
-          "kind": "expand",
-          "nodeId": "n0",
-          "name": "I",
-          "path": [
-            {
-              "kind": "pair",
-              "parentId": "n2",
-              "index": 0
-            }
-          ]
-        }
-      },
-      {
-        "graph": {
-          "nodes": [
-            {
-              "kind": "symbol",
-              "label": "I",
-              "id": "n0"
             },
             {
               "kind": "symbol",
               "label": "z",
-              "id": "n1"
-            },
-            {
-              "kind": "pair",
-              "children": [
-                "n5",
-                "n1"
-              ],
-              "id": "n2"
-            },
-            {
-              "kind": "binder",
-              "valueId": null,
               "id": "n3"
             },
             {
-              "kind": "slot",
-              "binderId": "n3",
+              "kind": "pair",
+              "children": [
+                "n2",
+                "n3"
+              ],
               "id": "n4"
             },
             {
-              "kind": "pair",
-              "children": [
-                "n3",
-                "n4"
-              ],
+              "kind": "binder",
+              "valueId": "n8",
               "id": "n5"
             },
             {
-              "kind": "binder",
-              "valueId": "n9",
+              "kind": "slot",
+              "binderId": "n5",
               "id": "n6"
             },
             {
-              "kind": "slot",
-              "binderId": "n6",
-              "id": "n7"
-            },
-            {
               "kind": "pair",
               "children": [
-                "n6",
-                "n7"
+                "n5",
+                "n6"
               ],
-              "id": "n8"
+              "id": "n7"
             },
             {
               "kind": "symbol",
               "label": "z",
-              "id": "n9"
+              "id": "n8"
             }
           ],
           "links": [
             {
-              "id": "reentry:n4",
+              "id": "reentry:n1",
               "kind": "reentry",
-              "from": "n4",
-              "to": "n3"
+              "from": "n1",
+              "to": "n0"
             },
             {
-              "id": "value:n6",
+              "id": "value:n5",
               "kind": "value",
-              "from": "n6",
-              "to": "n9"
+              "from": "n5",
+              "to": "n8"
             },
             {
-              "id": "reentry:n7",
+              "id": "reentry:n6",
               "kind": "reentry",
-              "from": "n7",
-              "to": "n6"
+              "from": "n6",
+              "to": "n5"
             }
           ],
           "edges": [
@@ -234,7 +169,7 @@
               "id": "t:n2:0",
               "kind": "child",
               "from": "n2",
-              "to": "n5",
+              "to": "n0",
               "index": 0
             },
             {
@@ -245,60 +180,60 @@
               "index": 1
             },
             {
-              "id": "t:n5:0",
+              "id": "t:n4:0",
               "kind": "child",
-              "from": "n5",
-              "to": "n3",
-              "index": 0
-            },
-            {
-              "id": "t:n5:1",
-              "kind": "child",
-              "from": "n5",
-              "to": "n4",
-              "index": 1
-            },
-            {
-              "id": "t:n8:0",
-              "kind": "child",
-              "from": "n8",
-              "to": "n6",
-              "index": 0
-            },
-            {
-              "id": "t:n8:1",
-              "kind": "child",
-              "from": "n8",
-              "to": "n7",
-              "index": 1
-            },
-            {
-              "id": "reentry:n4",
-              "kind": "reentry",
               "from": "n4",
-              "to": "n3"
+              "to": "n2",
+              "index": 0
             },
             {
-              "id": "value:n6",
-              "kind": "value",
-              "from": "n6",
-              "to": "n9"
+              "id": "t:n4:1",
+              "kind": "child",
+              "from": "n4",
+              "to": "n3",
+              "index": 1
             },
             {
-              "id": "reentry:n7",
-              "kind": "reentry",
+              "id": "t:n7:0",
+              "kind": "child",
               "from": "n7",
-              "to": "n6"
+              "to": "n5",
+              "index": 0
+            },
+            {
+              "id": "t:n7:1",
+              "kind": "child",
+              "from": "n7",
+              "to": "n6",
+              "index": 1
+            },
+            {
+              "id": "reentry:n1",
+              "kind": "reentry",
+              "from": "n1",
+              "to": "n0"
+            },
+            {
+              "id": "value:n5",
+              "kind": "value",
+              "from": "n5",
+              "to": "n8"
+            },
+            {
+              "id": "reentry:n6",
+              "kind": "reentry",
+              "from": "n6",
+              "to": "n5"
             }
           ]
         },
-        "rootId": "n7",
+        "rootId": "n6",
         "note": "apply",
         "focus": {
           "kind": "apply",
-          "nodeId": "n2",
-          "lambdaId": "n5",
-          "argId": "n1",
+          "nodeId": "n4",
+          "lambdaId": "n2",
+          "argId": "n3",
           "path": []
         }
       },
@@ -306,83 +241,78 @@
         "graph": {
           "nodes": [
             {
-              "kind": "symbol",
-              "label": "I",
+              "kind": "binder",
+              "valueId": null,
               "id": "n0"
             },
             {
-              "kind": "symbol",
-              "label": "z",
+              "kind": "slot",
+              "binderId": "n0",
               "id": "n1"
             },
             {
               "kind": "pair",
               "children": [
-                "n5",
+                "n0",
                 "n1"
               ],
               "id": "n2"
             },
             {
-              "kind": "binder",
-              "valueId": null,
+              "kind": "symbol",
+              "label": "z",
               "id": "n3"
             },
             {
-              "kind": "slot",
-              "binderId": "n3",
+              "kind": "pair",
+              "children": [
+                "n2",
+                "n3"
+              ],
               "id": "n4"
             },
             {
-              "kind": "pair",
-              "children": [
-                "n3",
-                "n4"
-              ],
+              "kind": "binder",
+              "valueId": "n8",
               "id": "n5"
             },
             {
-              "kind": "binder",
-              "valueId": "n9",
-              "id": "n6"
-            },
-            {
               "kind": "slot",
-              "binderId": "n6",
-              "id": "n7"
+              "binderId": "n5",
+              "id": "n6"
             },
             {
               "kind": "pair",
               "children": [
-                "n6",
-                "n7"
+                "n5",
+                "n6"
               ],
-              "id": "n8"
+              "id": "n7"
             },
             {
               "kind": "symbol",
               "label": "z",
-              "id": "n9"
+              "id": "n8"
             }
           ],
           "links": [
             {
-              "id": "reentry:n4",
+              "id": "reentry:n1",
               "kind": "reentry",
-              "from": "n4",
-              "to": "n3"
+              "from": "n1",
+              "to": "n0"
             },
             {
-              "id": "value:n6",
+              "id": "value:n5",
               "kind": "value",
-              "from": "n6",
-              "to": "n9"
+              "from": "n5",
+              "to": "n8"
             },
             {
-              "id": "reentry:n7",
+              "id": "reentry:n6",
               "kind": "reentry",
-              "from": "n7",
-              "to": "n6"
+              "from": "n6",
+              "to": "n5"
             }
           ],
           "edges": [
@@ -390,7 +320,7 @@
               "id": "t:n2:0",
               "kind": "child",
               "from": "n2",
-              "to": "n5",
+              "to": "n0",
               "index": 0
             },
             {
@@ -401,54 +331,54 @@
               "index": 1
             },
             {
-              "id": "t:n5:0",
+              "id": "t:n4:0",
               "kind": "child",
-              "from": "n5",
-              "to": "n3",
-              "index": 0
-            },
-            {
-              "id": "t:n5:1",
-              "kind": "child",
-              "from": "n5",
-              "to": "n4",
-              "index": 1
-            },
-            {
-              "id": "t:n8:0",
-              "kind": "child",
-              "from": "n8",
-              "to": "n6",
-              "index": 0
-            },
-            {
-              "id": "t:n8:1",
-              "kind": "child",
-              "from": "n8",
-              "to": "n7",
-              "index": 1
-            },
-            {
-              "id": "reentry:n4",
-              "kind": "reentry",
               "from": "n4",
-              "to": "n3"
+              "to": "n2",
+              "index": 0
             },
             {
-              "id": "value:n6",
-              "kind": "value",
-              "from": "n6",
-              "to": "n9"
+              "id": "t:n4:1",
+              "kind": "child",
+              "from": "n4",
+              "to": "n3",
+              "index": 1
             },
             {
-              "id": "reentry:n7",
-              "kind": "reentry",
+              "id": "t:n7:0",
+              "kind": "child",
               "from": "n7",
-              "to": "n6"
+              "to": "n5",
+              "index": 0
+            },
+            {
+              "id": "t:n7:1",
+              "kind": "child",
+              "from": "n7",
+              "to": "n6",
+              "index": 1
+            },
+            {
+              "id": "reentry:n1",
+              "kind": "reentry",
+              "from": "n1",
+              "to": "n0"
+            },
+            {
+              "id": "value:n5",
+              "kind": "value",
+              "from": "n5",
+              "to": "n8"
+            },
+            {
+              "id": "reentry:n6",
+              "kind": "reentry",
+              "from": "n6",
+              "to": "n5"
             }
           ]
         },
-        "rootId": "n7",
+        "rootId": "n6",
         "note": "final",
         "focus": null
       }

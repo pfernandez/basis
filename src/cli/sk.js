@@ -9,6 +9,7 @@
  * Usage:
  *   `node src/cli/sk.js "(I a)" "((K a) b)"`
  *   `node src/cli/sk.js --trace=src/vis/trace.json "(I a)"`
+ *   `node src/cli/sk.js --no-precompile --trace=src/vis/trace.json "(I a)"`
  */
 
 import { fileURLToPath } from 'node:url';
@@ -44,14 +45,24 @@ function countPointerLinks(graph) {
 function parseArgs(argv) {
   const defsArg = argv.find(arg => arg.startsWith('--defs='));
   const traceArg = argv.find(arg => arg.startsWith('--trace='));
+  const precompileArg = argv.includes('--precompile');
+  const noPrecompileArg = argv.includes('--no-precompile');
   const defsPath = defsArg
     ? defsArg.slice('--defs='.length)
     : join(__dirname, '../../programs/sk-basis.lisp');
   const tracePath = traceArg ? traceArg.slice('--trace='.length) : null;
+  const precompile = precompileArg
+    ? true
+    : noPrecompileArg
+      ? false
+      : Boolean(tracePath);
   const inputs = argv.filter(
     arg => !arg.startsWith('--defs=') && !arg.startsWith('--trace='),
   );
-  return { defsPath, tracePath, inputs };
+  const filteredInputs = inputs.filter(
+    arg => arg !== '--precompile' && arg !== '--no-precompile',
+  );
+  return { defsPath, tracePath, inputs: filteredInputs, precompile };
 }
 
 function exportTrace(results, tracePath) {
@@ -64,7 +75,9 @@ function exportTrace(results, tracePath) {
 }
 
 function main() {
-  const { defsPath, tracePath, inputs } = parseArgs(process.argv.slice(2));
+  const { defsPath, tracePath, inputs, precompile } = parseArgs(
+    process.argv.slice(2),
+  );
   const env = loadDefinitions(defsPath);
   const samples = inputs.length ? inputs : ['(I a)', '((K a) b)'];
   const evaluations = [];
@@ -74,6 +87,7 @@ function main() {
       const snapshots = [];
       const result = evaluateExpression(exprSource, env, {
         tracer: snapshot => snapshots.push(snapshot),
+        precompile,
       });
       const focus = getNode(result.graph, result.rootId);
       evaluations.push({ expression: exprSource, snapshots });

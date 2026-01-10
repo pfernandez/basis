@@ -87,6 +87,10 @@ browser using `3d-force-graph`.
 node src/cli/sk.js --trace=src/vis/trace.json "(I z)"
 ```
 
+Traces inline (`precompile`) definitions by default so the viewer shows only the
+core `apply`/`collapse` dynamics. Use `--no-precompile` if you want to see
+symbol expansion steps.
+
 2) Start the viewer (Vite + hot reload):
 
 ```sh

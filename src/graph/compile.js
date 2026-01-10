@@ -14,6 +14,18 @@ import { addNode } from './graph.js';
 import { invariant } from '../utils.js';
 
 /**
+ * Hooks for compile-time conveniences, such as resolving symbol names into
+ * precompiled subgraphs.
+ *
+ * @typedef {{
+ *   resolveSymbol?: (
+ *     graph: import('./graph.js').Graph,
+ *     name: string
+ *   ) => ({ graph: import('./graph.js').Graph, nodeId: string } | null)
+ * }} CompileHooks
+ */
+
+/**
  * Internal marker used when desugaring `(defn ...)` forms.
  *
  * For named parameters, we want to compile variable occurrences directly into
@@ -90,17 +102,17 @@ function compilePair(graph, leftId, rightId) {
   return { graph: nextGraph, nodeId: id };
 }
 
-function compileLambda(graph, bodyExpr, stack, binderName) {
+function compileLambda(graph, bodyExpr, stack, binderName, hooks) {
   const binder = addNode(graph, { kind: 'binder', valueId: null });
   const binderId = binder.id;
   const nextStack = [...stack, { id: binderId, name: binderName ?? undefined }];
-  const body = buildGraphFromSexpr(binder.graph, bodyExpr, nextStack);
+  const body = buildGraphFromSexpr(binder.graph, bodyExpr, nextStack, hooks);
   return compilePair(body.graph, binderId, body.nodeId);
 }
 
-function compileApplication(graph, leftExpr, rightExpr, stack) {
-  const left = buildGraphFromSexpr(graph, leftExpr, stack);
-  const right = buildGraphFromSexpr(left.graph, rightExpr, stack);
+function compileApplication(graph, leftExpr, rightExpr, stack, hooks) {
+  const left = buildGraphFromSexpr(graph, leftExpr, stack, hooks);
+  const right = buildGraphFromSexpr(left.graph, rightExpr, stack, hooks);
   return compilePair(right.graph, left.nodeId, right.nodeId);
 }
 
@@ -110,9 +122,10 @@ function compileApplication(graph, leftExpr, rightExpr, stack) {
  * @param {import('./graph.js').Graph} graph
  * @param {any} expr
  * @param {{ id: string, name?: string }[]} stack
+ * @param {CompileHooks} [hooks]
  * @returns {{ graph: import('./graph.js').Graph, nodeId: string }}
  */
-export function buildGraphFromSexpr(graph, expr, stack) {
+export function buildGraphFromSexpr(graph, expr, stack, hooks = {}) {
   if (isNil(expr)) return compileEmpty(graph);
 
   if (Array.isArray(expr)) {
@@ -121,10 +134,10 @@ export function buildGraphFromSexpr(graph, expr, stack) {
 
     if (isLambdaForm(marker)) {
       const binderName = isLambdaMarker(marker) ? marker.name : null;
-      return compileLambda(graph, expr[1], stack, binderName);
+      return compileLambda(graph, expr[1], stack, binderName, hooks);
     }
 
-    return compileApplication(graph, expr[0], expr[1], stack);
+    return compileApplication(graph, expr[0], expr[1], stack, hooks);
   }
 
   if (typeof expr === 'string') {
@@ -137,6 +150,11 @@ export function buildGraphFromSexpr(graph, expr, stack) {
 
     const named = findNamedBinder(stack, expr);
     if (named) return compileSlot(graph, named.id);
+
+    if (typeof hooks.resolveSymbol === 'function') {
+      const resolved = hooks.resolveSymbol(graph, expr);
+      if (resolved) return resolved;
+    }
   }
 
   return compileSymbol(graph, expr);

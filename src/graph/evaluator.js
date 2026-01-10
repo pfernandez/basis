@@ -35,8 +35,34 @@ function makeExpansionHooks(env) {
   };
 }
 
+function buildGraphInlinedFromSexpr(graph, ast, env) {
+  const compiled = new Map(); // name -> rootId
+  const compiling = new Set(); // cycle guard
+
+  function resolveSymbol(graphValue, name) {
+    if (!env.has(name)) return null;
+    const cached = compiled.get(name);
+    if (typeof cached === 'string') {
+      return { graph: graphValue, nodeId: cached };
+    }
+    if (compiling.has(name)) {
+      throw new Error(`Recursive definition: ${name}`);
+    }
+    compiling.add(name);
+    const built = buildGraphFromSexpr(graphValue, env.get(name), [], {
+      resolveSymbol,
+    });
+    compiling.delete(name);
+    compiled.set(name, built.nodeId);
+    return built;
+  }
+
+  return buildGraphFromSexpr(graph, ast, [], { resolveSymbol });
+}
+
 function runUntilStuck(graph, rootId, env, tracer, maxSteps, options) {
-  const hooks = makeExpansionHooks(env);
+  const allowSymbolExpansion = options.allowSymbolExpansion ?? true;
+  const hooks = allowSymbolExpansion ? makeExpansionHooks(env) : {};
   let state = { graph, rootId, observer: createObserver(rootId) };
 
   for (let i = 0; i < maxSteps; i += 1) {
@@ -77,7 +103,8 @@ function runUntilStuck(graph, rootId, env, tracer, maxSteps, options) {
  * @param {{
  *   tracer?: (snapshot: object) => void,
  *   maxSteps?: number,
- *   cloneArguments?: boolean
+ *   cloneArguments?: boolean,
+ *   precompile?: boolean
  * }} [options]
  * @returns {{ graph: import('./graph.js').Graph, rootId: string }}
  */
@@ -85,10 +112,13 @@ export function evaluateExpression(expr, env, options = {}) {
   const tracer = options.tracer ?? null;
   const maxSteps = options.maxSteps ?? 10_000;
   const cloneArguments = options.cloneArguments ?? true;
+  const precompile = options.precompile ?? false;
 
   const ast = typeof expr === 'string' ? parseSexpr(expr) : expr;
   const graph = createGraph();
-  const compiled = buildGraphFromSexpr(graph, ast, []);
+  const compiled = precompile
+    ? buildGraphInlinedFromSexpr(graph, ast, env)
+    : buildGraphFromSexpr(graph, ast, []);
   emitSnapshot(tracer, compiled.graph, compiled.nodeId, 'init');
 
   // Phase 1: weak reduction (do not reduce inside lambda bodies).
@@ -98,13 +128,18 @@ export function evaluateExpression(expr, env, options = {}) {
     env,
     tracer,
     maxSteps,
-    { reduceUnderLambdas: false, cloneArguments },
+    {
+      reduceUnderLambdas: false,
+      cloneArguments,
+      allowSymbolExpansion: !precompile,
+    },
   );
 
   // Phase 2: full reduction (normalize under lambdas).
   const full = runUntilStuck(weak.graph, weak.rootId, env, tracer, maxSteps, {
     reduceUnderLambdas: true,
     cloneArguments,
+    allowSymbolExpansion: !precompile,
   });
 
   emitSnapshot(tracer, full.graph, full.rootId, 'final');
