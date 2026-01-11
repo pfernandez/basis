@@ -13,6 +13,10 @@ import ForceGraph3D from '3d-force-graph';
 import { hierarchy, tree } from 'd3-hierarchy';
 import * as THREE from 'three';
 
+const GRID_SIZE = 720;
+const GRID_DIVISIONS = 24;
+const GRID_CELL_SIZE = GRID_SIZE / GRID_DIVISIONS;
+
 const CONFIG = Object.freeze({
   axes: Object.freeze({
     enabled: true,
@@ -20,27 +24,27 @@ const CONFIG = Object.freeze({
   }),
   grid: Object.freeze({
     enabled: true,
-    divisions: 24,
-    opacity: 0.12,
-    size: 720,
+    divisions: GRID_DIVISIONS,
+    opacity: 0.1,
+    size: GRID_SIZE,
   }),
   camera: Object.freeze({
     clickDistance: 140,
     clickMs: 600,
-    initialDistanceBase: 160,
+    initialDistanceBase: 120,
     initialXFactor: -0.55,
     initialYFactor: 0.35,
   }),
   colors: Object.freeze({
-    pair: '#000000',
-    binder: '#FF2DAA',
-    slot: '#2D0A5B',
-    symbol: '#111111',
-    empty: '#BDBDBD',
-    focus: '#FF2DAA',
+    pair: '#000',
+    binder: '#000',
+    slot: '#000',
+    symbol: '#000',
+    empty: '#000',
+    focus: '#000',
     childLink: 'rgba(0, 0, 0, 0.72)',
     childLinkFolded: 'rgba(0, 0, 0, 0.78)',
-    reentryLink: 'rgba(255, 45, 170, 0.42)',
+    reentryLink: 'rgba(0, 0, 0, 0.2)',
     valueLink: 'rgba(45, 10, 91, 0.42)',
     historyLink: 'rgba(0, 0, 0, 0.26)',
     expandLink: 'rgba(0, 0, 0, 0.72)',
@@ -52,7 +56,7 @@ const CONFIG = Object.freeze({
   graph: Object.freeze({
     backgroundColor: '#ffffff',
     controlType: 'orbit',
-    linkOpacity: 1,
+    linkOpacity: 0.8,
     numDimensions: 2,
   }),
   history: Object.freeze({
@@ -73,42 +77,42 @@ const CONFIG = Object.freeze({
     pointerPoints: 24,
     valueConstraintStrength: 0.22,
     zstack: Object.freeze({
-      pointerLiftMax: 42,
-      sliceDistance: 63,
+      pointerGap: 5,
+      sliceDistance: GRID_CELL_SIZE,
     }),
   }),
   links: Object.freeze({
-    thickness: 2,
+    thickness: 0.5,
     radii: Object.freeze({
-      child: 0.22,
-      childFolded: 0.3,
-      default: 0.18,
-      focus: 0.36,
-      pointer: 0.16,
-      value: 0.16,
+      child: 0.5,
+      childFolded: 0.5,
+      default: 0.5,
+      focus: 0.5,
+      pointer: 0.5,
+      value: 0.5,
     }),
     widths: Object.freeze({
-      child: 1.6,
-      childFolded: 2.4,
-      default: 2.6,
-      focus: 4,
-      history: 0,
-      pointer: 0,
+      child: 1,
+      childFolded: 1,
+      default: 1,
+      focus: 1,
+      history: 1,
+      pointer: 1,
     }),
   }),
   nodes: Object.freeze({
     collision: Object.freeze({
-      binder: 1.7,
-      default: 1.2,
-      empty: 0.6,
-      slot: 1.1,
+      binder: 1,
+      default: 1,
+      empty: 1,
+      slot: 1,
     }),
     sizes: Object.freeze({
-      binder: 1.4,
-      default: 1,
-      empty: 0.35,
-      focus: 2.5,
-      slot: 0.8,
+      binder: 2,
+      default: 2,
+      empty: 2,
+      focus: 2,
+      slot: 2,
     }),
   }),
   physics: Object.freeze({
@@ -123,7 +127,7 @@ const CONFIG = Object.freeze({
     labelsEnabled: true,
     labelSprite: Object.freeze({
       fontFamily: 'monospace',
-      fontPx: 52,
+      fontPx: 78,
       opacity: 0.9,
       paddingPx: 12,
       worldUnitsPerPx: 0.06,
@@ -164,7 +168,6 @@ let lastGraphData = null;
 let activeTransition = null;
 let pinnedNodeId = null;
 let labelsEnabled = CONFIG.ui.labelsEnabled;
-let activeLayoutMode = CONFIG.layout.modeDefault;
 const viewOffset = { x: 0, y: 0 };
 
 // Keep stable object identities across snapshot updates so node positions
@@ -408,16 +411,10 @@ function widthForLink(link) {
 }
 
 const NODE_GEOMETRY = new THREE.SphereGeometry(
-  1,
-  CONFIG.geometry.sphereSegments,
-  CONFIG.geometry.sphereSegments,
+  1, CONFIG.geometry.sphereSegments, CONFIG.geometry.sphereSegments
 );
 const LINK_GEOMETRY = new THREE.CylinderGeometry(
-  1,
-  1,
-  1,
-  CONFIG.geometry.linkRadialSegments,
-  1,
+  1, 1, 1, CONFIG.geometry.linkRadialSegments, 1,
 );
 const LINK_MATERIALS = new Map();
 const UP_VECTOR = new THREE.Vector3(0, 1, 0);
@@ -431,10 +428,6 @@ function labelTextForNode(node) {
   if (node.kind === 'slot') return String(node.__displayLabel ?? '');
   if (node.kind === 'binder') return defaultLabelForKind(node.kind);
   return '';
-}
-
-function colorCssForNode(node) {
-  return colorForNode(node);
 }
 
 function createLabelTexture(text) {
@@ -485,7 +478,7 @@ function updateLabelSprite(sprite, node) {
   sprite.visible = Boolean(text);
   if (!text) return;
 
-  const cssColor = colorCssForNode(node);
+  const cssColor = colorForNode(node);
   sprite.material.color.set(cssColor);
 
   if (sprite.userData.text !== text) {
@@ -607,24 +600,13 @@ function normalizeLinkEndpoint(pos) {
   };
 }
 
-function pointerLiftZ(start, end, link) {
-  const dist = Math.hypot(end.x - start.x, end.y - start.y);
-  const rawLift = dist / 2;
-  const maxLift = activeLayoutMode === 'zstack'
-    ? CONFIG.layout.zstack.pointerLiftMax
-    : rawLift;
-  const lift = Math.min(rawLift, maxLift);
-  const sign = link.kind === 'value' ? -1 : 1;
-  return sign * lift;
-}
-
-function pointAlongPointerArc(start, end, liftZ, fraction) {
+function pointAlongPointerArc(start, end, fraction) {
   const t = clamp01(fraction);
   const dist = Math.hypot(end.x - start.x, end.y - start.y);
   if (!Number.isFinite(dist) || dist <= 0) return { ...start };
 
   const radius = dist / 2;
-  const sign = Math.sign(liftZ) || 1;
+  const sign = 1;
   const startZ = Number.isFinite(start.z) ? start.z : 0;
   const endZ = Number.isFinite(end.z) ? end.z : 0;
   const ux = (end.x - start.x) / dist;
@@ -635,11 +617,12 @@ function pointAlongPointerArc(start, end, liftZ, fraction) {
   const theta = Math.PI * t;
   const cos = Math.cos(theta);
   const sin = Math.sin(theta);
+  const r = radius - CONFIG.layout.zstack.pointerGap;
 
   return {
     x: cx - radius * cos * ux,
     y: cy - radius * cos * uy,
-    z: lerp(startZ, endZ, t) + sign * radius * sin,
+    z: lerp(startZ, endZ, t) + sign * r * sin,
   };
 }
 
@@ -731,12 +714,11 @@ function updateLinkObject(linkObject, endpoints, link) {
   const radius = radiusForLink(link);
 
   if (isPointerLink(link)) {
-    const liftZ = pointerLiftZ(start, end, link);
     const points = Math.max(2, CONFIG.layout.pointerPoints);
     const path = [];
     for (let i = 0; i < points; i += 1) {
       const t = points === 1 ? appear : (i / (points - 1)) * appear;
-      path.push(pointAlongPointerArc(start, end, liftZ, t));
+      path.push(pointAlongPointerArc(start, end, t));
     }
 
     const segmentCount = Math.min(segments.length, path.length - 1);
@@ -1116,11 +1098,9 @@ function primaryPairParentByChild(nodes, allowedIds) {
   }
 
   nodes.forEach(node => {
-    if (node.kind !== 'pair') return;
-    if (!Array.isArray(node.children) || node.children.length !== 2) return;
     if (!allowed(node.id)) return;
 
-    node.children.forEach((childId, index) => {
+    node.children?.forEach((childId, index) => {
       if (typeof childId !== 'string') return;
       if (!allowed(childId)) return;
       const candidate = { parentId: node.id, index };
@@ -1138,6 +1118,8 @@ function buildStructureConstraints(nodes, allowedIds) {
   const nodeById = new Map(nodes.map(node => [node.id, node]));
   const primaryParent = primaryPairParentByChild(nodes, allowedIds);
   const constraints = [];
+
+  // TODO: Make all the nodes be like pairs :)
 
   primaryParent.forEach(({ parentId, index }, childId) => {
     const parent = nodeById.get(parentId);
@@ -1174,7 +1156,7 @@ function buildStructureConstraints(nodes, allowedIds) {
     });
   });
 
-  return constraints;
+  return constraints;  // distances from parent: { dx, dy }
 }
 
 function hasFinitePosition(node) {
@@ -1614,7 +1596,6 @@ function renderStep(index) {
   const graphData = snapshotToGraphData(snapshot, clamped);
   const pinId = pinIdFromSnapshot(snapshot);
   const layoutMode = layoutModeFromUi();
-  activeLayoutMode = layoutMode;
   if (layoutMode === 'hierarchy') {
     const ok = applyHierarchyLayout(pinId, graphData.nodes);
     if (!ok) {
