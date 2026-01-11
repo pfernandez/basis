@@ -19,26 +19,36 @@
         <span id="note-label"></span>
       </div>
       <div class="row meta">
-        <label><input id="show-tree" type="checkbox" checked /> tree</label>
-        <label><input id="show-pointers" type="checkbox" checked /> pointers</label>
-        <label><input id="fold-slots" type="checkbox" /> fold bound slots</label>
-        <label><input id="show-axes" type="checkbox" /> axes</label>
-        <label><input id="show-grid" type="checkbox" /> grid</label>
-      </div>
-      <div class="row meta">
         <label>
           layout
           <select id="layout-mode">
-            <option value="constrained" selected>constrained</option>
+            <option value="constrained">constrained</option>
             <option value="hierarchy">hierarchy</option>
-            <option value="zstack">z-stack</option>
+            <option value="zstack" selected>z-stack</option>
           </select>
         </label>
+      </div>
+      <div class="row meta">
         <label>
-          thickness
-          <input id="link-thickness" type="range" />
+          <input id="show-axes" type="checkbox" checked />
+          axes
         </label>
-        <label><input id="show-labels" type="checkbox" /> labels</label>
+        <label>
+          <input id="show-grid" type="checkbox" checked />
+          grid
+        </label>
+        <label>
+          <input id="show-labels" type="checkbox" checked />
+          labels
+        </label>
+        <label>
+          <input id="show-pointers" type="checkbox" checked />
+          pointers
+        </label>
+        <label>
+          <input id="fold-slots" type="checkbox" />
+          fold bound slots
+        </label>
       </div>
       <div class="row">
         <input id="file" type="file" accept="application/json" />

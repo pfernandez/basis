@@ -15,11 +15,11 @@ import * as THREE from 'three';
 
 const CONFIG = Object.freeze({
   axes: Object.freeze({
-    enabled: false,
+    enabled: true,
     size: 110,
   }),
   grid: Object.freeze({
-    enabled: false,
+    enabled: true,
     divisions: 24,
     opacity: 0.12,
     size: 720,
@@ -65,7 +65,7 @@ const CONFIG = Object.freeze({
     stubFactor: 0.4,
   }),
   layout: Object.freeze({
-    modeDefault: 'constrained',
+    modeDefault: 'zstack',
     hierarchyNodeSizeX: 18,
     hierarchyNodeSizeY: 26,
     pairConstraintStrength: 1,
@@ -78,6 +78,7 @@ const CONFIG = Object.freeze({
     }),
   }),
   links: Object.freeze({
+    thickness: 2,
     radii: Object.freeze({
       child: 0.22,
       childFolded: 0.3,
@@ -128,12 +129,6 @@ const CONFIG = Object.freeze({
       worldUnitsPerPx: 0.06,
       yOffset: 2.6,
     }),
-    linkThickness: Object.freeze({
-      default: 1,
-      max: 6,
-      min: 0.25,
-      step: 0.05,
-    }),
   }),
   timingMs: Object.freeze({
     step: 900,
@@ -154,7 +149,6 @@ const elements = {
   showAxes: document.getElementById('show-axes'),
   showGrid: document.getElementById('show-grid'),
   layoutMode: document.getElementById('layout-mode'),
-  linkThickness: document.getElementById('link-thickness'),
   showLabels: document.getElementById('show-labels'),
   file: document.getElementById('file'),
   focus: document.getElementById('focus'),
@@ -170,7 +164,6 @@ let lastGraphData = null;
 let activeTransition = null;
 let pinnedNodeId = null;
 let labelsEnabled = CONFIG.ui.labelsEnabled;
-let linkThicknessScale = CONFIG.ui.linkThickness.default;
 let activeLayoutMode = CONFIG.layout.modeDefault;
 const viewOffset = { x: 0, y: 0 };
 
@@ -233,14 +226,6 @@ function initUiControls() {
     elements.layoutMode.value = CONFIG.layout.modeDefault;
   }
 
-  if (elements.linkThickness) {
-    const slider = elements.linkThickness;
-    slider.min = String(CONFIG.ui.linkThickness.min);
-    slider.max = String(CONFIG.ui.linkThickness.max);
-    slider.step = String(CONFIG.ui.linkThickness.step);
-    slider.value = String(CONFIG.ui.linkThickness.default);
-  }
-
   if (elements.showLabels) {
     elements.showLabels.checked = CONFIG.ui.labelsEnabled;
   }
@@ -254,8 +239,6 @@ function initUiControls() {
   }
 
   labelsEnabled = elements.showLabels?.checked ?? CONFIG.ui.labelsEnabled;
-  linkThicknessScale =
-    Number(elements.linkThickness?.value) || CONFIG.ui.linkThickness.default;
 }
 
 function makeHistoryDashedLine() {
@@ -673,7 +656,7 @@ function baseRadiusForLink(link) {
 }
 
 function radiusForLink(link) {
-  return baseRadiusForLink(link) * linkThicknessScale;
+  return baseRadiusForLink(link) * CONFIG.links.thickness;
 }
 
 function updateCylinderMesh(mesh, start, end, radius, material) {
@@ -1587,11 +1570,15 @@ function updateHud(stepIndex, snapshot) {
   const stepText = `${Math.min(stepIndex + 1, total)} / ${total}`;
   elements.stepLabel.textContent = stepText;
   elements.noteLabel.textContent = [note, expr].filter(Boolean).join(' • ');
-  if (snapshot?.focus) {
-    elements.focus.textContent = JSON.stringify(snapshot.focus, null, 2);
-  } else {
-    elements.focus.textContent = '';
-  }
+  elements.focus.textContent = JSON.stringify(
+    {
+      note: snapshot?.note ?? null,
+      rootId: snapshot?.rootId ?? null,
+      focus: snapshot?.focus ?? null,
+    },
+    null,
+    2,
+  );
 }
 
 function configureForcesForCurrentSimulation() {
@@ -1794,12 +1781,6 @@ function setupEvents() {
 
   elements.showLabels?.addEventListener('change', () => {
     labelsEnabled = elements.showLabels.checked;
-    Graph.refresh();
-  });
-
-  elements.linkThickness?.addEventListener('input', () => {
-    linkThicknessScale =
-      Number(elements.linkThickness.value) || CONFIG.ui.linkThickness.default;
     Graph.refresh();
   });
 }
