@@ -38,6 +38,32 @@ Legend:
 
 (When you have a new thought, drop it here; the next refactor folds it into CANON.)
 
+### Quantum Circuit Cosmology
+
+% Possible insertion: Related Work / Discussion (emergence threshold; trans-Planckian framing)
+A closely related quantum-information picture of early-universe expansion is the
+``quantum circuit cosmology'' proposal of Bao, Cao, Carroll, and McAllister,
+in which a fixed comoving region is modeled by a finite-dimensional Hilbert space
+and cosmological expansion corresponds to ancilla degrees of freedom becoming
+progressively entangled with an ``active'' sector that admits an emergent geometric
+interpretation. In that framework one identifies a ``time of one e-bit''---the
+earliest stage at which the region contains even a single unit of distillable
+entanglement---and argues that no geometric description is applicable before that
+threshold. A notable consequence is an upper bound of order $N_{\mathrm{tot}}\lesssim 140$
+e-folds of meaningful expansion for the comoving region that becomes our present
+Hubble volume, derived not merely as an ambiguity in perturbation initial
+conditions but as a limit on the applicability of semiclassical background
+geometry itself.
+
+@article{BaoCaoCarrollMcAllister2017QuantumCircuitCosmology,
+  title        = {Quantum Circuit Cosmology: The Expansion of the Universe Since the First Qubit},
+  author       = {Bao, Ning and Cao, ChunJun and Carroll, Sean M. and McAllister, Liam},
+  year         = {2017},
+  eprint       = {1702.06959},
+  archivePrefix= {arXiv},
+  primaryClass = {hep-th}
+}
+
 ### Conservation of Structure, Binders as Currying, Folding, Dynamics
 
 % --- Insert as a new subsection near where you introduce "frame(first,rest)"
