@@ -33,9 +33,15 @@
   "license": "Apache-2.0",
   "dependencies": {
     "3d-force-graph": "^1.79.0",
-    "d3-hierarchy": "^3.1.2"
+    "d3-hierarchy": "^3.1.2",
+    "graphology": "^0.26.0",
+    "gsap": "^3.14.2",
+    "jolt-physics": "^1.0.0",
+    "three": "^0.182.0",
+    "vite-plugin-top-level-await": "^1.6.0",
+    "vite-plugin-wasm": "^3.5.0"
   },
   "devDependencies": {
-    "vite": "^5.4.0"
+    "vite": "^7.3.1"
   }
 }
