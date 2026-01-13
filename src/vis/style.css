@@ -1,0 +1,56 @@
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #0b1020;
+  color: #e5e7eb;
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+}
+
+#app {
+  position: absolute;
+  inset: 0;
+}
+
+#hud {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  margin: 0;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 16px;
+  user-select: none;
+  pointer-events: none;
+  white-space: pre-wrap;
+}
+
+.node-label {
+  padding: 2px 5px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 5px;
+  font-size: 11px;
+  line-height: 12px;
+  white-space: nowrap;
+}
+
+.node-label--symbol {
+  color: #93c5fd;
+}
+
+.node-label--binder {
+  color: #6ee7b7;
+}
+
+.node-label--slot {
+  color: #fcd34d;
+}
