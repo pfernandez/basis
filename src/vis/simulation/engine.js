@@ -168,63 +168,118 @@ function zOffsetForChildKind(kind, step) {
 }
 
 /**
+ * Compute tree depths via `child` edges.
+ *
+ * @param {Map<string, (string | null)[]>} childrenByParent
+ * @param {string} rootId
+ * @returns {Map<string, number>}
+ */
+function depthByChildTree(childrenByParent, rootId) {
+  const depth = new Map([[rootId, 0]]);
+  const queue = [rootId];
+
+  while (queue.length) {
+    const nodeId = queue.shift();
+    if (!nodeId) break;
+    const parentDepth = depth.get(nodeId) ?? 0;
+    const children = childrenByParent.get(nodeId);
+    if (!children) continue;
+
+    children.forEach(childId => {
+      if (!childId) return;
+      if (depth.has(childId)) return;
+      depth.set(childId, parentDepth + 1);
+      queue.push(childId);
+    });
+  }
+
+  return depth;
+}
+
+/**
+ * Compute x-coordinates by spacing leaves and centering internal nodes.
+ *
+ * This avoids deep-chain overlaps that can cause collision jitter at t=0.
+ *
+ * @param {Map<string, (string | null)[]>} childrenByParent
+ * @param {string} rootId
+ * @returns {Map<string, number>}
+ */
+function xByChildTree(childrenByParent, rootId) {
+  const xByNode = new Map();
+  const visiting = new Set();
+  let nextLeaf = 0;
+
+  /**
+   * @param {string} nodeId
+   * @returns {number}
+   */
+  function assign(nodeId) {
+    const existing = xByNode.get(nodeId);
+    if (typeof existing === 'number') return existing;
+    if (visiting.has(nodeId)) {
+      const value = nextLeaf;
+      nextLeaf += 1;
+      xByNode.set(nodeId, value);
+      return value;
+    }
+
+    visiting.add(nodeId);
+    const children = childrenByParent.get(nodeId) ?? [null, null];
+    const [left, right] = children;
+    const xs = [];
+    if (left) xs.push(assign(left));
+    if (right) xs.push(assign(right));
+
+    const value = xs.length
+      ? xs.reduce((sum, item) => sum + item, 0) / xs.length
+      : nextLeaf++;
+
+    xByNode.set(nodeId, value);
+    visiting.delete(nodeId);
+    return value;
+  }
+
+  assign(rootId);
+  return xByNode;
+}
+
+/**
  * Produce deterministic initial positions from the reachable graph.
  *
  * @param {VisGraph} graph
  * @param {string} rootId
+ * @param {number} nodeRadius
  * @returns {Map<string, [number, number, number]>}
  */
-function layoutGraphPositions(graph, rootId) {
-  const spacing = 2.2;
+function layoutGraphPositions(graph, rootId, nodeRadius) {
+  const spacing = Math.max(1.6, nodeRadius * 8);
   const positions = new Map();
   const childrenByParent = childAdjacency(graph);
 
-  const queue = [{ nodeId: rootId, x: 0, y: 0, z: 0, depth: 0 }];
-  positions.set(rootId, [0, 0, 0]);
+  const xByNode = xByChildTree(childrenByParent, rootId);
+  const depthByNode = depthByChildTree(childrenByParent, rootId);
 
-  while (queue.length) {
-    const item = queue.shift();
-    if (!item) break;
-    const children = childrenByParent.get(item.nodeId);
-    if (!children) continue;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  xByNode.forEach(value => {
+    if (value < minX) minX = value;
+    if (value > maxX) maxX = value;
+  });
 
-    const depthScale = 1 / (1 + item.depth * 0.35);
-    const step = spacing * depthScale;
-    const nextY = item.y - step;
+  const centerX = Number.isFinite(minX) && Number.isFinite(maxX)
+    ? (minX + maxX) / 2
+    : 0;
 
-    const [left, right] = children;
-    if (left) {
-      const x = item.x - step;
-      const kind = String(graph.getNodeAttributes(left)?.kind ?? '');
-      const z = item.z + zOffsetForChildKind(kind, step);
-      if (!positions.has(left)) {
-        positions.set(left, [x, nextY, z]);
-        queue.push({
-          nodeId: left,
-          x,
-          y: nextY,
-          z,
-          depth: item.depth + 1,
-        });
-      }
-    }
-
-    if (right) {
-      const x = item.x + step;
-      const kind = String(graph.getNodeAttributes(right)?.kind ?? '');
-      const z = item.z + zOffsetForChildKind(kind, step);
-      if (!positions.has(right)) {
-        positions.set(right, [x, nextY, z]);
-        queue.push({
-          nodeId: right,
-          x,
-          y: nextY,
-          z,
-          depth: item.depth + 1,
-        });
-      }
-    }
-  }
+  xByNode.forEach((xIndex, nodeId) => {
+    const depth = depthByNode.get(nodeId) ?? 0;
+    const kind = String(graph.getNodeAttributes(nodeId)?.kind ?? '');
+    positions.set(nodeId, [
+      (xIndex - centerX) * spacing,
+      -depth * spacing,
+      zOffsetForChildKind(kind, spacing),
+    ]);
+  });
 
   /** @type {{ kind: string, index?: number, from: string, to: string }[]} */
   const edges = [];
@@ -420,7 +475,7 @@ export async function createPhysicsEngine(params) {
   const floorShape = new Jolt.BoxShape(new Jolt.Vec3(25, 0.5, 25));
   const floorBodySettings = new Jolt.BodyCreationSettings(
     floorShape,
-    new Jolt.RVec3(0, -8, 0),
+    new Jolt.RVec3(0, -80, 0),
     new Jolt.Quat(0, 0, 0, 1),
     Jolt.EMotionType_Static,
     layerNonMoving,
@@ -434,7 +489,7 @@ export async function createPhysicsEngine(params) {
     nodeIds.map((nodeId, index) => [nodeId, index]),
   );
   const positions = new Float32Array(nodeIds.length * 3);
-  const initialPositions = layoutGraphPositions(graph, rootId);
+  const initialPositions = layoutGraphPositions(graph, rootId, nodeRadius);
   const sphereShape = new Jolt.SphereShape(nodeRadius);
 
   const bodies = new Map();
