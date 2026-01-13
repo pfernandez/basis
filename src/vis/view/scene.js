@@ -23,19 +23,25 @@ import {
 /**
  * @typedef {{
  *   container: HTMLElement,
- *   graph: import('graphology').MultiDirectedGraph,
- *   nodeIds: string[],
- *   nodeIndexById: Map<string, number>,
- *   segments: Segment[],
  *   nodeRadius?: number
  * }} SceneParams
  */
 
 /**
  * @typedef {{
+ *   graph: import('graphology').MultiDirectedGraph,
+ *   nodeIds: string[],
+ *   segments: Segment[]
+ * }} SceneGraph
+ */
+
+/**
+ * @typedef {{
+ *   setGraph: (graph: SceneGraph) => void,
  *   update: (positions: Float32Array) => void,
- *   render: () => void,
- *   dispose: () => void
+ *   fitToPositions: (positions: Float32Array) => void,
+  *   render: () => void,
+  *   dispose: () => void
  * }} VisScene
  */
 
@@ -130,6 +136,50 @@ function createLineSegments(segments, color) {
 }
 
 /**
+ * @param {Float32Array} positions
+ * @returns {{ center: THREE.Vector3, radius: number } | null}
+ */
+function boundsFromPositions(positions) {
+  if (positions.length < 3) return null;
+
+  let minX = Infinity;
+  let minY = Infinity;
+  let minZ = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  let maxZ = -Infinity;
+
+  for (let i = 0; i < positions.length; i += 3) {
+    const x = positions[i];
+    const y = positions[i + 1];
+    const z = positions[i + 2];
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (z < minZ) minZ = z;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+    if (z > maxZ) maxZ = z;
+  }
+
+  const center = new THREE.Vector3(
+    (minX + maxX) / 2,
+    (minY + maxY) / 2,
+    (minZ + maxZ) / 2,
+  );
+
+  let radiusSq = 0;
+  for (let i = 0; i < positions.length; i += 3) {
+    const dx = positions[i] - center.x;
+    const dy = positions[i + 1] - center.y;
+    const dz = positions[i + 2] - center.z;
+    const distSq = dx * dx + dy * dy + dz * dz;
+    if (distSq > radiusSq) radiusSq = distSq;
+  }
+
+  return { center, radius: Math.sqrt(radiusSq) };
+}
+
+/**
  * Create a Three.js scene for a graph + physics positions.
  *
  * @param {SceneParams} params
@@ -181,51 +231,35 @@ export function createScene(params) {
   grid.position.y = -8;
   scene.add(grid);
 
-  const nodeCount = params.nodeIds.length;
-  const nodeGeometry = new THREE.SphereGeometry(nodeRadius, 16, 12);
-  const nodeMaterial = new THREE.MeshStandardMaterial({
-    metalness: 0.1,
-    roughness: 0.65,
-  });
-  const nodes = new THREE.InstancedMesh(nodeGeometry, nodeMaterial, nodeCount);
-  nodes.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  nodes.frustumCulled = false;
-
-  const scaleByIndex = new Float32Array(nodeCount);
-  const labelsByIndex = new Array(nodeCount).fill(null);
   const labelGroup = new THREE.Group();
   scene.add(labelGroup);
 
-  const tempColor = new THREE.Color();
-  params.nodeIds.forEach((nodeId, index) => {
-    const attrs = params.graph.getNodeAttributes(nodeId);
-    const kind = String(attrs?.kind ?? 'unknown');
-    scaleByIndex[index] = scaleForKind(kind);
-    tempColor.setHex(colorForKind(kind));
-    nodes.setColorAt(index, tempColor);
+  /** @type {SceneGraph | null} */
+  let graphValue = null;
 
-    const label = labelForNode(attrs ?? {});
-    if (!label) return;
+  /** @type {THREE.InstancedMesh | null} */
+  let nodes = null;
 
-    const element = document.createElement('div');
-    element.className = `node-label ${label.className}`;
-    element.textContent = label.text;
-    const object = new CSS2DObject(element);
-    labelGroup.add(object);
-    labelsByIndex[index] = object;
-  });
-  if (nodes.instanceColor) nodes.instanceColor.needsUpdate = true;
-  scene.add(nodes);
+  /** @type {THREE.SphereGeometry | null} */
+  let nodeGeometry = null;
 
-  const childSegments = params.segments.filter(seg => seg.kind === 'child');
-  const linkSegments = params.segments.filter(
-    seg => seg.kind === 'reentry' || seg.kind === 'value',
-  );
+  /** @type {THREE.MeshStandardMaterial | null} */
+  let nodeMaterial = null;
 
-  const childLines = createLineSegments(childSegments, 0x64748b);
-  const linkLines = createLineSegments(linkSegments, 0xf59e0b);
-  scene.add(childLines.object);
-  scene.add(linkLines.object);
+  /** @type {number} */
+  let nodeCount = 0;
+
+  /** @type {Float32Array} */
+  let scaleByIndex = new Float32Array(0);
+
+  /** @type {(CSS2DObject | null)[]} */
+  let labelsByIndex = [];
+
+  /** @type {ReturnType<typeof createLineSegments> | null} */
+  let childLines = null;
+
+  /** @type {ReturnType<typeof createLineSegments> | null} */
+  let linkLines = null;
 
   const dummy = new THREE.Object3D();
 
@@ -239,6 +273,103 @@ export function createScene(params) {
     labelRenderer.setSize(width, height);
     camera.aspect = width / Math.max(1, height);
     camera.updateProjectionMatrix();
+  }
+
+  /**
+   * @returns {void}
+   */
+  function disposeGraphObjects() {
+    if (nodes) scene.remove(nodes);
+    if (childLines) scene.remove(childLines.object);
+    if (linkLines) scene.remove(linkLines.object);
+
+    labelsByIndex.forEach(label => {
+      if (!label) return;
+      if (label.element && typeof label.element.remove === 'function') {
+        label.element.remove();
+      }
+      labelGroup.remove(label);
+    });
+    labelsByIndex = [];
+
+    if (nodes && nodes.instanceColor) {
+      nodes.instanceColor.needsUpdate = false;
+    }
+
+    if (nodeGeometry) nodeGeometry.dispose();
+    if (nodeMaterial) nodeMaterial.dispose();
+    if (childLines) {
+      childLines.object.geometry.dispose();
+      childLines.object.material.dispose();
+    }
+    if (linkLines) {
+      linkLines.object.geometry.dispose();
+      linkLines.object.material.dispose();
+    }
+
+    nodes = null;
+    nodeGeometry = null;
+    nodeMaterial = null;
+    childLines = null;
+    linkLines = null;
+    nodeCount = 0;
+    scaleByIndex = new Float32Array(0);
+    graphValue = null;
+  }
+
+  /**
+   * @param {SceneGraph} next
+   * @returns {void}
+   */
+  function setGraph(next) {
+    disposeGraphObjects();
+    graphValue = next;
+
+    nodeCount = next.nodeIds.length;
+    nodeGeometry = new THREE.SphereGeometry(nodeRadius, 16, 12);
+    nodeMaterial = new THREE.MeshStandardMaterial({
+      metalness: 0.1,
+      roughness: 0.65,
+    });
+
+    nodes = new THREE.InstancedMesh(nodeGeometry, nodeMaterial, nodeCount);
+    nodes.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    nodes.frustumCulled = false;
+
+    scaleByIndex = new Float32Array(nodeCount);
+    labelsByIndex = new Array(nodeCount).fill(null);
+
+    const tempColor = new THREE.Color();
+    next.nodeIds.forEach((nodeId, index) => {
+      const attrs = next.graph.getNodeAttributes(nodeId);
+      const kind = String(attrs?.kind ?? 'unknown');
+      scaleByIndex[index] = scaleForKind(kind);
+      tempColor.setHex(colorForKind(kind));
+      nodes.setColorAt(index, tempColor);
+
+      const label = labelForNode(attrs ?? {});
+      if (!label) return;
+
+      const element = document.createElement('div');
+      element.className = `node-label ${label.className}`;
+      element.textContent = label.text;
+      const object = new CSS2DObject(element);
+      labelGroup.add(object);
+      labelsByIndex[index] = object;
+    });
+
+    if (nodes.instanceColor) nodes.instanceColor.needsUpdate = true;
+    scene.add(nodes);
+
+    const childSegments = next.segments.filter(seg => seg.kind === 'child');
+    const linkSegments = next.segments.filter(
+      seg => seg.kind === 'reentry' || seg.kind === 'value',
+    );
+
+    childLines = createLineSegments(childSegments, 0x64748b);
+    linkLines = createLineSegments(linkSegments, 0xf59e0b);
+    scene.add(childLines.object);
+    scene.add(linkLines.object);
   }
 
   /**
@@ -277,6 +408,9 @@ export function createScene(params) {
    * @returns {void}
    */
   function update(positions) {
+    if (!nodes) return;
+    if (!childLines || !linkLines) return;
+
     for (let index = 0; index < nodeCount; index += 1) {
       const base = index * 3;
       const x = positions[base];
@@ -300,6 +434,39 @@ export function createScene(params) {
   }
 
   /**
+   * Fit the current camera/controls to contain the provided positions.
+   *
+   * @param {Float32Array} positions
+   * @returns {void}
+   */
+  function fitToPositions(positions) {
+    const bounds = boundsFromPositions(positions);
+    if (!bounds) return;
+
+    const padding = 1.25;
+    const radius = Math.max(bounds.radius, nodeRadius) * padding;
+
+    const vFov = camera.fov * Math.PI / 180;
+    const vDistance = radius / Math.tan(vFov / 2);
+    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
+    const hDistance = radius / Math.tan(hFov / 2);
+    const distance = Math.max(vDistance, hDistance, 2);
+
+    const direction = new THREE.Vector3()
+      .copy(camera.position)
+      .sub(controls.target);
+    if (direction.lengthSq() < 1e-8) direction.set(0, 0.35, 1);
+    direction.normalize();
+
+    controls.target.copy(bounds.center);
+    camera.position.copy(bounds.center).add(direction.multiplyScalar(distance));
+    camera.near = Math.max(0.01, distance / 100);
+    camera.far = distance * 20 + radius * 2;
+    camera.updateProjectionMatrix();
+    controls.update();
+  }
+
+  /**
    * @returns {void}
    */
   function render() {
@@ -313,17 +480,12 @@ export function createScene(params) {
    */
   function dispose() {
     window.removeEventListener('resize', resize);
+    disposeGraphObjects();
     controls.dispose();
     renderer.dispose();
-    nodeGeometry.dispose();
-    nodeMaterial.dispose();
-    childLines.object.geometry.dispose();
-    childLines.object.material.dispose();
-    linkLines.object.geometry.dispose();
-    linkLines.object.material.dispose();
     container.removeChild(labelRenderer.domElement);
     container.removeChild(renderer.domElement);
   }
 
-  return { update, render, dispose };
+  return { setGraph, update, fitToPositions, render, dispose };
 }

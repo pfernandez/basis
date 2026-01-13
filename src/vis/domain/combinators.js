@@ -29,7 +29,8 @@ import { invariant } from '../../utils.js';
  *   graph: VisGraph,
  *   rootId: string,
  *   note: string,
- *   expr: string
+ *   expr: string,
+ *   stepIndex: number
  * }} VisState
  */
 
@@ -100,36 +101,76 @@ export function parseDefinitionsSource(source) {
 }
 
 /**
- * Build symbol expansion hooks for the pointer machine.
+ * Build a graph by inlining all known symbols from `env`.
  *
+ * This lets the reducer operate on the full initial structure without
+ * performing symbol expansion as a visible step.
+ *
+ * @param {import('../../graph/graph.js').Graph} graph
  * @param {Map<string, any>} env
- * @returns {import('../../graph/machine.js').MachineHooks}
+ * @param {any} ast
+ * @returns {{ graph: import('../../graph/graph.js').Graph, nodeId: string }}
  */
-function makeExpansionHooks(env) {
-  return {
-    canExpandSymbol: name => env.has(name),
-    expandSymbol: (graph, name) =>
-      buildGraphFromSexpr(graph, env.get(name), []),
-  };
+function buildGraphInlinedFromSexpr(graph, env, ast) {
+  const compiled = new Map(); // name -> rootId
+  const compiling = new Set(); // cycle guard
+
+  /**
+   * @param {import('../../graph/graph.js').Graph} graphValue
+   * @param {string} name
+   * @returns {{
+   *   graph: import('../../graph/graph.js').Graph,
+   *   nodeId: string
+   * } | null}
+   */
+  function resolveSymbol(graphValue, name) {
+    if (!env.has(name)) return null;
+
+    const cached = compiled.get(name);
+    if (typeof cached === 'string') {
+      return { graph: graphValue, nodeId: cached };
+    }
+
+    if (compiling.has(name)) {
+      throw new Error(`Recursive definition: ${name}`);
+    }
+
+    compiling.add(name);
+    const built = buildGraphFromSexpr(graphValue, env.get(name), [], {
+      resolveSymbol,
+    });
+    compiling.delete(name);
+
+    compiled.set(name, built.nodeId);
+    return built;
+  }
+
+  return buildGraphFromSexpr(graph, ast, [], { resolveSymbol });
 }
 
 /**
- * Run deterministic leftmost-outermost reduction until no local rewrite
- * remains enabled.
+ * Step the pointer machine, collecting a trace of reachable snapshots.
  *
  * @param {import('../../graph/graph.js').Graph} graph
  * @param {string} rootId
- * @param {Map<string, any>} env
  * @param {{
+ *   phase: 'weak' | 'full',
  *   reduceUnderLambdas: boolean,
  *   cloneArguments: boolean,
  *   maxSteps: number
  * }} options
- * @returns {{ graph: import('../../graph/graph.js').Graph, rootId: string }}
+ * @param {number} startIndex
+ * @returns {{
+ *   graph: import('../../graph/graph.js').Graph,
+ *   rootId: string,
+ *   states: VisState[],
+ *   nextIndex: number
+ * }}
  */
-function reduceUntilStuck(graph, rootId, env, options) {
-  const hooks = makeExpansionHooks(env);
+function traceUntilStuck(graph, rootId, options, startIndex) {
   let state = { graph, rootId, observer: createObserver(rootId) };
+  const states = [];
+  let index = startIndex;
 
   for (let step = 0; step < options.maxSteps; step += 1) {
     const stepped = stepNormalOrder(
@@ -137,11 +178,15 @@ function reduceUntilStuck(graph, rootId, env, options) {
       state.rootId,
       options,
       state.observer,
-      hooks,
     );
 
     if (!stepped.didStep) {
-      return { graph: state.graph, rootId: state.rootId };
+      return {
+        graph: state.graph,
+        rootId: state.rootId,
+        states,
+        nextIndex: index,
+      };
     }
 
     state = {
@@ -149,6 +194,24 @@ function reduceUntilStuck(graph, rootId, env, options) {
       rootId: stepped.rootId,
       observer: stepped.observer,
     };
+
+    const note = `${options.phase}:${stepped.note ?? 'step'}`;
+    const expr = serializeGraph(state.graph, state.rootId);
+    const snapshot = snapshotFromGraph(
+      state.graph,
+      state.rootId,
+      note,
+      stepped.focus ?? null,
+    );
+
+    states.push({
+      graph: graphologyFromSnapshot(snapshot),
+      rootId: state.rootId,
+      note,
+      expr,
+      stepIndex: index,
+    });
+    index += 1;
   }
 
   throw new Error(`Reduction exceeded maxSteps=${options.maxSteps}`);
@@ -228,9 +291,11 @@ function reachableNodeIds(snapshot, rootId) {
 }
 
 /**
- * Build the "Hello World" domain states:
- * - initial pointer-graph for `(((S a) b) c)`
- * - reduced form after one S-combinator macro step: `((a c) (b c))`
+ * Build the "Hello World" domain trace for `(((S a) b) c)`.
+ *
+ * This trace:
+ * - starts from an inlined (preexpanded) `S` definition
+ * - steps the reducer event-by-event (apply/collapse)
  *
  * @param {string} programSource
  * @returns {{ states: VisState[] }}
@@ -239,7 +304,7 @@ export function createHelloWorldStates(programSource) {
   const env = parseDefinitionsSource(programSource);
   const ast = parseSexpr('(((S a) b) c)');
 
-  const compiled = buildGraphFromSexpr(createGraph(), ast, []);
+  const compiled = buildGraphInlinedFromSexpr(createGraph(), env, ast);
   const initialExpr = serializeGraph(compiled.graph, compiled.nodeId);
   const initSnapshot = snapshotFromGraph(
     compiled.graph,
@@ -251,31 +316,25 @@ export function createHelloWorldStates(programSource) {
     rootId: compiled.nodeId,
     note: 'init',
     expr: initialExpr,
+    stepIndex: 0,
   };
 
   const maxSteps = 5_000;
-  const weak = reduceUntilStuck(compiled.graph, compiled.nodeId, env, {
+  const weakTrace = traceUntilStuck(compiled.graph, compiled.nodeId, {
+    phase: 'weak',
     reduceUnderLambdas: false,
     cloneArguments: true,
     maxSteps,
-  });
+  }, 1);
 
-  const full = reduceUntilStuck(weak.graph, weak.rootId, env, {
+  const fullTrace = traceUntilStuck(weakTrace.graph, weakTrace.rootId, {
+    phase: 'full',
     reduceUnderLambdas: true,
     cloneArguments: true,
     maxSteps,
-  });
+  }, weakTrace.nextIndex);
 
-  const reducedExpr = serializeGraph(full.graph, full.rootId);
-  const reducedSnapshot = snapshotFromGraph(full.graph, full.rootId, 'reduced');
-  const reduced = {
-    graph: graphologyFromSnapshot(reducedSnapshot),
-    rootId: full.rootId,
-    note: 'reduced',
-    expr: reducedExpr,
-  };
-
-  return { states: [initial, reduced] };
+  return { states: [initial, ...weakTrace.states, ...fullTrace.states] };
 }
 
 /**
