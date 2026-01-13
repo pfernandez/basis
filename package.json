@@ -32,9 +32,9 @@
   "author": "Paul Fernandez",
   "license": "Apache-2.0",
   "dependencies": {
-    "3d-force-graph": "^1.79.0",
     "d3-hierarchy": "^3.1.2",
     "graphology": "^0.26.0",
+    "graphology-traversal": "^0.3.1",
     "gsap": "^3.14.2",
     "jolt-physics": "^1.0.0",
     "three": "^0.182.0",

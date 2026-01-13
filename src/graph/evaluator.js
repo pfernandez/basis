@@ -17,6 +17,7 @@
 import { createGraph } from './graph.js';
 import { parseSexpr } from './parser.js';
 import { buildGraphFromSexpr } from './compile.js';
+import { buildGraphInlinedFromSexpr } from './precompile.js';
 import { createObserver, stepNormalOrder } from './machine.js';
 import { snapshotFromGraph } from './trace.js';
 
@@ -33,31 +34,6 @@ function makeExpansionHooks(env) {
     expandSymbol: (graphValue, name) =>
       buildGraphFromSexpr(graphValue, env.get(name), []),
   };
-}
-
-function buildGraphInlinedFromSexpr(graph, ast, env) {
-  const compiled = new Map(); // name -> rootId
-  const compiling = new Set(); // cycle guard
-
-  function resolveSymbol(graphValue, name) {
-    if (!env.has(name)) return null;
-    const cached = compiled.get(name);
-    if (typeof cached === 'string') {
-      return { graph: graphValue, nodeId: cached };
-    }
-    if (compiling.has(name)) {
-      throw new Error(`Recursive definition: ${name}`);
-    }
-    compiling.add(name);
-    const built = buildGraphFromSexpr(graphValue, env.get(name), [], {
-      resolveSymbol,
-    });
-    compiling.delete(name);
-    compiled.set(name, built.nodeId);
-    return built;
-  }
-
-  return buildGraphFromSexpr(graph, ast, [], { resolveSymbol });
 }
 
 function runUntilStuck(graph, rootId, env, tracer, maxSteps, options) {

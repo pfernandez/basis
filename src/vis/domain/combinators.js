@@ -12,13 +12,13 @@
 
 import { MultiDirectedGraph } from 'graphology';
 
-import { parseMany, parseSexpr } from '../../graph/parser.js';
-import { buildGraphFromSexpr, lambdaMarker } from '../../graph/compile.js';
+import { parseSexpr } from '../../graph/parser.js';
 import { createGraph } from '../../graph/graph.js';
 import { createObserver, stepNormalOrder } from '../../graph/machine.js';
 import { snapshotFromGraph } from '../../graph/trace.js';
 import { serializeGraph } from '../../graph/serializer.js';
-import { invariant } from '../../utils.js';
+import { parseDefinitionsSource } from '../../graph/definitions-core.js';
+import { buildGraphInlinedFromSexpr } from '../../graph/precompile.js';
 
 /**
  * @typedef {import('graphology').MultiDirectedGraph} VisGraph
@@ -42,111 +42,7 @@ import { invariant } from '../../utils.js';
  * }} VisHistory
  */
 
-/**
- * Desugar `(defn name (x y …) body)` into nested lambdas `λx.λy.… body`.
- *
- * Lambdas are represented in S-expression skeletons as `[[], body]` where the
- * empty list is a lambda marker.
- *
- * @param {any[]} params
- * @param {any} body
- * @returns {any}
- */
-function desugarParamsToLambdas(params, body) {
-  invariant(Array.isArray(params), 'defn params must be a list');
-  if (!params.length) return body;
-
-  const [first, ...rest] = params;
-  return [lambdaMarker(first), desugarParamsToLambdas(rest, body)];
-}
-
-/**
- * Normalize a `(def …)` or `(defn …)` form into `{ name, body }`.
- *
- * @param {any[]} form
- * @returns {{ name: string, body: any }}
- */
-function normalizeDefinitionForm(form) {
-  if (!Array.isArray(form) || form.length < 3) {
-    throw new Error('Each form must be (def name body)');
-  }
-
-  if (form[0] === 'def') {
-    const [, name, body] = form;
-    return { name, body };
-  }
-
-  if (form[0] === 'defn') {
-    const [, name, params, body] = form;
-    return { name, body: desugarParamsToLambdas(params, body) };
-  }
-
-  throw new Error(`Unsupported form ${String(form[0])}`);
-}
-
-/**
- * Parse a program source containing `(def …)` / `(defn …)` forms.
- *
- * @param {string} source
- * @returns {Map<string, any>} Map of name → S-expression template
- */
-export function parseDefinitionsSource(source) {
-  const forms = parseMany(source);
-  const env = new Map();
-  forms.forEach(form => {
-    const normalized = normalizeDefinitionForm(form);
-    env.set(normalized.name, normalized.body);
-  });
-  return env;
-}
-
-/**
- * Build a graph by inlining all known symbols from `env`.
- *
- * This lets the reducer operate on the full initial structure without
- * performing symbol expansion as a visible step.
- *
- * @param {import('../../graph/graph.js').Graph} graph
- * @param {Map<string, any>} env
- * @param {any} ast
- * @returns {{ graph: import('../../graph/graph.js').Graph, nodeId: string }}
- */
-function buildGraphInlinedFromSexpr(graph, env, ast) {
-  const compiled = new Map(); // name -> rootId
-  const compiling = new Set(); // cycle guard
-
-  /**
-   * @param {import('../../graph/graph.js').Graph} graphValue
-   * @param {string} name
-   * @returns {{
-   *   graph: import('../../graph/graph.js').Graph,
-   *   nodeId: string
-   * } | null}
-   */
-  function resolveSymbol(graphValue, name) {
-    if (!env.has(name)) return null;
-
-    const cached = compiled.get(name);
-    if (typeof cached === 'string') {
-      return { graph: graphValue, nodeId: cached };
-    }
-
-    if (compiling.has(name)) {
-      throw new Error(`Recursive definition: ${name}`);
-    }
-
-    compiling.add(name);
-    const built = buildGraphFromSexpr(graphValue, env.get(name), [], {
-      resolveSymbol,
-    });
-    compiling.delete(name);
-
-    compiled.set(name, built.nodeId);
-    return built;
-  }
-
-  return buildGraphFromSexpr(graph, ast, [], { resolveSymbol });
-}
+export { parseDefinitionsSource };
 
 /**
  * Step the pointer machine, collecting a trace of reachable snapshots.
@@ -304,7 +200,7 @@ export function createHelloWorldStates(programSource) {
   const env = parseDefinitionsSource(programSource);
   const ast = parseSexpr('(((S a) b) c)');
 
-  const compiled = buildGraphInlinedFromSexpr(createGraph(), env, ast);
+  const compiled = buildGraphInlinedFromSexpr(createGraph(), ast, env);
   const initialExpr = serializeGraph(compiled.graph, compiled.nodeId);
   const initSnapshot = snapshotFromGraph(
     compiled.graph,
