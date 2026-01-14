@@ -13,11 +13,7 @@ import {
 } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 
 /**
- * @typedef {{
- *   kind: string,
- *   fromIndex: number,
- *   toIndex: number
- * }} Segment
+ * @typedef {import('../types.js').Segment} Segment
  */
 
 /**
@@ -142,41 +138,20 @@ function createLineSegments(segments, color) {
 function boundsFromPositions(positions) {
   if (positions.length < 3) return null;
 
-  let minX = Infinity;
-  let minY = Infinity;
-  let minZ = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  let maxZ = -Infinity;
+  const box = new THREE.Box3();
+  const temp = new THREE.Vector3();
+  box.makeEmpty();
 
   for (let i = 0; i < positions.length; i += 3) {
-    const x = positions[i];
-    const y = positions[i + 1];
-    const z = positions[i + 2];
-    if (x < minX) minX = x;
-    if (y < minY) minY = y;
-    if (z < minZ) minZ = z;
-    if (x > maxX) maxX = x;
-    if (y > maxY) maxY = y;
-    if (z > maxZ) maxZ = z;
+    temp.set(positions[i], positions[i + 1], positions[i + 2]);
+    box.expandByPoint(temp);
   }
 
-  const center = new THREE.Vector3(
-    (minX + maxX) / 2,
-    (minY + maxY) / 2,
-    (minZ + maxZ) / 2,
-  );
+  const sphere = new THREE.Sphere();
+  box.getBoundingSphere(sphere);
+  if (!Number.isFinite(sphere.radius)) return null;
 
-  let radiusSq = 0;
-  for (let i = 0; i < positions.length; i += 3) {
-    const dx = positions[i] - center.x;
-    const dy = positions[i + 1] - center.y;
-    const dz = positions[i + 2] - center.z;
-    const distSq = dx * dx + dy * dy + dz * dz;
-    if (distSq > radiusSq) radiusSq = distSq;
-  }
-
-  return { center, radius: Math.sqrt(radiusSq) };
+  return { center: sphere.center, radius: sphere.radius };
 }
 
 /**

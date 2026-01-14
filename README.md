@@ -76,22 +76,22 @@ npm install
 npm test
 ```
 
-### 3D trace viewer
+### 3D visualizer
 
-The graph reducer can emit a step-by-step JSON trace that you can watch in a
-browser using `3d-force-graph`.
+The repo includes a Vite-powered 3D reduction visualizer under `src/vis/`
+(Three.js rendering + Jolt Physics simulation).
 
-1) Generate a trace:
+1) (Optional) Generate a trace JSON:
 
 ```sh
 node src/cli/sk.js --trace=src/vis/trace.json "(I z)"
 ```
 
-Traces inline (`precompile`) definitions by default so the viewer shows only the
-core `apply`/`collapse` dynamics. Use `--no-precompile` if you want to see
-symbol expansion steps.
+Traces inline (`precompile`) definitions by default so you only see core
+`apply`/`collapse` dynamics. Use `--no-precompile` if you want to see symbol
+expansion steps.
 
-2) Start the viewer (Vite + hot reload):
+2) Start the visualizer (Vite + hot reload):
 
 ```sh
 npm run vis:dev
@@ -99,8 +99,9 @@ npm run vis:dev
 
 3) Open `http://localhost:8000/` (it should also auto-open).
 
-The viewer has basic controls for stepping/playing the trace, and toggles for
-showing tree vs pointer edges (and folding bound slots into the tree view).
+The visualizer currently boots into a built-in `(((S a) b) c)` example and has
+basic play/pause + step controls. Wiring trace JSON into the visualizer is
+next.
 
 There are also small CLI scripts for enumeration, collapse-policy exploration,
 and evaluation (see package.json for entry points). Some scripts emit trace

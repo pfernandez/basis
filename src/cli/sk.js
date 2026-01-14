@@ -4,7 +4,7 @@
  * ---------------
  *
  * Runs the graph reducer against a small `(def …)`/`(defn …)` basis file
- * and optionally writes a trace for `src/vis/viewer.js` to render.
+ * and optionally writes a step-by-step JSON trace for visualization/debugging.
  *
  * Usage:
  *   `node src/cli/sk.js "(I a)" "((K a) b)"`

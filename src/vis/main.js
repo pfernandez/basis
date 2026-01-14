@@ -88,7 +88,6 @@ async function start() {
   let didFit = false;
   let isPlaying = false;
   let isLoading = false;
-  let loadToken = 0;
 
   const secondsPerStep = 0.8;
   let stepAccumulatorSeconds = 0;
@@ -98,24 +97,16 @@ async function start() {
    * @param {{ fit: boolean }} options
    * @returns {Promise<void>}
    */
-  async function loadState(state, options) {
-    const token = loadToken + 1;
-    loadToken = token;
-    isLoading = true;
+  async function loadStateNow(state, options) {
+    const previousEngine = engine;
+    engine = null;
+    if (previousEngine) previousEngine.dispose();
 
     const nextEngine = await createPhysicsEngine({
       graph: state.graph,
       rootId: state.rootId,
     });
-
-    if (loadToken !== token) {
-      nextEngine.dispose();
-      return;
-    }
-
-    const previousEngine = engine;
     engine = nextEngine;
-    if (previousEngine) previousEngine.dispose();
 
     vis.setGraph({
       graph: state.graph,
@@ -131,10 +122,25 @@ async function start() {
 
     vis.render();
     setHudText(hud, hudForPresent(state, totals, { isPlaying }));
-    isLoading = false;
   }
 
-  await loadState(history.present, { fit: true });
+  /** @type {{
+   *   state: import('./domain/combinators.js').VisState,
+   *   options: { fit: boolean }
+   * } | null} */
+  let pendingLoad = null;
+
+  /**
+   * @returns {Promise<void>}
+   */
+  async function flushPendingLoads() {
+    while (pendingLoad) {
+      const { state, options } = pendingLoad;
+      pendingLoad = null;
+      await loadStateNow(state, options);
+    }
+    isLoading = false;
+  }
 
   /**
    * @param {import('./domain/combinators.js').VisState} state
@@ -142,13 +148,20 @@ async function start() {
    * @returns {void}
    */
   function queueLoadState(state, options) {
-    void loadState(state, options).catch(error => {
+    pendingLoad = { state, options };
+    if (isLoading) return;
+    isLoading = true;
+
+    void flushPendingLoads().catch(error => {
+      pendingLoad = null;
       isLoading = false;
       isPlaying = false;
       setHudText(hud, String(error?.stack ?? error));
       console.error(error);
     });
   }
+
+  await loadStateNow(history.present, { fit: true });
 
   /**
    * @returns {void}

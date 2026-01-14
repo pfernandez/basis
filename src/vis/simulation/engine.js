@@ -9,35 +9,17 @@
  * constraints are treated as springs to keep the solver stable.
  */
 
-import initJolt from 'jolt-physics/wasm';
-import joltWasmUrl from 'jolt-physics/jolt-physics.wasm.wasm?url';
+import { hierarchy, tree } from 'd3-hierarchy';
 
 import { invariant } from '../../utils.js';
-
-let joltModulePromise = null;
-
-/**
- * Load (and cache) the Jolt WASM module.
- *
- * @returns {Promise<any>}
- */
-function loadJolt() {
-  if (!joltModulePromise) {
-    joltModulePromise = initJolt({ locateFile: () => joltWasmUrl });
-  }
-  return joltModulePromise;
-}
+import { getPhysicsRuntime } from './runtime.js';
 
 /**
  * @typedef {import('graphology').MultiDirectedGraph} VisGraph
  */
 
 /**
- * @typedef {{
- *   kind: string,
- *   fromIndex: number,
- *   toIndex: number
- * }} Segment
+ * @typedef {import('../types.js').Segment} Segment
  */
 
 /**
@@ -161,87 +143,53 @@ function offsetForEdge(edge, targetId, spacing) {
  * @param {number} step
  * @returns {number}
  */
-function zOffsetForChildKind(kind, step) {
-  if (kind === 'binder') return -step * 0.7;
-  if (kind === 'slot') return step * 0.7;
+function zOffsetForChildKind(kind, spacing) {
+  if (kind === 'binder') return -spacing * 0.7;
+  if (kind === 'slot') return spacing * 0.7;
   return 0;
 }
 
 /**
- * Compute tree depths via `child` edges.
- *
- * @param {Map<string, (string | null)[]>} childrenByParent
- * @param {string} rootId
- * @returns {Map<string, number>}
+ * @typedef {{ id: string, children?: ChildTreeNode[] }} ChildTreeNode
  */
-function depthByChildTree(childrenByParent, rootId) {
-  const depth = new Map([[rootId, 0]]);
-  const queue = [rootId];
-
-  while (queue.length) {
-    const nodeId = queue.shift();
-    if (!nodeId) break;
-    const parentDepth = depth.get(nodeId) ?? 0;
-    const children = childrenByParent.get(nodeId);
-    if (!children) continue;
-
-    children.forEach(childId => {
-      if (!childId) return;
-      if (depth.has(childId)) return;
-      depth.set(childId, parentDepth + 1);
-      queue.push(childId);
-    });
-  }
-
-  return depth;
-}
 
 /**
- * Compute x-coordinates by spacing leaves and centering internal nodes.
- *
- * This avoids deep-chain overlaps that can cause collision jitter at t=0.
+ * Build a d3-hierarchy input structure from Graphology `child` edges.
  *
  * @param {Map<string, (string | null)[]>} childrenByParent
  * @param {string} rootId
- * @returns {Map<string, number>}
+ * @returns {ChildTreeNode}
  */
-function xByChildTree(childrenByParent, rootId) {
-  const xByNode = new Map();
-  const visiting = new Set();
-  let nextLeaf = 0;
+function buildChildTreeData(childrenByParent, rootId) {
+  const visited = new Set();
 
   /**
    * @param {string} nodeId
-   * @returns {number}
+   * @returns {ChildTreeNode | null}
    */
-  function assign(nodeId) {
-    const existing = xByNode.get(nodeId);
-    if (typeof existing === 'number') return existing;
-    if (visiting.has(nodeId)) {
-      const value = nextLeaf;
-      nextLeaf += 1;
-      xByNode.set(nodeId, value);
-      return value;
-    }
+  function build(nodeId) {
+    if (visited.has(nodeId)) return null;
+    visited.add(nodeId);
 
-    visiting.add(nodeId);
     const children = childrenByParent.get(nodeId) ?? [null, null];
     const [left, right] = children;
-    const xs = [];
-    if (left) xs.push(assign(left));
-    if (right) xs.push(assign(right));
+    const nextChildren = [];
+    if (left) {
+      const built = build(left);
+      if (built) nextChildren.push(built);
+    }
+    if (right) {
+      const built = build(right);
+      if (built) nextChildren.push(built);
+    }
 
-    const value = xs.length
-      ? xs.reduce((sum, item) => sum + item, 0) / xs.length
-      : nextLeaf++;
-
-    xByNode.set(nodeId, value);
-    visiting.delete(nodeId);
-    return value;
+    if (!nextChildren.length) return { id: nodeId };
+    return { id: nodeId, children: nextChildren };
   }
 
-  assign(rootId);
-  return xByNode;
+  const built = build(rootId);
+  if (!built) return { id: rootId };
+  return built;
 }
 
 /**
@@ -257,26 +205,27 @@ function layoutGraphPositions(graph, rootId, nodeRadius) {
   const positions = new Map();
   const childrenByParent = childAdjacency(graph);
 
-  const xByNode = xByChildTree(childrenByParent, rootId);
-  const depthByNode = depthByChildTree(childrenByParent, rootId);
+  const rootData = buildChildTreeData(childrenByParent, rootId);
+  const rootHierarchy = hierarchy(rootData, node => node.children);
+  const layout = tree().nodeSize([spacing, spacing]);
+  layout(rootHierarchy);
 
   let minX = Infinity;
   let maxX = -Infinity;
-  xByNode.forEach(value => {
-    if (value < minX) minX = value;
-    if (value > maxX) maxX = value;
+  rootHierarchy.each(node => {
+    if (node.x < minX) minX = node.x;
+    if (node.x > maxX) maxX = node.x;
   });
-
   const centerX = Number.isFinite(minX) && Number.isFinite(maxX)
     ? (minX + maxX) / 2
     : 0;
 
-  xByNode.forEach((xIndex, nodeId) => {
-    const depth = depthByNode.get(nodeId) ?? 0;
+  rootHierarchy.each(node => {
+    const nodeId = node.data.id;
     const kind = String(graph.getNodeAttributes(nodeId)?.kind ?? '');
     positions.set(nodeId, [
-      (xIndex - centerX) * spacing,
-      -depth * spacing,
+      node.x - centerX,
+      -node.y,
       zOffsetForChildKind(kind, spacing),
     ]);
   });
@@ -423,66 +372,13 @@ export async function createPhysicsEngine(params) {
   invariant(typeof rootId === 'string', 'rootId must be a string');
   invariant(graph && typeof graph === 'object', 'graph is required');
 
-  const Jolt = await loadJolt();
-
-  const layerNonMoving = 0;
-  const layerMoving = 1;
-  const bpLayerNonMoving = 0;
-  const bpLayerMoving = 1;
-  const numObjectLayers = 2;
-  const numBroadPhaseLayers = 2;
-
-  const objectLayerPairFilter = new Jolt.ObjectLayerPairFilterTable(
-    numObjectLayers,
-  );
-  objectLayerPairFilter.EnableCollision(layerNonMoving, layerMoving);
-  objectLayerPairFilter.EnableCollision(layerMoving, layerMoving);
-
-  const broadPhaseLayerInterface = new Jolt.BroadPhaseLayerInterfaceTable(
-    numObjectLayers,
-    numBroadPhaseLayers,
-  );
-  broadPhaseLayerInterface.MapObjectToBroadPhaseLayer(
-    layerNonMoving,
-    new Jolt.BroadPhaseLayer(bpLayerNonMoving),
-  );
-  broadPhaseLayerInterface.MapObjectToBroadPhaseLayer(
-    layerMoving,
-    new Jolt.BroadPhaseLayer(bpLayerMoving),
-  );
-
-  const objectVsBroadPhaseLayerFilter =
-    new Jolt.ObjectVsBroadPhaseLayerFilterTable(
-      broadPhaseLayerInterface,
-      numBroadPhaseLayers,
-      objectLayerPairFilter,
-      numObjectLayers,
-    );
-
-  const settings = new Jolt.JoltSettings();
-  settings.mMaxBodies = 10_000;
-  settings.mMaxBodyPairs = 10_000;
-  settings.mMaxContactConstraints = 10_000;
-  settings.mBroadPhaseLayerInterface = broadPhaseLayerInterface;
-  settings.mObjectVsBroadPhaseLayerFilter = objectVsBroadPhaseLayerFilter;
-  settings.mObjectLayerPairFilter = objectLayerPairFilter;
-
-  const joltInterface = new Jolt.JoltInterface(settings);
-  const physicsSystem = joltInterface.GetPhysicsSystem();
-  physicsSystem.SetGravity(new Jolt.Vec3(0, 0, 0));
-  const bodyInterface = physicsSystem.GetBodyInterface();
-
-  const floorShape = new Jolt.BoxShape(new Jolt.Vec3(25, 0.5, 25));
-  const floorBodySettings = new Jolt.BodyCreationSettings(
-    floorShape,
-    new Jolt.RVec3(0, -80, 0),
-    new Jolt.Quat(0, 0, 0, 1),
-    Jolt.EMotionType_Static,
-    layerNonMoving,
-  );
-  const floorBody = bodyInterface.CreateBody(floorBodySettings);
-  bodyInterface.AddBody(floorBody.GetID(), Jolt.EActivation_Activate);
-  Jolt.destroy(floorBodySettings);
+  const runtime = await getPhysicsRuntime();
+  const Jolt = runtime.Jolt;
+  const joltInterface = runtime.joltInterface;
+  const physicsSystem = runtime.physicsSystem;
+  const bodyInterface = runtime.bodyInterface;
+  const layerNonMoving = runtime.layerNonMoving;
+  const layerMoving = runtime.layerMoving;
 
   const nodeIds = graph.nodes();
   const nodeIndexById = new Map(
@@ -608,11 +504,6 @@ export async function createPhysicsEngine(params) {
       bodyInterface.RemoveBody(bodyId);
       bodyInterface.DestroyBody(bodyId);
     });
-
-    bodyInterface.RemoveBody(floorBody.GetID());
-    bodyInterface.DestroyBody(floorBody.GetID());
-
-    Jolt.destroy(joltInterface);
   }
 
   return {
