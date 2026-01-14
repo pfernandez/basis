@@ -15,25 +15,8 @@
  */
 
 import { getNode } from './graph.js';
+import { isLambdaPair, pairChildren } from './patterns.js';
 import { invariant } from '../utils.js';
-
-function isPair(node) {
-  return node.kind === 'pair' && Array.isArray(node.children);
-}
-
-function pairChildren(node) {
-  invariant(
-    isPair(node) && node.children.length === 2,
-    'pair must have 2 children',
-  );
-  return node.children;
-}
-
-function isLambdaPair(graph, pairNode) {
-  if (!isPair(pairNode) || pairNode.children.length !== 2) return false;
-  const [leftId] = pairNode.children;
-  return getNode(graph, leftId).kind === 'binder';
-}
 
 function slotIndex(binderStack, binderId) {
   const index = binderStack.lastIndexOf(binderId);
@@ -51,7 +34,7 @@ function nodeToAst(graph, nodeId, binderStack, seenNodeIds) {
   switch (node.kind) {
     case 'pair': {
       const [leftId, rightId] = pairChildren(node);
-      if (isLambdaPair(graph, node)) {
+      if (isLambdaPair(graph, nodeId)) {
         // Lambda pair: `(() body)` where the binder itself is operational-only.
         const body = nodeToAst(
           graph,

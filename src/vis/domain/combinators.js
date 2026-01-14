@@ -15,7 +15,7 @@ import { bfsFromNode } from 'graphology-traversal/bfs';
 
 import { parseSexpr } from '../../graph/parser.js';
 import { createGraph } from '../../graph/graph.js';
-import { createObserver, stepNormalOrder } from '../../graph/machine.js';
+import { runUntilStuck } from '../../graph/runner.js';
 import { snapshotFromGraph } from '../../graph/trace.js';
 import { serializeGraph } from '../../graph/serializer.js';
 import { parseDefinitionsSource } from '../../graph/definitions.js';
@@ -65,53 +65,42 @@ export { parseDefinitionsSource };
  * }}
  */
 function traceUntilStuck(graph, rootId, options, startIndex) {
-  let state = { graph, rootId, observer: createObserver(rootId) };
-  const states = [];
   let index = startIndex;
+  /** @type {VisState[]} */
+  const states = [];
 
-  for (let step = 0; step < options.maxSteps; step += 1) {
-    const stepped = stepNormalOrder(
-      state.graph,
-      state.rootId,
-      options,
-      state.observer,
-    );
+  const result = runUntilStuck(
+    graph,
+    rootId,
+    options,
+    {},
+    step => {
+      const note = `${options.phase}:${step.note ?? 'step'}`;
+      const expr = serializeGraph(step.graph, step.rootId);
+      const snapshot = snapshotFromGraph(
+        step.graph,
+        step.rootId,
+        note,
+        step.focus ?? null,
+      );
 
-    if (!stepped.didStep) {
-      return {
-        graph: state.graph,
-        rootId: state.rootId,
-        states,
-        nextIndex: index,
-      };
-    }
+      states.push({
+        graph: graphologyFromSnapshot(snapshot),
+        rootId: step.rootId,
+        note,
+        expr,
+        stepIndex: index,
+      });
+      index += 1;
+    },
+  );
 
-    state = {
-      graph: stepped.graph,
-      rootId: stepped.rootId,
-      observer: stepped.observer,
-    };
-
-    const note = `${options.phase}:${stepped.note ?? 'step'}`;
-    const expr = serializeGraph(state.graph, state.rootId);
-    const snapshot = snapshotFromGraph(
-      state.graph,
-      state.rootId,
-      note,
-      stepped.focus ?? null,
-    );
-
-    states.push({
-      graph: graphologyFromSnapshot(snapshot),
-      rootId: state.rootId,
-      note,
-      expr,
-      stepIndex: index,
-    });
-    index += 1;
-  }
-
-  throw new Error(`Reduction exceeded maxSteps=${options.maxSteps}`);
+  return {
+    graph: result.graph,
+    rootId: result.rootId,
+    states,
+    nextIndex: index,
+  };
 }
 
 /**

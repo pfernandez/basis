@@ -15,6 +15,7 @@
  */
 
 import { cloneSubgraph, getNode, updateNode } from './graph.js';
+import { assertPairNode, isLambdaPair, pairChildren } from './patterns.js';
 import { invariant } from '../utils.js';
 
 /**
@@ -72,19 +73,6 @@ import { invariant } from '../utils.js';
  * }} MachineHooks
  */
 
-function assertPairNode(node, message = 'Expected pair node') {
-  invariant(node.kind === 'pair', message);
-  invariant(
-    Array.isArray(node.children) && node.children.length === 2,
-    'pair nodes must have two children',
-  );
-}
-
-function pairChildren(node) {
-  assertPairNode(node);
-  return node.children;
-}
-
 function replaceInPair(graph, parentId, index, replacementId) {
   return updateNode(graph, parentId, node => {
     assertPairNode(node, 'pair frame must target a pair node');
@@ -120,14 +108,6 @@ function replaceAtPath(graph, rootId, path, replacementId) {
   }
 
   throw new Error(`Unknown path frame kind: ${frame.kind}`);
-}
-
-function isLambdaPair(graph, pairId) {
-  const node = getNode(graph, pairId);
-  if (node.kind !== 'pair') return false;
-  if (!Array.isArray(node.children) || node.children.length !== 2) return false;
-  const [leftId] = node.children;
-  return getNode(graph, leftId).kind === 'binder';
 }
 
 function lambdaParts(graph, lambdaId) {

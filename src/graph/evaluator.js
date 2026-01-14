@@ -12,7 +12,7 @@ import { createGraph } from './graph.js';
 import { parseSexpr } from './parser.js';
 import { buildGraphFromSexpr } from './compile.js';
 import { buildGraphInlinedFromSexpr } from './precompile.js';
-import { createObserver, stepNormalOrder } from './machine.js';
+import { runUntilStuck } from './runner.js';
 import { snapshotFromGraph } from './trace.js';
 
 /**
@@ -47,54 +47,6 @@ function makeExpansionHooks(env) {
 }
 
 /**
- * @param {import('./graph.js').Graph} graph
- * @param {string} rootId
- * @param {Map<string, any>} env
- * @param {((snapshot: object) => void) | null} tracer
- * @param {number} maxSteps
- * @param {{
- *   reduceUnderLambdas: boolean,
- *   cloneArguments: boolean,
- *   allowSymbolExpansion?: boolean
- * }} options
- * @returns {{ graph: import('./graph.js').Graph, rootId: string }}
- */
-function runUntilStuck(graph, rootId, env, tracer, maxSteps, options) {
-  const allowSymbolExpansion = options.allowSymbolExpansion ?? true;
-  const hooks = allowSymbolExpansion ? makeExpansionHooks(env) : {};
-  let state = { graph, rootId, observer: createObserver(rootId) };
-
-  for (let i = 0; i < maxSteps; i += 1) {
-    const stepped = stepNormalOrder(
-      state.graph,
-      state.rootId,
-      options,
-      state.observer,
-      hooks,
-    );
-    if (!stepped.didStep) return { graph: state.graph, rootId: state.rootId };
-
-    state = {
-      graph: stepped.graph,
-      rootId: stepped.rootId,
-      observer: stepped.observer,
-    };
-    emitSnapshot(
-      tracer,
-      state.graph,
-      state.rootId,
-      stepped.note,
-      stepped.focus,
-    );
-  }
-
-  throw new Error(
-    `Reduction exceeded maxSteps=${maxSteps}; ` +
-      'expression may be non-terminating',
-  );
-}
-
-/**
  * Evaluate an expression against the provided environment.
  *
  * @param {string | any[]} expr
@@ -112,6 +64,19 @@ export function evaluateExpression(expr, env, options = {}) {
   const maxSteps = options.maxSteps ?? 10_000;
   const cloneArguments = options.cloneArguments ?? true;
   const precompile = options.precompile ?? false;
+  const hooks = precompile ? {} : makeExpansionHooks(env);
+  const onStep =
+    typeof tracer === 'function'
+      ? step => {
+          emitSnapshot(
+            tracer,
+            step.graph,
+            step.rootId,
+            step.note ?? 'step',
+            step.focus ?? null,
+          );
+        }
+      : null;
 
   const ast = typeof expr === 'string' ? parseSexpr(expr) : expr;
   const graph = createGraph();
@@ -121,27 +86,19 @@ export function evaluateExpression(expr, env, options = {}) {
   emitSnapshot(tracer, compiled.graph, compiled.nodeId, 'init');
 
   // Phase 1: weak reduction (do not reduce inside lambda bodies).
-  const weak = runUntilStuck(
-    compiled.graph,
-    compiled.nodeId,
-    env,
-    tracer,
+  const weak = runUntilStuck(compiled.graph, compiled.nodeId, {
     maxSteps,
-    {
-      reduceUnderLambdas: false,
-      cloneArguments,
-      allowSymbolExpansion: !precompile,
-    },
-  );
+    reduceUnderLambdas: false,
+    cloneArguments,
+  }, hooks, onStep);
 
   // Phase 2: full reduction (normalize under lambdas).
-  const full = runUntilStuck(weak.graph, weak.rootId, env, tracer, maxSteps, {
+  const full = runUntilStuck(weak.graph, weak.rootId, {
+    maxSteps,
     reduceUnderLambdas: true,
     cloneArguments,
-    allowSymbolExpansion: !precompile,
-  });
+  }, hooks, onStep);
 
   emitSnapshot(tracer, full.graph, full.rootId, 'final');
   return { graph: full.graph, rootId: full.rootId };
 }
-
