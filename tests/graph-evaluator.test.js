@@ -2,7 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { loadDefinitions, evaluateExpression } from '../src/graph/evaluator.js';
+import {
+  loadDefinitions,
+  evaluateExpression,
+} from '../src/graph/evaluator-node.js';
 import { serializeGraph } from '../src/graph/serializer.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

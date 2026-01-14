@@ -18,7 +18,7 @@ import { createGraph } from '../../graph/graph.js';
 import { createObserver, stepNormalOrder } from '../../graph/machine.js';
 import { snapshotFromGraph } from '../../graph/trace.js';
 import { serializeGraph } from '../../graph/serializer.js';
-import { parseDefinitionsSource } from '../../graph/definitions-core.js';
+import { parseDefinitionsSource } from '../../graph/definitions.js';
 import { buildGraphInlinedFromSexpr } from '../../graph/precompile.js';
 
 /**

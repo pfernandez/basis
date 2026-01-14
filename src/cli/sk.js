@@ -15,7 +15,10 @@
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { writeFileSync } from 'node:fs';
-import { loadDefinitions, evaluateExpression } from '../graph/evaluator.js';
+import {
+  loadDefinitions,
+  evaluateExpression,
+} from '../graph/evaluator-node.js';
 import { getNode } from '../graph/graph.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
