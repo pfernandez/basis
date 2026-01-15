@@ -345,6 +345,51 @@ export function createObserver(rootId) {
 }
 
 /**
+ * Observe the next locally-enabled event under a deterministic normal-order
+ * schedule.
+ *
+ * This is the "redex chooser" part of the machine. It does not mutate or
+ * rewrite; it only selects an event.
+ *
+ * @param {Observer} observer
+ * @param {import('./graph.js').Graph} graph
+ * @param {{ reduceUnderLambdas: boolean }} options
+ * @param {MachineHooks} [hooks]
+ * @returns {{ event: Event | null, observer: Observer }}
+ */
+export function observeNormalOrder(observer, graph, options, hooks = {}) {
+  return observeNextEvent(observer, graph, options, hooks);
+}
+
+/**
+ * Apply a previously observed machine event.
+ *
+ * This is the "rewrite" part of the machine. It is pure: returns a new graph
+ * value and an updated root.
+ *
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} rootId
+ * @param {Event} event
+ * @param {{ cloneArguments: boolean }} options
+ * @param {MachineHooks} [hooks]
+ * @returns {{
+ *   graph: import('./graph.js').Graph,
+ *   rootId: string,
+ *   note: string,
+ *   focus: Event
+ * }}
+ */
+export function applyMachineEvent(graph, rootId, event, options, hooks = {}) {
+  const stepped = stepEvent(graph, rootId, event, options, hooks);
+  return {
+    graph: stepped.graph,
+    rootId: stepped.rootId,
+    note: event.kind,
+    focus: event,
+  };
+}
+
+/**
  * Perform one deterministic leftmost-outermost reduction step.
  *
  * @param {import('./graph.js').Graph} graph
