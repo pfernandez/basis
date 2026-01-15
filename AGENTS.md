@@ -16,6 +16,8 @@ Build a clean, maintainable platform where:
 
 - Formatting: keep max line length 80 columns in new/edited files.
 - Documentation: add JSDoc for all functions you touch or add.
+- Style: write in a pure functional style wherever possible (prefer immutable
+  data + pure transforms; isolate effects behind adapters).
 - Purity: kernel/domain logic must be side-effect free (no I/O, no mutation,
   no `console.*`). Side effects live in explicit adapters and UI.
 - Determinism: prefer replayable traces. If you introduce randomness, thread

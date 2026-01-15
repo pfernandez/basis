@@ -11,12 +11,13 @@
 import programSource from '../../programs/sk-basis.lisp?raw';
 
 import {
-  createHelloWorldStates,
-  createHistory,
-  commit,
-  undo,
-  redo,
-} from './domain/combinators.js';
+  canStepForward,
+  createHelloWorldSession,
+  present,
+  stepBack,
+  stepForward,
+  totals,
+} from './domain/session.js';
 
 import { createPhysicsEngine } from './simulation/engine.js';
 import { createScene } from './view/scene.js';
@@ -41,26 +42,30 @@ function setHudText(hud, text) {
 }
 
 /**
- * @param {import('./domain/combinators.js').VisState} state
- * @param {{ initial: number, reduced: number }} totals
+ * @param {import('./domain/session.js').VisState} state
+ * @param {{ initial: number, reduced: number | null, lastStep: number | null }}
+ *   totalsValue
  * @param {{ isPlaying: boolean }} playback
+ * @param {string} sourceExpr
  * @returns {string}
  */
-function hudForPresent(state, totals, playback) {
+function hudForPresent(state, totalsValue, playback, sourceExpr) {
+  const lastStep = totalsValue.lastStep ?? '?';
+  const reduced = totalsValue.reduced ?? '?';
   return [
     '3D Combinator Visualizer (Hello World)',
     '',
-    `step: ${state.stepIndex}/${totals.lastStep}`,
+    `step: ${state.stepIndex}/${lastStep}`,
     `state: ${state.note}`,
     `play: ${playback.isPlaying ? 'playing' : 'paused'}`,
-    'source: (((S a) b) c)',
+    `source: ${sourceExpr}`,
     `expr: ${state.expr}`,
     'play/pause: Space',
     'step: ←/→',
     '',
     `nodes: ${state.graph.order}  edges: ${state.graph.size}`,
-    `init nodes: ${totals.initial}`,
-    `reduced nodes: ${totals.reduced}`,
+    `init nodes: ${totalsValue.initial}`,
+    `reduced nodes: ${reduced}`,
   ].join('\n');
 }
 
@@ -71,14 +76,8 @@ async function start() {
   const app = mustGetElement('app');
   const hud = mustGetElement('hud');
 
-  const { states } = createHelloWorldStates(programSource);
-  let history = createHistory(states[0]);
-
-  const totals = {
-    initial: states[0].graph.order,
-    reduced: states[states.length - 1].graph.order,
-    lastStep: states.length - 1,
-  };
+  /** @type {import('./domain/session.js').VisSession} */
+  let session = createHelloWorldSession(programSource);
 
   /** @type {import('./simulation/engine.js').PhysicsEngine | null} */
   let engine = null;
@@ -93,7 +92,25 @@ async function start() {
   let stepAccumulatorSeconds = 0;
 
   /**
-   * @param {import('./domain/combinators.js').VisState} state
+   * @param {import('./domain/session.js').VisState | null} state
+   * @returns {void}
+   */
+  function renderHud(state = null) {
+    const effectiveState = state ?? present(session);
+    const totalsValue = totals(session);
+    setHudText(
+      hud,
+      hudForPresent(
+        effectiveState,
+        totalsValue,
+        { isPlaying },
+        session.sourceExpr,
+      ),
+    );
+  }
+
+  /**
+   * @param {import('./domain/session.js').VisState} state
    * @param {{ fit: boolean }} options
    * @returns {Promise<void>}
    */
@@ -121,11 +138,11 @@ async function start() {
     }
 
     vis.render();
-    setHudText(hud, hudForPresent(state, totals, { isPlaying }));
+    renderHud(state);
   }
 
   /** @type {{
-   *   state: import('./domain/combinators.js').VisState,
+   *   state: import('./domain/session.js').VisState,
    *   options: { fit: boolean }
    * } | null} */
   let pendingLoad = null;
@@ -143,7 +160,7 @@ async function start() {
   }
 
   /**
-   * @param {import('./domain/combinators.js').VisState} state
+   * @param {import('./domain/session.js').VisState} state
    * @param {{ fit: boolean }} options
    * @returns {void}
    */
@@ -161,7 +178,7 @@ async function start() {
     });
   }
 
-  await loadStateNow(history.present, { fit: true });
+  await loadStateNow(present(session), { fit: true });
 
   /**
    * @returns {void}
@@ -169,7 +186,7 @@ async function start() {
   function pausePlayback() {
     isPlaying = false;
     stepAccumulatorSeconds = 0;
-    setHudText(hud, hudForPresent(history.present, totals, { isPlaying }));
+    renderHud(null);
   }
 
   /**
@@ -178,31 +195,27 @@ async function start() {
    */
   function stepFrame(direction) {
     pausePlayback();
+    const beforeIndex = session.index;
 
-    if (direction === -1) {
-      const previousIndex = history.present.stepIndex;
-      history = undo(history);
-      if (history.present.stepIndex !== previousIndex) {
-        queueLoadState(history.present, { fit: false });
+    try {
+      if (direction === -1) {
+        session = stepBack(session);
+      } else {
+        session = stepForward(session, null);
       }
+    } catch (error) {
+      isPlaying = false;
+      setHudText(hud, String(error?.stack ?? error));
+      console.error(error);
       return;
     }
 
-    const attemptedRedo = redo(history);
-    if (attemptedRedo.present.stepIndex !== history.present.stepIndex) {
-      history = attemptedRedo;
-      queueLoadState(history.present, { fit: false });
+    if (session.index !== beforeIndex) {
+      queueLoadState(present(session), { fit: false });
       return;
     }
 
-    const nextIndex = history.present.stepIndex + 1;
-    if (nextIndex >= states.length) {
-      setHudText(hud, hudForPresent(history.present, totals, { isPlaying }));
-      return;
-    }
-
-    history = commit(history, states[nextIndex]);
-    queueLoadState(history.present, { fit: false });
+    renderHud(null);
   }
 
   /**
@@ -217,11 +230,11 @@ async function start() {
         return;
       }
 
-      if (history.present.stepIndex >= states.length - 1) return;
+      if (!canStepForward(session)) return;
 
       isPlaying = true;
       stepAccumulatorSeconds = 0;
-      setHudText(hud, hudForPresent(history.present, totals, { isPlaying }));
+      renderHud(null);
       return;
     }
 
@@ -238,16 +251,14 @@ async function start() {
     }
 
     if (event.key === 'z' || event.key === 'Z') {
-      pausePlayback();
-      history = undo(history);
-      queueLoadState(history.present, { fit: false });
+      event.preventDefault();
+      stepFrame(-1);
       return;
     }
 
     if (event.key === 'y' || event.key === 'Y') {
-      pausePlayback();
-      history = redo(history);
-      queueLoadState(history.present, { fit: false });
+      event.preventDefault();
+      stepFrame(1);
     }
   }
 
@@ -267,12 +278,20 @@ async function start() {
       stepAccumulatorSeconds += dt;
       if (stepAccumulatorSeconds >= secondsPerStep) {
         stepAccumulatorSeconds = 0;
-        if (history.present.stepIndex >= states.length - 1) {
+        const beforeIndex = session.index;
+        try {
+          session = stepForward(session, null);
+        } catch (error) {
+          isPlaying = false;
+          setHudText(hud, String(error?.stack ?? error));
+          console.error(error);
+          return;
+        }
+
+        if (session.index === beforeIndex) {
           pausePlayback();
         } else {
-          const nextIndex = history.present.stepIndex + 1;
-          history = commit(history, states[nextIndex]);
-          queueLoadState(history.present, { fit: false });
+          queueLoadState(present(session), { fit: false });
         }
       }
     }

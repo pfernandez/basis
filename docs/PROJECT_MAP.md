@@ -68,5 +68,10 @@ semantics changes and you can explain the new invariant.
 ## src/kernel/ (Pluggable Action Surface)
 
 Purpose: a long-term home for replayable `Action` transitions and reducer /
-scheduler interfaces. Today it contains an adapter for the pointer machine.
+scheduler interfaces.
 
+Current contents:
+- `src/kernel/actions.js`: apply an action (pure)
+- `src/kernel/stepper.js`: reducer + scheduler orchestration
+- `src/kernel/reducers/`: reducer plugins (normal-order pointer machine today)
+- `src/kernel/schedulers/`: scheduler plugins (deterministic today)
