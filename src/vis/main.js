@@ -23,6 +23,33 @@ import { createPhysicsEngine } from './simulation/engine.js';
 import { createScene } from './view/scene.js';
 
 /**
+ * @param {string | null} value
+ * @returns {'normal-order' | 'multiway-rng'}
+ */
+function parseModeParam(value) {
+  const normalized = String(value ?? '').toLowerCase().trim();
+  if (
+    normalized === 'multiway' ||
+    normalized === 'multi' ||
+    normalized === 'rng' ||
+    normalized === 'random' ||
+    normalized === 'stochastic'
+  ) {
+    return 'multiway-rng';
+  }
+  return 'normal-order';
+}
+
+/**
+ * @param {string | null} value
+ * @returns {number}
+ */
+function parseSeedParam(value) {
+  const seed = Number.parseInt(String(value ?? ''), 10);
+  return Number.isFinite(seed) ? seed : 1;
+}
+
+/**
  * @param {string} id
  * @returns {HTMLElement}
  */
@@ -46,22 +73,25 @@ function setHudText(hud, text) {
  * @param {{ initial: number, reduced: number | null, lastStep: number | null }}
  *   totalsValue
  * @param {{ isPlaying: boolean }} playback
- * @param {string} sourceExpr
+ * @param {import('./domain/session.js').VisSession} session
  * @returns {string}
  */
-function hudForPresent(state, totalsValue, playback, sourceExpr) {
+function hudForPresent(state, totalsValue, playback, session) {
   const lastStep = totalsValue.lastStep ?? '?';
   const reduced = totalsValue.reduced ?? '?';
+  const seed = session.seed === null ? '' : ` seed=${session.seed}`;
   return [
     '3D Combinator Visualizer (Hello World)',
     '',
     `step: ${state.stepIndex}/${lastStep}`,
     `state: ${state.note}`,
     `play: ${playback.isPlaying ? 'playing' : 'paused'}`,
-    `source: ${sourceExpr}`,
+    `mode: ${session.mode}${seed}`,
+    `source: ${session.sourceExpr}`,
     `expr: ${state.expr}`,
     'play/pause: Space',
     'step: ←/→',
+    'mode: M',
     '',
     `nodes: ${state.graph.order}  edges: ${state.graph.size}`,
     `init nodes: ${totalsValue.initial}`,
@@ -76,8 +106,12 @@ async function start() {
   const app = mustGetElement('app');
   const hud = mustGetElement('hud');
 
+  const params = new URLSearchParams(window.location.search);
+  let mode = parseModeParam(params.get('mode'));
+  const seed = parseSeedParam(params.get('seed'));
+
   /** @type {import('./domain/session.js').VisSession} */
-  let session = createHelloWorldSession(programSource);
+  let session = createHelloWorldSession(programSource, { mode, seed });
 
   /** @type {import('./simulation/engine.js').PhysicsEngine | null} */
   let engine = null;
@@ -104,7 +138,7 @@ async function start() {
         effectiveState,
         totalsValue,
         { isPlaying },
-        session.sourceExpr,
+        session,
       ),
     );
   }
@@ -235,6 +269,15 @@ async function start() {
       isPlaying = true;
       stepAccumulatorSeconds = 0;
       renderHud(null);
+      return;
+    }
+
+    if (event.key === 'm' || event.key === 'M') {
+      event.preventDefault();
+      pausePlayback();
+      mode = mode === 'normal-order' ? 'multiway-rng' : 'normal-order';
+      session = createHelloWorldSession(programSource, { mode, seed });
+      queueLoadState(present(session), { fit: false });
       return;
     }
 

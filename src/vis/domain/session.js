@@ -19,7 +19,13 @@ import { createKernelStepper } from '../../kernel/stepper.js';
 import {
   createPointerMachineNormalOrderReducer,
 } from '../../kernel/reducers/pointer-machine-normal-order.js';
+import {
+  createPointerMachineAllCandidatesReducer,
+} from '../../kernel/reducers/pointer-machine-all-candidates.js';
 import { createFirstScheduler } from '../../kernel/schedulers/first.js';
+import {
+  createSeededRngScheduler,
+} from '../../kernel/schedulers/seeded-rng.js';
 
 import { graphologyFromSnapshot } from './snapshot.js';
 
@@ -55,10 +61,18 @@ import { graphologyFromSnapshot } from './snapshot.js';
  */
 
 /**
+ * @typedef {'normal-order' | 'multiway-rng'} SessionMode
+ */
+
+/**
  * @typedef {{
  *   sourceExpr: string,
  *   programSource: string,
  *   hooks: object,
+ *   mode: SessionMode,
+ *   seed: number | null,
+ *   reducerId: string,
+ *   schedulerId: string,
  *   phases: Phase[],
  *   frames: Frame[],
  *   index: number,
@@ -250,6 +264,8 @@ export function stepForward(session, context = null) {
  *   sourceExpr: string,
  *   precompile?: boolean,
  *   cloneArguments?: boolean,
+ *   mode?: SessionMode,
+ *   seed?: number,
  *   maxSteps?: number
  * }} config
  * @returns {VisSession}
@@ -257,6 +273,8 @@ export function stepForward(session, context = null) {
 export function createSession(config) {
   const precompile = config.precompile ?? true;
   const cloneArguments = config.cloneArguments ?? true;
+  const mode = config.mode ?? 'normal-order';
+  const seed = config.seed ?? 1;
   const maxSteps = config.maxSteps ?? 5_000;
   const env = parseDefinitionsSource(config.programSource);
   const hooks = precompile ? {} : makeExpansionHooks(env);
@@ -269,8 +287,14 @@ export function createSession(config) {
   /** @type {KernelState} */
   const initialKernel = { graph: compiled.graph, rootId: compiled.nodeId };
 
-  const reducer = createPointerMachineNormalOrderReducer();
-  const scheduler = createFirstScheduler();
+  const reducer =
+    mode === 'multiway-rng'
+      ? createPointerMachineAllCandidatesReducer()
+      : createPointerMachineNormalOrderReducer();
+  const scheduler =
+    mode === 'multiway-rng'
+      ? createSeededRngScheduler(seed)
+      : createFirstScheduler();
   const stepper = createKernelStepper({ reducer, scheduler, hooks });
 
   const phases = [
@@ -312,6 +336,10 @@ export function createSession(config) {
     complete: false,
     maxSteps,
     stepper,
+    mode,
+    seed: mode === 'multiway-rng' ? seed : null,
+    reducerId: reducer.id,
+    schedulerId: scheduler.id,
   };
 }
 
@@ -319,14 +347,17 @@ export function createSession(config) {
  * Convenience wrapper for the current "Hello World" demo.
  *
  * @param {string} programSource
+ * @param {{ mode?: SessionMode, seed?: number }} [options]
  * @returns {VisSession}
  */
-export function createHelloWorldSession(programSource) {
+export function createHelloWorldSession(programSource, options = {}) {
   return createSession({
     programSource,
     sourceExpr: '(((S a) b) c)',
     precompile: true,
     cloneArguments: true,
+    mode: options.mode,
+    seed: options.seed,
     maxSteps: 5_000,
   });
 }

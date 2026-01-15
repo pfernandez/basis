@@ -362,6 +362,64 @@ export function observeNormalOrder(observer, graph, options, hooks = {}) {
 }
 
 /**
+ * Collect all locally-enabled events reachable from `rootId`.
+ *
+ * The returned list is deterministic: it follows the same left-first traversal
+ * order as the normal-order observer, but does not stop at the first redex.
+ *
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} rootId
+ * @param {{ reduceUnderLambdas: boolean }} options
+ * @param {MachineHooks} [hooks]
+ * @returns {Event[]}
+ */
+export function collectEnabledEvents(graph, rootId, options, hooks = {}) {
+  const reduceUnderLambdas = options.reduceUnderLambdas ?? true;
+  const stack = [{ nodeId: rootId, path: [], seenBinders: new Set() }];
+
+  /** @type {Event[]} */
+  const events = [];
+
+  while (stack.length) {
+    const item = stack.pop();
+    if (!item) break;
+
+    const { nodeId, path, seenBinders } = item;
+    const node = getNode(graph, nodeId);
+
+    if (shouldExpandSymbol(node, hooks)) {
+      events.push({ kind: 'expand', nodeId, name: node.label, path });
+      continue;
+    }
+
+    if (node.kind === 'pair') {
+      const collapse = collapseEventForApplication(graph, nodeId, node, path);
+      if (collapse) events.push(collapse);
+
+      const apply = applyEventForApplication(graph, nodeId, node, path);
+      if (apply) events.push(apply);
+
+      if (isLambdaPair(graph, nodeId)) {
+        if (reduceUnderLambdas) {
+          pushLambdaBody(stack, nodeId, node, path, seenBinders);
+        }
+        continue;
+      }
+
+      pushPairTraversal(stack, nodeId, node, path, seenBinders);
+      continue;
+    }
+
+    if (node.kind === 'slot') {
+      const nextItem = workItemForBoundSlot(graph, node, path, seenBinders);
+      if (nextItem) stack.push(nextItem);
+    }
+  }
+
+  return events;
+}
+
+/**
  * Apply a previously observed machine event.
  *
  * This is the "rewrite" part of the machine. It is pure: returns a new graph
