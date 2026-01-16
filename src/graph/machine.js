@@ -438,6 +438,8 @@ export function collectEnabledEvents(graph, rootId, options, hooks = {}) {
  * }}
  */
 export function applyMachineEvent(graph, rootId, event, options, hooks = {}) {
+  assertEventTargetsNode(graph, rootId, event);
+  assertEventEnabled(graph, event, hooks);
   const stepped = stepEvent(graph, rootId, event, options, hooks);
   return {
     graph: stepped.graph,
@@ -474,6 +476,8 @@ export function stepNormalOrder(graph, rootId, options, observer, hooks = {}) {
     return { graph, rootId, observer: observed.observer, didStep: false };
   }
 
+  assertEventTargetsNode(graph, rootId, event);
+  assertEventEnabled(graph, event, hooks);
   const stepped = stepEvent(graph, rootId, event, options, hooks);
 
   return {
@@ -484,4 +488,137 @@ export function stepNormalOrder(graph, rootId, options, observer, hooks = {}) {
     note: event.kind,
     focus: event,
   };
+}
+
+/**
+ * Resolve the target node id reached by following a path from `rootId`.
+ *
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} rootId
+ * @param {PathFrame[]} path
+ * @returns {string}
+ */
+function nodeIdAtPath(graph, rootId, path) {
+  let currentId = rootId;
+
+  path.forEach(frame => {
+    if (frame.kind === 'pair') {
+      invariant(
+        frame.parentId === currentId,
+        `Path parent mismatch at ${frame.parentId}`,
+      );
+      const parent = getNode(graph, currentId);
+      assertPairNode(parent, 'path pair frame must target a pair node');
+      currentId = parent.children[frame.index];
+      return;
+    }
+
+    if (frame.kind === 'binder-value') {
+      const slot = getNode(graph, currentId);
+      invariant(slot.kind === 'slot', 'binder-value path must follow a slot');
+      invariant(
+        slot.binderId === frame.binderId,
+        'binder-value path binderId mismatch',
+      );
+      const binder = getNode(graph, frame.binderId);
+      invariant(binder.kind === 'binder', 'binderId must reference a binder');
+      invariant(
+        typeof binder.valueId === 'string',
+        'binder must have a valueId when following binder-value path',
+      );
+      currentId = binder.valueId;
+      return;
+    }
+
+    throw new Error(`Unknown path frame kind: ${frame.kind}`);
+  });
+
+  return currentId;
+}
+
+/**
+ * Ensure the event's `nodeId` matches the node reached by its `path`.
+ *
+ * This prevents "teleportation" where a crafted event rewrites an unrelated
+ * pointer by providing an inconsistent path.
+ *
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} rootId
+ * @param {Event} event
+ * @returns {void}
+ */
+function assertEventTargetsNode(graph, rootId, event) {
+  const targetId = nodeIdAtPath(graph, rootId, event.path ?? []);
+  invariant(
+    targetId === event.nodeId,
+    `Event nodeId ${event.nodeId} does not match path target ${targetId}`,
+  );
+}
+
+/**
+ * Assert that an event is locally enabled in the current graph.
+ *
+ * This keeps the observer honest: applying an action cannot perform a rewrite
+ * that wasn't justified by the substrate's local structure.
+ *
+ * @param {import('./graph.js').Graph} graph
+ * @param {Event} event
+ * @param {MachineHooks} hooks
+ * @returns {void}
+ */
+function assertEventEnabled(graph, event, hooks) {
+  if (event.kind === 'expand') {
+    const node = getNode(graph, event.nodeId);
+    invariant(node.kind === 'symbol', 'expand target must be a symbol node');
+    invariant(
+      node.label === event.name,
+      'expand event name must match symbol label',
+    );
+    invariant(
+      typeof hooks.canExpandSymbol === 'function' &&
+        hooks.canExpandSymbol(event.name),
+      `Symbol ${event.name} is not expandable`,
+    );
+    invariant(
+      typeof hooks.expandSymbol === 'function',
+      'expand event requires hooks.expandSymbol',
+    );
+    return;
+  }
+
+  if (event.kind === 'apply') {
+    const node = getNode(graph, event.nodeId);
+    assertPairNode(node, 'apply target must be a pair node');
+    const shape = applicationShape(graph, node);
+    invariant(
+      shape.rightId === event.argId,
+      'apply event argId must match application right child',
+    );
+    invariant(
+      shape.headId === event.lambdaId,
+      'apply event lambdaId must match application head',
+    );
+    invariant(
+      isLambdaPair(graph, shape.headId),
+      'apply event requires a lambda head',
+    );
+    return;
+  }
+
+  if (event.kind === 'collapse') {
+    const node = getNode(graph, event.nodeId);
+    assertPairNode(node, 'collapse target must be a pair node');
+    const shape = applicationShape(graph, node);
+    invariant(
+      shape.rightId === event.replacementId,
+      'collapse replacementId must match application right child',
+    );
+    invariant(
+      getNode(graph, shape.headId).kind === 'empty',
+      'collapse event requires an empty application head',
+    );
+    return;
+  }
+
+  throw new Error(`Unknown event kind: ${event.kind}`);
 }
