@@ -20,6 +20,12 @@ test('identity returns its argument', () => {
   assert.equal(render('(I z)'), 'z');
 });
 
+test('I is extensionally equal to (S K K)', () => {
+  assert.equal(render('I'), render('((S K) K)'));
+  assert.equal(render('(I z)'), render('(((S K) K) z)'));
+  assert.equal(render('(I ((pair a) b))'), render('(((S K) K) ((pair a) b))'));
+});
+
 test('K discards the second argument', () => {
   assert.equal(render('((K a) b)'), 'a');
 });
