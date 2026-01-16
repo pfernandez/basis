@@ -12,14 +12,15 @@ import programSource from '../../programs/sk-basis.lisp?raw';
 
 import {
   canStepForward,
+  actionLog,
   createHelloWorldSession,
   present,
+  presentFrame,
   stepBack,
   stepForward,
   totals,
 } from './domain/session.js';
 
-import { createPhysicsEngine } from './simulation/engine.js';
 import { createScene } from './view/scene.js';
 
 /**
@@ -80,6 +81,19 @@ function hudForPresent(state, totalsValue, playback, session) {
   const lastStep = totalsValue.lastStep ?? '?';
   const reduced = totalsValue.reduced ?? '?';
   const seed = session.seed === null ? '' : ` seed=${session.seed}`;
+  const frame = presentFrame(session);
+  const decision = frame.decision;
+  const candidateCount = decision?.candidateCount ?? 0;
+  const picked =
+    typeof decision?.choiceIndex === 'number'
+      ? decision.choiceIndex + 1
+      : null;
+  const choice =
+    picked === null ? `-/${candidateCount}` : `${picked}/${candidateCount}`;
+  const rngState =
+    typeof frame.stepperState?.schedulerState === 'number'
+      ? ` rng=${frame.stepperState.schedulerState}`
+      : '';
   return [
     '3D Combinator Visualizer (Hello World)',
     '',
@@ -87,11 +101,13 @@ function hudForPresent(state, totalsValue, playback, session) {
     `state: ${state.note}`,
     `play: ${playback.isPlaying ? 'playing' : 'paused'}`,
     `mode: ${session.mode}${seed}`,
+    `choice: ${choice}  scheduler: ${session.schedulerId}${rngState}`,
     `source: ${session.sourceExpr}`,
     `expr: ${state.expr}`,
     'play/pause: Space',
     'step: ←/→',
     'mode: M',
+    'log: L',
     '',
     `nodes: ${state.graph.order}  edges: ${state.graph.size}`,
     `init nodes: ${totalsValue.initial}`,
@@ -153,7 +169,8 @@ async function start() {
     engine = null;
     if (previousEngine) previousEngine.dispose();
 
-    const nextEngine = await createPhysicsEngine({
+    const physics = await import('./simulation/engine.js');
+    const nextEngine = await physics.createPhysicsEngine({
       graph: state.graph,
       rootId: state.rootId,
     });
@@ -278,6 +295,12 @@ async function start() {
       mode = mode === 'normal-order' ? 'multiway-rng' : 'normal-order';
       session = createHelloWorldSession(programSource, { mode, seed });
       queueLoadState(present(session), { fit: false });
+      return;
+    }
+
+    if (event.key === 'l' || event.key === 'L') {
+      event.preventDefault();
+      console.log(JSON.stringify(actionLog(session), null, 2));
       return;
     }
 

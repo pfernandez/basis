@@ -31,6 +31,7 @@ import { graphologyFromSnapshot } from './snapshot.js';
 
 /**
  * @typedef {import('../../kernel/actions.js').KernelState} KernelState
+ * @typedef {import('../../kernel/actions.js').KernelAction} KernelAction
  * @typedef {import('../../kernel/stepper.js').StepperState} StepperState
  */
 
@@ -54,7 +55,9 @@ import { graphologyFromSnapshot } from './snapshot.js';
 /**
  * @typedef {{
  *   kernel: KernelState,
+ *   action: KernelAction | null,
  *   stepperState: StepperState,
+ *   decision: import('../../kernel/stepper.js').StepDecision | null,
  *   phaseIndex: number,
  *   state: VisState
  * }} Frame
@@ -135,7 +138,15 @@ function visStateFromKernel(kernel, note, stepIndex, focus) {
  * @returns {VisState}
  */
 export function present(session) {
-  return session.frames[session.index].state;
+  return presentFrame(session).state;
+}
+
+/**
+ * @param {VisSession} session
+ * @returns {Frame}
+ */
+export function presentFrame(session) {
+  return session.frames[session.index];
 }
 
 /**
@@ -245,7 +256,9 @@ export function stepForward(session, context = null) {
 
     const nextFrame = {
       kernel,
+      action: stepped.action ?? null,
       stepperState,
+      decision: stepped.decision ?? null,
       phaseIndex,
       state: nextState,
     };
@@ -256,6 +269,35 @@ export function stepForward(session, context = null) {
       index: session.frames.length,
     };
   }
+}
+
+/**
+ * @typedef {{
+ *   stepIndex: number,
+ *   phase: string,
+ *   note: string,
+ *   decision: import('../../kernel/stepper.js').StepDecision | null,
+ *   action: KernelAction | null
+ * }} ActionLogEntry
+ */
+
+/**
+ * Return a replayable log of chosen actions and decisions.
+ *
+ * This is intended for debugging, exporting traces, and building replay
+ * schedulers without depending on PRNG state.
+ *
+ * @param {VisSession} session
+ * @returns {ActionLogEntry[]}
+ */
+export function actionLog(session) {
+  return session.frames.map(frame => ({
+    stepIndex: frame.state.stepIndex,
+    phase: session.phases[frame.phaseIndex]?.name ?? '?',
+    note: frame.state.note,
+    decision: frame.decision ?? null,
+    action: frame.action ?? null,
+  }));
 }
 
 /**
@@ -327,7 +369,9 @@ export function createSession(config) {
     frames: [
       {
         kernel: initialKernel,
+        action: null,
         stepperState: initialStepperState,
+        decision: null,
         phaseIndex: 0,
         state: initialState,
       },

@@ -19,6 +19,20 @@ import { applyAction } from './actions.js';
  */
 
 /**
+ * A deterministic summary of how a step was chosen.
+ *
+ * This is logged as data (not a side effect) so multiway/RNG stepping can be
+ * replayed or inspected without entangling the kernel with UI concerns.
+ *
+ * @typedef {{
+ *   reducerId: string,
+ *   schedulerId: string,
+ *   candidateCount: number,
+ *   choiceIndex: number | null
+ * }} StepDecision
+ */
+
+/**
  * @typedef {{
  *   maxSteps?: number,
  *   reduceUnderLambdas: boolean,
@@ -76,6 +90,7 @@ import { applyAction } from './actions.js';
  *   didStep: boolean,
  *   state: KernelState,
  *   stepperState: StepperState,
+ *   decision: StepDecision,
  *   note?: string,
  *   focus?: object | null,
  *   action?: KernelAction
@@ -126,6 +141,18 @@ export function createKernelStepper(config) {
 
       const action = choice.action;
       const nextSchedulerState = choice.schedulerState;
+      const candidateCount = proposed.actions.length;
+      const choiceIndex =
+        action === null ? null : proposed.actions.indexOf(action);
+
+      /** @type {StepDecision} */
+      const decision = {
+        reducerId: reducer.id,
+        schedulerId: scheduler.id,
+        candidateCount,
+        choiceIndex: typeof choiceIndex === 'number' ? choiceIndex : null,
+      };
+
       if (!action) {
         return {
           didStep: false,
@@ -134,6 +161,7 @@ export function createKernelStepper(config) {
             reducerState: proposed.reducerState,
             schedulerState: nextSchedulerState,
           },
+          decision,
         };
       }
 
@@ -160,8 +188,8 @@ export function createKernelStepper(config) {
           reducerState: nextReducerState,
           schedulerState: nextSchedulerState,
         },
+        decision,
       };
     },
   };
 }
-
