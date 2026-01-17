@@ -1,0 +1,17 @@
+\begin{tikzpicture}[
+  level distance=10mm,
+  sibling distance=16mm,
+  every node/.style={circle,draw,inner sep=1.5pt}
+  ]
+  \node {$\cdot$}
+    child {
+      node {$\cdot$}
+      child {
+        node {$\cdot$}
+        child { node {$\mathrm{S}$} }
+        child { node {$f$} }
+      }
+      child { node {$g$} }
+    }
+    child { node {$x$} };
+\end{tikzpicture}

@@ -1,0 +1,22 @@
+\begin{tikzpicture}[>=stealth]
+  % nodes
+  \node[circle,draw,inner sep=1pt,minimum size=3pt] (T) at (0,0) {};
+  \node[circle,draw,inner sep=1pt,minimum size=3pt] (Ta)
+    at (-1.5,-1.5) {};
+  \node[circle,draw,inner sep=1pt,minimum size=3pt] (Tb)
+    at (1.5,-1.5) {};
+  \node[circle,draw,inner sep=1pt,minimum size=3pt] (Tab)
+    at (0,-3) {};
+
+  % labels
+  \node[above] at (T) {$T$};
+  \node[left] at (Ta) {$T_a$};
+  \node[right] at (Tb) {$T_b$};
+  \node[below] at (Tab) {$T_{ab}=T_{ba}$};
+
+  % arrows
+  \draw[->] (T) -- node[above left] {$a$} (Ta);
+  \draw[->] (T) -- node[above right] {$b$} (Tb);
+  \draw[->] (Ta) -- node[left] {$b$} (Tab);
+  \draw[->] (Tb) -- node[right] {$a$} (Tab);
+\end{tikzpicture}

@@ -1,0 +1,30 @@
+\begin{tikzpicture}[scale=1.0, >=Latex]
+  % Circle
+  \draw[thick] (0,0) circle (3);
+  \node at (0,4.1) {\small Rim of fixed $n$ (all Dyck words at tier $n$)};
+
+  % Points and labels on the rim
+  \foreach \ang/\lab in {
+      0/$w_0$,
+     45/$w_1$,
+     90/$w_2$,
+    135/$w_3$,
+    180/$w_4$,
+    225/$w_5$,
+    270/$w_6$,
+    315/$w_7$} {
+    \fill ({3*cos(\ang)},{3*sin(\ang)}) circle (2.2pt);
+    % labels slightly outside the circle
+    \node at ({3.4*cos(\ang)},{3.4*sin(\ang)}) {\small \lab};
+  }
+
+  % Shift along the rim (the unitary U)
+  \draw[->,thick] ({3*cos(0)},{3*sin(0)}) arc (0:45:3);
+  \draw[->,thick] ({3*cos(45)},{3*sin(45)}) arc (45:90:3);
+  \draw[->,thick,densely dashed] ({3*cos(90)},{3*sin(90)}) arc (90:315:3);
+
+  % Phase / state vector
+  \draw[->,very thick,blue] (0,0) -- (2.1,2.1);
+  % Label placed well inside the circle, away from w1
+  \node[blue] at (0,1.5) {\small phase $e^{-iH\Delta/\hbar}$};
+\end{tikzpicture}

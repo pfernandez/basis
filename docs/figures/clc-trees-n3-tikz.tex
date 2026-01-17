@@ -1,0 +1,97 @@
+\begin{tikzpicture}[
+  level 1/.style={level distance=7mm,sibling distance=7mm},
+  level 2/.style={level distance=7mm,sibling distance=7mm},
+  every node/.style={circle,draw,inner sep=1pt,minimum size=2pt}
+  ]
+  % Order: ((())), (()()), (())(), ()(()), ()()()
+  % Pairs encodings (canonical):
+  % ((())) -> (((()())())())
+  % (()()) -> ((()(()()))())
+  % (())() -> ((()())(()()))
+  % ()(()) -> (()((()())()))
+  % ()()() -> (()(()(()())))
+
+  % 1) ((()))
+  \begin{scope}[shift={(-5,0)}]
+    \node {}
+      child { node {}
+        child { node {}
+          child { node {} }
+          child { node {} }
+        }
+        child { node {} }
+      }
+      child { node {} };
+    \node[draw=none,align=center] at (0,-2.6)
+      {\scriptsize\texttt{((()))}\\[-0.6mm]
+       \scriptsize\texttt{(((()())())())}};
+  \end{scope}
+
+  % 2) (()())
+  \begin{scope}[shift={(-2.5,0)}]
+    \node {}
+      child { node {}
+        child { node {} }
+        child { node {}
+          child { node {} }
+          child { node {} }
+        }
+      }
+      child { node {} };
+    \node[draw=none,align=center] at (0,-2.6)
+      {\scriptsize\texttt{(()())}\\[-0.6mm]
+       \scriptsize\texttt{((()(()()))())}};
+  \end{scope}
+
+  % 3) (())()
+  \begin{scope}[
+    shift={(0,0)},
+    level 1/.style={level distance=7mm,sibling distance=10mm}
+    ]
+    \node {}
+      child { node {}
+        child { node {} }
+        child { node {} }
+      }
+      child { node {}
+        child { node {} }
+        child { node {} }
+      };
+    \node[draw=none,align=center] at (0,-2.6)
+      {\scriptsize\texttt{(())()}\\[-0.6mm]
+       \scriptsize\texttt{((()())(()()))}};
+  \end{scope}
+
+  % 4) ()(())
+  \begin{scope}[shift={(2.5,0)}]
+    \node {}
+      child { node {} }
+      child { node {}
+        child { node {}
+          child { node {} }
+          child { node {} }
+        }
+        child { node {} }
+      };
+    \node[draw=none,align=center] at (0,-2.6)
+      {\scriptsize\texttt{()(())}\\[-0.6mm]
+       \scriptsize\texttt{(()((()())()))}};
+  \end{scope}
+
+  % 5) ()()()
+  \begin{scope}[shift={(5,0)}]
+    \node {}
+      child { node {} }
+      child { node {}
+        child { node {} }
+        child { node {}
+          child { node {} }
+          child { node {} }
+        }
+      };
+    \node[draw=none,align=center] at (0,-2.6)
+      {\scriptsize\texttt{()()()}\\[-0.6mm]
+       \scriptsize\texttt{(()(()(()())))}};    
+  \end{scope}
+\end{tikzpicture}
+\vspace{-2.5em}

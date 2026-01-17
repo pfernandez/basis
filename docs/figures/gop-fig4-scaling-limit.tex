@@ -1,0 +1,30 @@
+\begin{tikzpicture}[scale=0.8, >=Latex]
+  % Left: discrete grid with a Dyck-like stair path
+  \begin{scope}[shift={(0,0)}]
+    % Grid
+    \foreach \x in {0,...,6} \draw[gray!25] (\x,0) -- (\x,3);
+    \foreach \y in {0,...,3} \draw[gray!25] (0,\y) -- (6,\y);
+    % Stair path
+    \draw[thick, blue]
+      (0,0) -- (1,1) -- (2,2) -- (3,1) -- (4,2) -- (5,1) -- (6,0);
+    % Label
+    \node at (3,-0.7) {\small discrete (Dyck-like)};
+  \end{scope}
+
+  % Arrow between panels
+  \draw[->,thick] (6.4,1.5) -- (7.8,1.5)
+    node[midway,above] {\small scaling $n\!\uparrow$};
+
+  % Right: smooth curve (Brownian excursion / wavefront)
+  \begin{scope}[shift={(8,0)}]
+    % Frame / grid
+    \draw[gray!25] (0,0) rectangle (6,3);
+    % Smooth curve
+    \draw[thick, red, rounded corners=4pt]
+      plot[smooth] coordinates {
+        (0,0) (1,0.6) (2,1.5) (3,2.3) (4,2.4) (5,1.8) (6,1.0)
+      };
+    % Label
+    \node at (3,-0.7) {\small continuum (excursion/wave)};
+  \end{scope}
+\end{tikzpicture}

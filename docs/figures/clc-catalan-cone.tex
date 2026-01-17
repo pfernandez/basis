@@ -1,0 +1,19 @@
+\begin{tikzpicture}[scale=1.1]
+  % axes
+  \draw[->] (0,0) -- (0,4) node[left] {$n$};
+  \draw[->] (0,0) -- (4,0) node[below] {$b$};
+
+  % cone boundaries
+  \draw[thick] (0,0) -- (3.5,3.5);
+  \draw[thick] (0,0) -- (0.8,3.5);
+
+  % discrete layers
+  \foreach \y in {1,2,3} {
+    \draw[dashed] (0.25*\y,\y) -- (0.85*\y,\y);
+  }
+
+  % labels
+  \node[left] at (0,3.6) {chain (axis)};
+  \node[above right] at (3.5,3.5) {boundary (star)};
+  \node at (1.1,2.2) {\small Dyck layer};
+\end{tikzpicture}

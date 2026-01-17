@@ -1,0 +1,21 @@
+\begin{tikzpicture}[scale=0.7]
+  % axes
+  \draw[->] (0,0) -- (13,0) node[below] {$k$};
+  \draw[->] (0,0) -- (0,6) node[left] {$H_k$};
+
+  % sample Dyck path (semilength 6)
+  \draw[thick]
+    (0,0) -- (1,1) -- (2,2) -- (3,3) -- (4,2) -- (5,3) -- (6,4)
+    -- (7,3) -- (8,2) -- (9,3) -- (10,2) -- (11,1) -- (12,0);
+
+  % labels
+  \node[below] at (0,0) {0};
+  \node[below] at (12,0) {$2n$};
+  \node[above right] at (3,3) {\small Dyck walk};
+
+  % schematic smooth excursion overlay
+  \draw[dashed] plot[smooth] coordinates {
+    (0,0) (2,1) (4,2.8) (6,4.2) (8,2.5) (10,1.2) (12,0)
+  };
+  \node[right] at (12,4.2) {\small Brownian excursion (scaling limit)};
+\end{tikzpicture}

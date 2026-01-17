@@ -237,23 +237,7 @@ k(w):=\sum_{j=1}^{2n-1}\mathbf{1}\{(w_j,w_{j+1})=(\texttt{(},\texttt{)})\}.
 
 \begin{figure}[ht]
 			\centering
-			% Schematic light-cone diagram
-				\begin{tikzpicture}[scale=1.1]
-			% axes
-				\draw[->] (0,0) -- (0,4) node[left] {$n$};
-				\draw[->] (0,0) -- (4,0) node[below] {$b$};
-			% cone boundaries
-			\draw[thick] (0,0) -- (3.5,3.5);
-			\draw[thick] (0,0) -- (0.8,3.5);
-		% discrete layers
-		\foreach \y in {1,2,3} {
-				\draw[dashed] (0.25*\y,\y) -- (0.85*\y,\y);
-			}
-				% labels
-				\node[left] at (0,3.6) {chain (axis)};
-				\node[above right] at (3.5,3.5) {boundary (star)};
-				\node at (1.1,2.2) {\small Dyck layer};
-					\end{tikzpicture}
+			\input{figures/clc-catalan-cone.tex}
 					\caption{The Catalan light cone.
 						Tier $n$ (the number of Dyck units) plays the role of a discrete time
 						coordinate, while breadth $b$ measures lateral spread.
@@ -336,15 +320,7 @@ If $w$ has height process $(H_k)_{k=0}^{2n}$, then
 
 \begin{figure}[ht]
 			\centering
-			\[
-					\begin{array}{ccl}
-				((())) & \quad & (h=3,\ b=1) \\
-				(()()) &      & (h=2,\ b=2) \\
-				(())() &      & (h=2,\ b=2) \\
-				()(()) &      & (h=2,\ b=2) \\
-				()()() &      & (h=1,\ b=3)
-				\end{array}
-		\]
+			\input{figures/clc-dyck-n3.tex}
 			\caption{All Dyck words of tier $n=3$, ordered from maximal nesting (chain)
 				to maximal separation (star). These five configurations exhaust the discrete
 				causal possibilities at fixed tier.
@@ -530,44 +506,13 @@ Two prefixes $u$ and $v$ relate in exactly two ways:
 Thus the cone picture is relocatable: it appears at every node, cones nest along
 causal chains, and branching produces incompatible futures.
 
-\begin{figure}[ht]
-	\centering
-	\begin{tikzpicture}[scale=1.0, every node/.style={inner sep=1pt}]
-		% Common causal past
-		\node (root) at (0,0) {};
-		\node (a1)   at (-1,1) {};
-		\node (b1)   at (1,1) {};
-
-		% Two divergent prefixes u and v
-		\node (u) at (-1.5,2) {};
-		\node (v) at (1.5,2) {};
-
-		% Subcones below u
-		\draw[dashed] (-3,2) -- (-1.5,2) -- (-0.5,3.2);
-		\draw[dashed] (-1.5,2) -- (-2.5,3.2);
-
-		% Subcones below v
-		\draw[dashed] (3,2) -- (1.5,2) -- (0.5,3.2);
-		\draw[dashed] (1.5,2) -- (2.5,3.2);
-
-		% Edges in prefix tree
-		\draw (root) -- (a1);
-		\draw (root) -- (b1);
-		\draw (a1) -- (u);
-		\draw (b1) -- (v);
-
-		% Labels
-		\node[left]  at (-1.5,2) {$u$};
-		\node[right] at (1.5,2) {$v$};
-		\node[below] at (0,0) {common prefix $w$};
-
-		\node at (-1.5,3.5) {\small local cone at $u$};
-		\node at (1.5,3.5) {\small local cone at $v$};
-	\end{tikzpicture}
-		\caption{Two Dyck prefixes $u$ and $v$ diverging from a shared ancestor $w$.
-			Dashed regions indicate the local Catalan cones rooted at $u$ and $v$.
-			Cones nest along causal chains and diverge after branching points, producing
-		a family of local, relocatable causal geometries on the Catalan substrate.}
+	\begin{figure}[ht]
+		\centering
+		\input{figures/clc-multiple-cones.tex}
+			\caption{Two Dyck prefixes $u$ and $v$ diverging from a shared ancestor $w$.
+				Dashed regions indicate the local Catalan cones rooted at $u$ and $v$.
+				Cones nest along causal chains and diverge after branching points, producing
+			a family of local, relocatable causal geometries on the Catalan substrate.}
 	\label{fig:multiple-cones}
 \end{figure}
 
@@ -703,100 +648,13 @@ displaying, for the \emph{same} five Catalan shapes, the corresponding pairs
 left-to-right in lexicographic order on Dyck words (with \texttt{(} $<$ \texttt{)}),
 and the tree and pairs rows are obtained by the standard bijection.
 
-\begin{figure}[H]
-  \centering
-  \begin{tikzpicture}[
-    level 1/.style={level distance=7mm,sibling distance=7mm},
-    level 2/.style={level distance=7mm,sibling distance=7mm},
-    every node/.style={circle,draw,inner sep=1pt,minimum size=2pt}
-    ]
-    % Order: ((())), (()()), (())(), ()(()), ()()()
-    % Pairs encodings (canonical): 
-    % ((())) -> (((()())())())
-    % (()()) -> ((()(()()))())
-    % (())() -> ((()())(()()))
-    % ()(()) -> (()((()())()))
-    % ()()() -> (()(()(()())))
-    %
-    % 1) ((()))
-    \begin{scope}[shift={(-5,0)}]
-      \node {}
-        child { node {}
-          child { node {}
-            child { node {} }
-            child { node {} }
-          }
-          child { node {} }
-        }
-        child { node {} };
-      \node[draw=none,align=center] at (0,-2.6)
-      {\scriptsize\texttt{((()))}\\[-0.6mm]\scriptsize\texttt{(((()())())())}};
-    \end{scope}
-    % 2) (()())
-    \begin{scope}[shift={(-2.5,0)}]
-      \node {}
-        child { node {}
-          child { node {} }
-          child { node {}
-            child { node {} }
-            child { node {} }
-          }
-        }
-        child { node {} };
-      \node[draw=none,align=center] at (0,-2.6)
-      {\scriptsize\texttt{(()())}\\[-0.6mm]\scriptsize\texttt{((()(()()))())}};
-    \end{scope}
-    % 3) (())()
-    \begin{scope}[
-      shift={(0,0)},
-      level 1/.style={level distance=7mm,sibling distance=10mm}
-      ]
-      \node {}
-        child { node {}
-          child { node {} }
-          child { node {} }
-        }
-        child { node {}
-          child { node {} }
-          child { node {} }
-        };
-      \node[draw=none,align=center] at (0,-2.6)
-      {\scriptsize\texttt{(())()}\\[-0.6mm]\scriptsize\texttt{((()())(()()))}};
-    \end{scope}
-    % 4) ()(())
-    \begin{scope}[shift={(2.5,0)}]
-      \node {}
-        child { node {} }
-        child { node {}
-          child { node {}
-            child { node {} }
-            child { node {} }
-          }
-          child { node {} }
-        };
-      \node[draw=none,align=center] at (0,-2.6)
-      {\scriptsize\texttt{()(())}\\[-0.6mm]\scriptsize\texttt{(()((()())()))}};
-    \end{scope}
-    % 5) ()()()
-    \begin{scope}[shift={(5,0)}]
-      \node {}
-        child { node {} }
-        child { node {}
-          child { node {} }
-          child { node {}
-            child { node {} }
-            child { node {} }
-          }
-        };
-      \node[draw=none,align=center] at (0,-2.6)
-      {\scriptsize\texttt{()()()}\\[-0.6mm]\scriptsize\texttt{(()(()(()())))}};    
-    \end{scope}
-  \end{tikzpicture}
-  \vspace{-2.5em}
-  \caption{The five Catalan shapes at tier $n=3$ shown as (i) full binary trees,
-  together with (ii) Dyck words and (iii) pairs (S-expression) encodings in which each
-  leaf is \texttt{()} and each internal node is a parenthesized pair of its two
-  children (as if one were looking "down into" the tree). These are three
+	\begin{figure}[H]
+	  \centering
+	  \input{figures/clc-trees-n3-tikz.tex}
+	  \caption{The five Catalan shapes at tier $n=3$ shown as (i) full binary trees,
+	  together with (ii) Dyck words and (iii) pairs (S-expression) encodings in which each
+	  leaf is \texttt{()} and each internal node is a parenthesized pair of its two
+	  children (as if one were looking "down into" the tree). These are three
   coordinate systems for the same underlying Catalan objects.}
   \label{fig:trees-n3-tikz}
 \end{figure}
@@ -1269,30 +1127,13 @@ More general amplitude assignments may depend on other prefix-local features
 (e.g.\ height, step type, or other additive functionals), provided the Dyck
 constraint is preserved.
 
-\begin{figure}[ht]
-	\centering
-	\begin{tikzpicture}[scale=0.7]
-		% axes
-		\draw[->] (0,0) -- (13,0) node[below] {$k$};
-		\draw[->] (0,0) -- (0,6) node[left] {$H_k$};
-		% sample Dyck path (semilength 6)
-		\draw[thick]
-			(0,0) -- (1,1) -- (2,2) -- (3,3) -- (4,2) -- (5,3) -- (6,4)
-			-- (7,3) -- (8,2) -- (9,3) -- (10,2) -- (11,1) -- (12,0);
-		% labels
-		\node[below] at (0,0) {0};
-		\node[below] at (12,0) {$2n$};
-		\node[above right] at (3,3) {\small Dyck walk};
-		% schematic smooth excursion overlay
-		\draw[dashed] plot[smooth] coordinates {
-				(0,0) (2,1) (4,2.8) (6,4.2) (8,2.5) (10,1.2) (12,0)
-			};
-		\node[right] at (12,4.2) {\small Brownian excursion (scaling limit)};
-	\end{tikzpicture}
-	\caption{A Dyck path as a nearest-neighbour walk $(H_k)$ constrained to stay
-		nonnegative and return to zero at time $2n$.
-		Under diffusive rescaling of $k$ and $H_k$, ensembles of such paths converge
-		to Brownian excursions, providing the bridge to the heat and Schr\"odinger
+	\begin{figure}[ht]
+		\centering
+		\input{figures/clc-dyck-walk-excursion.tex}
+		\caption{A Dyck path as a nearest-neighbour walk $(H_k)$ constrained to stay
+			nonnegative and return to zero at time $2n$.
+			Under diffusive rescaling of $k$ and $H_k$, ensembles of such paths converge
+			to Brownian excursions, providing the bridge to the heat and Schr\"odinger
 	equations discussed in the text.}
 	\label{fig:dyck-walk-excursion}
 \end{figure}
@@ -1630,25 +1471,7 @@ at fixed tier---is analyzed in detail by Chenevi\`ere \cite{cheneviere2022linear
 
 \begin{figure}[ht]
   \centering
-  \begin{tikzpicture}[>=stealth]
-    % nodes
-    \node[circle,draw,inner sep=1pt,minimum size=3pt] (T)   at (0,0)    {};
-    \node[circle,draw,inner sep=1pt,minimum size=3pt] (Ta)  at (-1.5,-1.5) {};
-    \node[circle,draw,inner sep=1pt,minimum size=3pt] (Tb)  at (1.5,-1.5)  {};
-    \node[circle,draw,inner sep=1pt,minimum size=3pt] (Tab) at (0,-3)   {};
-
-    % labels
-    \node[above] at (T)   {$T$};
-    \node[left]  at (Ta)  {$T_a$};
-    \node[right] at (Tb)  {$T_b$};
-    \node[below] at (Tab) {$T_{ab}=T_{ba}$};
-
-    % arrows
-    \draw[->] (T)  -- node[above left]  {$a$} (Ta);
-    \draw[->] (T)  -- node[above right] {$b$} (Tb);
-    \draw[->] (Ta) -- node[left]        {$b$} (Tab);
-    \draw[->] (Tb) -- node[right]       {$a$} (Tab);
-  \end{tikzpicture}
+  \input{figures/clc-disjoint-subtrees.tex}
   \caption{Local diamond for commuting disjoint updates. Starting from a common
   state $T$, two spacelike-separated reductions $a$ and $b$ can be applied in
   either order, yielding intermediate states $T_a$ and $T_b$ but the same final

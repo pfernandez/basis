@@ -793,12 +793,7 @@ children encode $M$ and $N$:
 \[
 	(M\,N)
 	\quad\mapsto\quad
-	\begin{tikzpicture}[baseline=-3pt,level distance=7mm,
-		every node/.style={inner sep=1pt}]
-		\node {$\bullet$}
-		child { node {$M$} }
-		child { node {$N$} };
-	\end{tikzpicture}
+	\input{figures/clc-supp-program-frame-inline.tex}
 \]
 This mapping is bijective between program terms (modulo $\alpha$-conversion) and
 labeled elements of $\mathcal{C}$.
@@ -828,56 +823,20 @@ developed in the main text.
 
 \begin{figure}[h]
 	\centering
-	\begin{tikzpicture}[
-		level distance=10mm,
-		sibling distance=18mm,
-		every node/.style={circle,draw,inner sep=1.5pt}
-		]
-		\node {$\cdot$}
-			child { node {$M$} }
-			child { node {$N$} };
-	\end{tikzpicture}
+	\input{figures/clc-supp-fig-MN.tex}
 	\caption{A binary application node representing the term $M\,N$.}
 \end{figure}
 
 \begin{figure}[h]
 	\centering
-	\begin{tikzpicture}[
-		level distance=10mm,
-		sibling distance=16mm,
-		every node/.style={circle,draw,inner sep=1.5pt}
-		]
-		\node {$\cdot$}
-			child {
-				node {$\cdot$}
-				child { node {$\cdot$} child { node {$\mathrm{S}$} } child { node {$f$} } }
-				child { node {$g$} }
-			}
-			child { node {$x$} };
-	\end{tikzpicture}
+	\input{figures/clc-supp-fig-Sfgx.tex}
 	\caption{Binary-tree representation of the term $\mathrm{S}\,f\,g\,x$.}
 	\label{fig:Sfgx-binary-tree}
 \end{figure}
 
 \begin{figure}[h]
 	\centering
-	\begin{tikzpicture}[
-		level distance=10mm,
-		sibling distance=20mm,
-		every node/.style={circle,draw,inner sep=1.5pt}
-		]
-		\node {$\cdot$}
-			child { node {$\lambda x.M$} }
-			child { node {$N$} };
-	\end{tikzpicture}
-	\qquad$\Longrightarrow$\qquad
-	\begin{tikzpicture}[
-		level distance=10mm,
-		sibling distance=20mm,
-		every node/.style={circle,draw,inner sep=1.5pt}
-		]
-		\node {$M[x:=N]$};
-	\end{tikzpicture}
+	\input{figures/clc-supp-fig-beta-reduction.tex}
 	\caption{$\beta$-reduction as a local rewrite inside the Catalan family.}
 \end{figure}
 
@@ -905,22 +864,7 @@ underlying Catalan tree: the outer parentheses form the root frame, while each
 is shown below.
 
 \begin{center}
-	\begin{tikzpicture}[
-		level 1/.style={level distance=7mm,sibling distance=7mm},
-		level 2/.style={level distance=7mm,sibling distance=7mm},
-		level 3/.style={level distance=7mm,sibling distance=7mm},
-		every node/.style={circle,draw,inner sep=1pt,minimum size=2pt}
-		]
-		\node {}
-			child { node {}
-				child { node {}
-					child { node {} }
-					child { node {} }
-				}
-				child { node {} }
-			}
-			child { node {} };
-	\end{tikzpicture}
+	\input{figures/clc-supp-pairs-tree.tex}
 \end{center}
 
 Viewed from this perspective, the S-expression is simply the linear “parentheses
