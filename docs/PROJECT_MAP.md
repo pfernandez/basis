@@ -38,14 +38,10 @@ Purpose: enumerate and analyze Catalan objects and related local rewrite
 experiments.
 
 Status:
-- Used by tests and scripts, but some files predate the stricter style rules.
-- Prefer factoring reusable pure helpers out of CLI scripts over rewriting
-everything at once.
-
-If a file must be edited, modernize only the touched surface:
-- keep line length ≤ 80
-- add JSDoc for modified functions
-- avoid adding new global process/CLI parsing in shared modules
+- `src/catalan/*.js` modules are pure helpers used by tests and experiments.
+- Node entrypoints live in `src/catalan/*-cli.js` (thin wrappers with I/O).
+- The enumerators are ordered deterministically (e.g. `pairs(n)` matches
+  `dyck(n)` under the Dyck ↔ tree bijection).
 
 ## src/cli/ (Entry Points)
 

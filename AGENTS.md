@@ -42,9 +42,8 @@ More detail: `docs/PROJECT_MAP.md`.
 
 **Catalan research tooling**
 - `src/catalan/`: generators/bijections and local-collapse experiments.
-  These scripts are useful for possibility-space exploration, but some are
-  older and do not yet follow the stricter style rules. Prefer extracting
-  reusable pure helpers and keeping CLI entrypoints thin.
+  The shared modules are pure helpers; Node entrypoints live in
+  `src/catalan/*-cli.js` (thin wrappers with I/O).
 
 **Node-only entrypoints**
 - `src/cli/`: CLI wrappers for experiments/traces. Keep these as adapters.

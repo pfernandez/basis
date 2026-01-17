@@ -23,6 +23,10 @@ import { getNode } from '../graph/graph.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+/**
+ * @param {any} node
+ * @returns {string}
+ */
 function describeNode(node) {
   if (!node) return '<missing>';
   if (node.kind === 'symbol') return String(node.label ?? node.id);
@@ -33,6 +37,12 @@ function describeNode(node) {
   return `${node.kind}(${node.id})`;
 }
 
+/**
+ * Count pointer edges (`slot -> binder` and `binder -> value`).
+ *
+ * @param {import('../graph/graph.js').Graph} graph
+ * @returns {number}
+ */
 function countPointerLinks(graph) {
   return graph.nodes.reduce((count, node) => {
     if (node.kind === 'slot' && typeof node.binderId === 'string') {
@@ -45,6 +55,15 @@ function countPointerLinks(graph) {
   }, 0);
 }
 
+/**
+ * @param {string[]} argv
+ * @returns {{
+ *   defsPath: string,
+ *   tracePath: string | null,
+ *   inputs: string[],
+ *   precompile: boolean
+ * }}
+ */
 function parseArgs(argv) {
   const defsArg = argv.find(arg => arg.startsWith('--defs='));
   const traceArg = argv.find(arg => arg.startsWith('--trace='));
@@ -68,6 +87,11 @@ function parseArgs(argv) {
   return { defsPath, tracePath, inputs: filteredInputs, precompile };
 }
 
+/**
+ * @param {{ expression: string, snapshots: object[] }[]} results
+ * @param {string} tracePath
+ * @returns {void}
+ */
 function exportTrace(results, tracePath) {
   const payload = results.map(result => ({
     expression: result.expression,
@@ -77,10 +101,12 @@ function exportTrace(results, tracePath) {
   console.log(`Trace written to ${tracePath}`);
 }
 
-function main() {
-  const { defsPath, tracePath, inputs, precompile } = parseArgs(
-    process.argv.slice(2),
-  );
+/**
+ * @param {string[]} argv
+ * @returns {void}
+ */
+function main(argv) {
+  const { defsPath, tracePath, inputs, precompile } = parseArgs(argv);
   const env = loadDefinitions(defsPath);
   const samples = inputs.length ? inputs : ['(I a)', '((K a) b)'];
   const evaluations = [];
@@ -101,7 +127,8 @@ function main() {
           `Links: ${countPointerLinks(result.graph)}`,
       );
     } catch (error) {
-      console.error(`Failed to evaluate ${exprSource}: ${error.message}`);
+      const message = String(error?.message ?? error);
+      console.error(`Failed to evaluate ${exprSource}: ${message}`);
     }
   });
 
@@ -110,4 +137,4 @@ function main() {
   }
 }
 
-main();
+main(process.argv.slice(2));

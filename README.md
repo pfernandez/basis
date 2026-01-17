@@ -107,6 +107,9 @@ There are also small CLI scripts for enumeration, collapse-policy exploration,
 and evaluation (see package.json for entry points). Some scripts emit trace
 data that can be viewed interactively in the browser.
 
+Note: `src/catalan/index.js` colorizes parentheses by default when attached to
+TTY output. Use `--no-color` (or redirect output) to print plain parentheses.
+
 ---
 
 This repo exists because I find these structures genuinely interesting, and

@@ -23,27 +23,65 @@ const DEFAULTS = {
   random: Math.random,
 };
 
+/**
+ * @typedef {{
+ *   mode: string,
+ *   freezeBalanced: boolean,
+ *   balanceThreshold: number,
+ *   lighterChance: number,
+ *   random: () => number
+ * }} CollapsePolicyOptions
+ */
+
+/**
+ * @param {Partial<CollapsePolicyOptions>} overrides
+ * @returns {CollapsePolicyOptions}
+ */
 function normalizeOptions(overrides = {}) {
   return { ...DEFAULTS, ...overrides };
 }
 
+/**
+ * @param {string} mode
+ * @returns {void}
+ */
 function validateMode(mode) {
   if (!Object.values(MODES).includes(mode)) {
     throw new Error(`Unknown collapse mode: ${mode}`);
   }
 }
 
+/**
+ * @param {unknown} countPairs
+ * @returns {void}
+ */
 function ensureCountPairs(countPairs) {
   if (typeof countPairs !== 'function') {
-    throw new Error('createCollapsePolicy expects a countPairs(tree) function');
+    throw new Error(
+      'createCollapsePolicy expects a countPairs(tree) function',
+    );
   }
 }
 
+/**
+ * Create a policy function that selects the subtree to keep at a node.
+ *
+ * The policy never mutates its input; it returns an existing subtree reference
+ * or the original node (when frozen).
+ *
+ * @param {(tree: any) => number} countPairs
+ * @param {Partial<CollapsePolicyOptions>} [overrides]
+ * @returns {(node: any) => any}
+ */
 export function createCollapsePolicy(countPairs, overrides = {}) {
   ensureCountPairs(countPairs);
   const options = normalizeOptions(overrides);
   validateMode(options.mode);
 
+  /**
+   * @param {any} node
+   * @returns {any}
+   */
   return function collapseNode(node) {
     if (!node) return null;
     const left = node.L ?? null;
@@ -71,7 +109,10 @@ export function createCollapsePolicy(countPairs, overrides = {}) {
       case MODES.LIGHTER:
         return lighter;
       case MODES.HEAVIER: {
-        if (options.lighterChance > 0 && options.random() < options.lighterChance) {
+        if (
+          options.lighterChance > 0 &&
+          options.random() < options.lighterChance
+        ) {
           return lighter;
         }
         return heavier;
