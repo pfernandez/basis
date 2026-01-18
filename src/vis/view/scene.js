@@ -186,7 +186,7 @@ export function createScene(params) {
   scene.background = new THREE.Color(0x0b1020);
 
   const camera = new THREE.PerspectiveCamera(55, 1, 0.01, 500);
-  camera.position.set(0, 3.5, 9);
+  camera.position.set(0, 0, 9);
   camera.lookAt(0, 0, 0);
 
   const controls = new OrbitControls(camera, renderer.domElement);
@@ -203,8 +203,11 @@ export function createScene(params) {
   scene.add(sun);
 
   const grid = new THREE.GridHelper(60, 60, 0x1f2937, 0x111827);
-  grid.position.y = -8;
+  grid.rotation.x = Math.PI / 2;
   scene.add(grid);
+
+  const axes = new THREE.AxesHelper(2.5);
+  scene.add(axes);
 
   const labelGroup = new THREE.Group();
   scene.add(labelGroup);

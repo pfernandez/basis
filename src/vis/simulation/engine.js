@@ -150,6 +150,25 @@ function zOffsetForChildKind(kind, spacing) {
 }
 
 /**
+ * Translate all positions so that the root sits at the origin.
+ *
+ * @param {Map<string, [number, number, number]>} positions
+ * @param {string} rootId
+ * @returns {Map<string, [number, number, number]>}
+ */
+function normalizePositionsToRoot(positions, rootId) {
+  const root = positions.get(rootId) ?? [0, 0, 0];
+  const [rx, ry, rz] = root;
+  const next = new Map();
+
+  positions.forEach((pos, nodeId) => {
+    next.set(nodeId, [pos[0] - rx, pos[1] - ry, pos[2] - rz]);
+  });
+
+  return next;
+}
+
+/**
  * @typedef {{ id: string, children?: ChildTreeNode[] }} ChildTreeNode
  */
 
@@ -281,7 +300,7 @@ function layoutGraphPositions(graph, rootId, nodeRadius) {
     );
   });
 
-  return positions;
+  return normalizePositionsToRoot(positions, rootId);
 }
 
 /**
