@@ -10,6 +10,22 @@
 import { discoverMotifs } from './motif-discover.js';
 
 /**
+ * @param {string} mode
+ * @returns {import('./motif-discover.js').CollapseMode}
+ */
+function parsePolicyMode(mode) {
+  if (
+    mode === 'heavier' ||
+    mode === 'lighter' ||
+    mode === 'left' ||
+    mode === 'right'
+  ) {
+    return mode;
+  }
+  throw new Error(`Unknown policy mode: ${mode}`);
+}
+
+/**
  * @param {string[]} argv
  * @returns {import('./motif-discover.js').DiscoverOptions}
  */
@@ -32,7 +48,9 @@ function parseArgs(argv) {
     ? Number.parseInt(minSizeArg.split('=')[1], 10)
     : 0;
   const eps = epsArg ? Number.parseFloat(epsArg.split('=')[1]) : 1;
-  const policyMode = policyArg ? policyArg.split('=')[1] : 'heavier';
+  const policyMode = parsePolicyMode(
+    policyArg ? policyArg.split('=')[1] : 'heavier',
+  );
 
   return {
     maxN: Number.isFinite(maxN) ? maxN : 9,

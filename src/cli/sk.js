@@ -127,7 +127,7 @@ function main(argv) {
           `Links: ${countPointerLinks(result.graph)}`,
       );
     } catch (error) {
-      const message = String(error?.message ?? error);
+      const message = error instanceof Error ? error.message : String(error);
       console.error(`Failed to evaluate ${exprSource}: ${message}`);
     }
   });

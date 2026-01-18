@@ -14,10 +14,26 @@
  * - Quoting/backquote, strings, dotted pairs, reader macros, etc.
  */
 
+/**
+ * @typedef {string | number | any[]} Sexpr
+ */
+
+/**
+ * Strip line comments.
+ *
+ * @param {string} source
+ * @returns {string}
+ */
 function clean(source) {
   return source.replace(/;.*$/gm, '');
 }
 
+/**
+ * Tokenize an S-expression string into `(`, `)`, and atom tokens.
+ *
+ * @param {string} source
+ * @returns {string[]}
+ */
 function tokenize(source) {
   return clean(source)
     .replace(/\(/g, ' ( ')
@@ -27,9 +43,20 @@ function tokenize(source) {
     .filter(Boolean);
 }
 
+/**
+ * Read a single expression from a token stream.
+ *
+ * Note: `tokens` is mutated.
+ *
+ * @param {string[]} tokens
+ * @returns {Sexpr}
+ */
 function read(tokens) {
   if (!tokens.length) throw new Error('Unexpected EOF while reading');
   const token = tokens.shift();
+  if (typeof token !== 'string') {
+    throw new Error('Unexpected EOF while reading');
+  }
   if (token === '(') {
     const list = [];
     while (tokens[0] !== ')') {
@@ -48,6 +75,12 @@ function read(tokens) {
   return token;
 }
 
+/**
+ * Parse a single S-expression string.
+ *
+ * @param {string} source
+ * @returns {Sexpr | null}
+ */
 export function parseSexpr(source) {
   const tokens = tokenize(source);
   if (!tokens.length) return null;
@@ -58,6 +91,12 @@ export function parseSexpr(source) {
   return expr;
 }
 
+/**
+ * Parse a sequence of S-expressions from the same source.
+ *
+ * @param {string} source
+ * @returns {Sexpr[]}
+ */
 export function parseMany(source) {
   const tokens = tokenize(source);
   const expressions = [];

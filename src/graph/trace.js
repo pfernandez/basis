@@ -6,11 +6,19 @@
  * visualization. This is view-only: it does not affect evaluation.
  */
 
+/**
+ * @param {any} node
+ * @returns {any}
+ */
 function cloneNodeForSnapshot(node) {
   if (node.kind !== 'pair') return { ...node };
   return { ...node, children: [...node.children] };
 }
 
+/**
+ * @param {any} node
+ * @returns {object[]}
+ */
 function pointerLinksForNode(node) {
   if (node.kind === 'slot' && typeof node.binderId === 'string') {
     return [
@@ -35,6 +43,10 @@ function pointerLinksForNode(node) {
   return [];
 }
 
+/**
+ * @param {any} node
+ * @returns {object[]}
+ */
 function treeLinksForNode(node) {
   if (node.kind !== 'pair') return [];
   const [leftId, rightId] = node.children;
@@ -75,4 +87,3 @@ export function snapshotFromGraph(graph, rootId, note, focus = null) {
     focus,
   };
 }
-

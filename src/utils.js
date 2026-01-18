@@ -19,9 +19,9 @@ export function createIdGenerator(prefix = 'n') {
 /**
  * Ensure a condition holds, otherwise throw with the provided message.
  *
- * @param {boolean} condition
+ * @param {unknown} condition
  * @param {string} message
- * @returns {void}
+ * @returns {asserts condition}
  */
 export function invariant(condition, message) {
   if (!condition) {
@@ -32,7 +32,7 @@ export function invariant(condition, message) {
 /**
  * Replace a node entry immutably.
  *
- * @template T
+ * @template {{ id: string }} T
  * @param {T[]} list
  * @param {string} id
  * @param {(node: T) => T} updater

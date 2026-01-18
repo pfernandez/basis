@@ -212,9 +212,6 @@ export function createScene(params) {
   const labelGroup = new THREE.Group();
   scene.add(labelGroup);
 
-  /** @type {SceneGraph | null} */
-  let graphValue = null;
-
   /** @type {THREE.InstancedMesh | null} */
   let nodes = null;
 
@@ -278,11 +275,21 @@ export function createScene(params) {
     if (nodeMaterial) nodeMaterial.dispose();
     if (childLines) {
       childLines.object.geometry.dispose();
-      childLines.object.material.dispose();
+      const material = childLines.object.material;
+      if (Array.isArray(material)) {
+        material.forEach(entry => entry.dispose());
+      } else {
+        material.dispose();
+      }
     }
     if (linkLines) {
       linkLines.object.geometry.dispose();
-      linkLines.object.material.dispose();
+      const material = linkLines.object.material;
+      if (Array.isArray(material)) {
+        material.forEach(entry => entry.dispose());
+      } else {
+        material.dispose();
+      }
     }
 
     nodes = null;
@@ -292,7 +299,6 @@ export function createScene(params) {
     linkLines = null;
     nodeCount = 0;
     scaleByIndex = new Float32Array(0);
-    graphValue = null;
   }
 
   /**
@@ -301,7 +307,6 @@ export function createScene(params) {
    */
   function setGraph(next) {
     disposeGraphObjects();
-    graphValue = next;
 
     nodeCount = next.nodeIds.length;
     nodeGeometry = new THREE.SphereGeometry(nodeRadius, 16, 12);
@@ -310,9 +315,10 @@ export function createScene(params) {
       roughness: 0.65,
     });
 
-    nodes = new THREE.InstancedMesh(nodeGeometry, nodeMaterial, nodeCount);
-    nodes.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    nodes.frustumCulled = false;
+    const mesh = new THREE.InstancedMesh(nodeGeometry, nodeMaterial, nodeCount);
+    nodes = mesh;
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    mesh.frustumCulled = false;
 
     scaleByIndex = new Float32Array(nodeCount);
     labelsByIndex = new Array(nodeCount).fill(null);
@@ -323,7 +329,7 @@ export function createScene(params) {
       const kind = String(attrs?.kind ?? 'unknown');
       scaleByIndex[index] = scaleForKind(kind);
       tempColor.setHex(colorForKind(kind));
-      nodes.setColorAt(index, tempColor);
+      mesh.setColorAt(index, tempColor);
 
       const label = labelForNode(attrs ?? {});
       if (!label) return;
@@ -336,8 +342,8 @@ export function createScene(params) {
       labelsByIndex[index] = object;
     });
 
-    if (nodes.instanceColor) nodes.instanceColor.needsUpdate = true;
-    scene.add(nodes);
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    scene.add(mesh);
 
     const childSegments = next.segments.filter(seg => seg.kind === 'child');
     const linkSegments = next.segments.filter(

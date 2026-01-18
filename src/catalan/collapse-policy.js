@@ -24,8 +24,12 @@ const DEFAULTS = {
 };
 
 /**
+ * @typedef {'heavier' | 'lighter' | 'left' | 'right'} CollapseMode
+ */
+
+/**
  * @typedef {{
- *   mode: string,
+ *   mode: CollapseMode,
  *   freezeBalanced: boolean,
  *   balanceThreshold: number,
  *   lighterChance: number,
@@ -42,7 +46,7 @@ function normalizeOptions(overrides = {}) {
 }
 
 /**
- * @param {string} mode
+ * @param {CollapseMode} mode
  * @returns {void}
  */
 function validateMode(mode) {

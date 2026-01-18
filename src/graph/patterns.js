@@ -11,14 +11,17 @@ import { invariant } from '../utils.js';
 
 /**
  * @param {any} node
- * @returns {boolean}
+ * @returns {node is { kind: 'pair', children: [string, string] }}
  */
 export function isPairNode(node) {
   return (
     Boolean(node) &&
     typeof node === 'object' &&
     node.kind === 'pair' &&
-    Array.isArray(node.children)
+    Array.isArray(node.children) &&
+    node.children.length === 2 &&
+    typeof node.children[0] === 'string' &&
+    typeof node.children[1] === 'string'
   );
 }
 
@@ -56,4 +59,3 @@ export function isLambdaPair(graph, pairId) {
   const [leftId] = node.children;
   return getNode(graph, leftId).kind === 'binder';
 }
-

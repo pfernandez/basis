@@ -16,7 +16,7 @@
 import { createIdGenerator, invariant, replaceNode } from '../utils.js';
 
 /**
- * @typedef {Object} GraphNode
+ * @typedef {object} GraphNode
  * @property {string} id Unique identifier for the node
  * @property {string} kind One of: pair | binder | slot | symbol | empty
  * @property {string} [label] Required only for `symbol` nodes
@@ -26,7 +26,7 @@ import { createIdGenerator, invariant, replaceNode } from '../utils.js';
  */
 
 /**
- * @typedef {Object} Graph
+ * @typedef {object} Graph
  * @property {GraphNode[]} nodes
  */
 
@@ -40,6 +40,10 @@ const NODE_KIND_KEYS = Object.freeze({
 
 const nextNodeId = createIdGenerator('n');
 
+/**
+ * @param {any} node
+ * @returns {void}
+ */
 function assertOnlyExpectedKeys(node) {
   const allowed = NODE_KIND_KEYS[node.kind];
   invariant(
@@ -129,18 +133,32 @@ export function assertValidNode(node) {
   }
 }
 
+/**
+ * @param {Partial<GraphNode>} node
+ * @returns {{ record: GraphNode, id: string }}
+ */
 function withFreshId(node) {
   const id = node.id ?? nextNodeId();
-  const record = { ...node, id };
+  const record = /** @type {GraphNode} */ ({ ...node, id });
   assertValidNode(record);
   return { record, id };
 }
 
+/**
+ * @param {Map<string, string>} nodeMap
+ * @param {string | null | undefined} maybeId
+ * @returns {string | null}
+ */
 function clonedPointer(nodeMap, maybeId) {
   if (typeof maybeId !== 'string') return null;
   return nodeMap.get(maybeId) ?? maybeId;
 }
 
+/**
+ * @param {GraphNode} source
+ * @param {Map<string, string>} nodeMap
+ * @returns {Partial<GraphNode>}
+ */
 function cloneNonPairNodeRecord(source, nodeMap) {
   switch (source.kind) {
     case 'binder':
@@ -149,6 +167,10 @@ function cloneNonPairNodeRecord(source, nodeMap) {
         valueId: clonedPointer(nodeMap, source.valueId),
       };
     case 'slot':
+      invariant(
+        typeof source.binderId === 'string',
+        `slot ${source.id} binderId must be a string id`,
+      );
       return {
         kind: 'slot',
         binderId: nodeMap.get(source.binderId) ?? source.binderId,
@@ -189,7 +211,7 @@ export function addNode(graph, node) {
  */
 export function getNode(graph, id) {
   const node = graph.nodes.find(node => node.id === id);
-  invariant(Boolean(node), `Unknown node ${id}`);
+  invariant(node, `Unknown node ${id}`);
   return node;
 }
 
@@ -225,6 +247,11 @@ export function cloneSubgraph(graph, rootId) {
   const sourceGraph = graph;
   const nodeMap = new Map(); // sourceId -> cloneId
 
+  /**
+   * @param {Graph} graphValue
+   * @param {string} nodeId
+   * @returns {{ graph: Graph, nodeId: string }}
+   */
   function cloneNode(graphValue, nodeId) {
     const existing = nodeMap.get(nodeId);
     if (existing) return { graph: graphValue, nodeId: existing };
@@ -232,7 +259,9 @@ export function cloneSubgraph(graph, rootId) {
     const source = getNode(sourceGraph, nodeId);
 
     if (source.kind === 'pair') {
-      const [leftId, rightId] = source.children;
+      const children = source.children;
+      invariant(children, `pair ${source.id} missing children`);
+      const [leftId, rightId] = children;
       const left = cloneNode(graphValue, leftId);
       const right = cloneNode(left.graph, rightId);
       const pair = addNode(right.graph, {

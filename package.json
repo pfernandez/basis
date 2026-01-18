@@ -27,7 +27,11 @@
     "vis:dev": "vite",
     "vis:build": "vite build",
     "vis:preview": "vite preview",
-    "test": "node --test tests/*.test.js"
+    "test": "npm run typecheck && node --test tests/*.test.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "check": "npm run lint && npm test"
   },
   "author": "Paul Fernandez",
   "license": "Apache-2.0",
@@ -42,6 +46,14 @@
     "vite-plugin-wasm": "^3.5.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.19.0",
+    "@types/d3-hierarchy": "^3.1.7",
+    "@types/node": "^24.0.0",
+    "@types/three": "^0.182.0",
+    "eslint": "^9.19.0",
+    "eslint-plugin-jsdoc": "^50.6.0",
+    "globals": "^15.14.0",
+    "typescript": "^5.7.3",
     "vite": "^7.3.1"
   }
 }

@@ -140,7 +140,7 @@ function offsetForEdge(edge, targetId, spacing) {
 
 /**
  * @param {string} kind
- * @param {number} step
+ * @param {number} spacing
  * @returns {number}
  */
 function zOffsetForChildKind(kind, spacing) {
@@ -221,6 +221,7 @@ function buildChildTreeData(childrenByParent, rootId) {
  */
 function layoutGraphPositions(graph, rootId, nodeRadius) {
   const spacing = Math.max(1.6, nodeRadius * 8);
+  /** @type {Map<string, [number, number, number]>} */
   const positions = new Map();
   const childrenByParent = childAdjacency(graph);
 
@@ -232,8 +233,9 @@ function layoutGraphPositions(graph, rootId, nodeRadius) {
   let minX = Infinity;
   let maxX = -Infinity;
   rootHierarchy.each(node => {
-    if (node.x < minX) minX = node.x;
-    if (node.x > maxX) maxX = node.x;
+    const x = node.x ?? 0;
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
   });
   const centerX = Number.isFinite(minX) && Number.isFinite(maxX)
     ? (minX + maxX) / 2
@@ -242,9 +244,11 @@ function layoutGraphPositions(graph, rootId, nodeRadius) {
   rootHierarchy.each(node => {
     const nodeId = node.data.id;
     const kind = String(graph.getNodeAttributes(nodeId)?.kind ?? '');
+    const x = node.x ?? 0;
+    const y = node.y ?? 0;
     positions.set(nodeId, [
-      node.x - centerX,
-      -node.y,
+      x - centerX,
+      -y,
       zOffsetForChildKind(kind, spacing),
     ]);
   });
@@ -436,7 +440,9 @@ export async function createPhysicsEngine(params) {
   });
 
   const pointerCycles = pointerAdjacency(graph);
+  /** @type {any[]} */
   const constraints = [];
+  /** @type {Segment[]} */
   const segments = [];
 
   graph.forEachEdge((edgeKey, attrs, source, target) => {

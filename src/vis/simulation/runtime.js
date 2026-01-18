@@ -9,9 +9,6 @@
 import initJolt from 'jolt-physics/wasm';
 import joltWasmUrl from 'jolt-physics/jolt-physics.wasm.wasm?url';
 
-let joltModulePromise = null;
-let runtimePromise = null;
-
 /**
  * @typedef {{
  *   Jolt: any,
@@ -22,6 +19,12 @@ let runtimePromise = null;
  *   layerMoving: number
  * }} PhysicsRuntime
  */
+
+/** @type {Promise<any> | null} */
+let joltModulePromise = null;
+
+/** @type {Promise<PhysicsRuntime> | null} */
+let runtimePromise = null;
 
 /**
  * Load (and cache) the Jolt WASM module.
@@ -108,4 +111,3 @@ export async function getPhysicsRuntime() {
   if (!runtimePromise) runtimePromise = createRuntime();
   return runtimePromise;
 }
-

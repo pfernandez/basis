@@ -63,6 +63,9 @@ export function parseDefinitionsSource(source) {
   const env = new Map();
 
   forms.forEach(form => {
+    if (!Array.isArray(form)) {
+      throw new Error('Definition forms must be lists');
+    }
     const normalized = normalizeDefinitionForm(form);
     env.set(normalized.name, normalized.body);
   });

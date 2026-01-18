@@ -42,6 +42,17 @@ function parseModeParam(value) {
 }
 
 /**
+ * @param {unknown} error
+ * @returns {string}
+ */
+function formatError(error) {
+  if (error instanceof Error) {
+    return String(error.stack ?? error.message);
+  }
+  return String(error);
+}
+
+/**
  * @param {string | null} value
  * @returns {number}
  */
@@ -71,8 +82,11 @@ function setHudText(hud, text) {
 
 /**
  * @param {import('./domain/session.js').VisState} state
- * @param {{ initial: number, reduced: number | null, lastStep: number | null }}
- *   totalsValue
+ * @param {{
+ *   initial: number,
+ *   reduced: number | null,
+ *   lastStep: number | null
+ * }} totalsValue
  * @param {{ isPlaying: boolean }} playback
  * @param {import('./domain/session.js').VisSession} session
  * @returns {string}
@@ -224,7 +238,7 @@ async function start() {
       pendingLoad = null;
       isLoading = false;
       isPlaying = false;
-      setHudText(hud, String(error?.stack ?? error));
+      setHudText(hud, formatError(error));
       console.error(error);
     });
   }
@@ -256,7 +270,7 @@ async function start() {
       }
     } catch (error) {
       isPlaying = false;
-      setHudText(hud, String(error?.stack ?? error));
+      setHudText(hud, formatError(error));
       console.error(error);
       return;
     }
@@ -349,7 +363,7 @@ async function start() {
           session = stepForward(session, null);
         } catch (error) {
           isPlaying = false;
-          setHudText(hud, String(error?.stack ?? error));
+          setHudText(hud, formatError(error));
           console.error(error);
           return;
         }
@@ -377,7 +391,7 @@ async function start() {
 start().catch(error => {
   const hud = document.getElementById('hud');
   if (hud) {
-    hud.textContent = String(error?.stack ?? error);
+    hud.textContent = formatError(error);
   }
   console.error(error);
 });

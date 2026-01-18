@@ -37,7 +37,7 @@ export function Node(left, right) {
 
 /**
  * @param {Tree} tree
- * @returns {boolean}
+ * @returns {tree is null}
  */
 export function isLeaf(tree) {
   return tree === Leaf;
@@ -134,7 +134,12 @@ export function parseTree(primitive) {
     return Node(parseTree(parts[0]), parseTree(parts[1]));
   }
 
-  return parts.reduceRight((acc, part) => Node(parseTree(part), acc), Leaf);
+  /** @type {Tree} */
+  let acc = Leaf;
+  for (let i = parts.length - 1; i >= 0; i -= 1) {
+    acc = Node(parseTree(parts[i]), acc);
+  }
+  return acc;
 }
 
 /**

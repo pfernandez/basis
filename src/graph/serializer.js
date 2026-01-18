@@ -18,12 +18,32 @@ import { getNode } from './graph.js';
 import { isLambdaPair, pairChildren } from './patterns.js';
 import { invariant } from '../utils.js';
 
+/**
+ * @typedef {string | number | any[]} Ast
+ */
+
+/**
+ * Find the De Bruijn index for `binderId` in the current binder stack.
+ *
+ * @param {string[]} binderStack
+ * @param {string} binderId
+ * @returns {number | null}
+ */
 function slotIndex(binderStack, binderId) {
   const index = binderStack.lastIndexOf(binderId);
   if (index === -1) return null;
   return binderStack.length - 1 - index;
 }
 
+/**
+ * Convert a node (and its reachable graph) into an S-expression AST.
+ *
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} nodeId
+ * @param {string[]} binderStack
+ * @param {Set<string>} seenNodeIds
+ * @returns {Ast}
+ */
 function nodeToAst(graph, nodeId, binderStack, seenNodeIds) {
   if (seenNodeIds.has(nodeId)) return '#cycle';
 
@@ -71,6 +91,10 @@ function nodeToAst(graph, nodeId, binderStack, seenNodeIds) {
   }
 }
 
+/**
+ * @param {Ast} ast
+ * @returns {string}
+ */
 function astToString(ast) {
   if (Array.isArray(ast)) {
     if (ast.length === 0) return '()';
@@ -79,6 +103,11 @@ function astToString(ast) {
   return String(ast);
 }
 
+/**
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} rootId
+ * @returns {string}
+ */
 export function serializeGraph(graph, rootId) {
   invariant(
     graph && typeof graph === 'object',

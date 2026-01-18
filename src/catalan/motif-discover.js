@@ -25,6 +25,10 @@ import {
  */
 
 /**
+ * @typedef {import('./collapse-policy.js').CollapseMode} CollapseMode
+ */
+
+/**
  * @typedef {{
  *   maxN: number,
  *   runsPerTree: number,
@@ -32,7 +36,7 @@ import {
  *   minMotifSize: number,
  *   useEta: boolean,
  *   freezeBalanced: boolean,
- *   policyMode: string,
+ *   policyMode: CollapseMode,
  *   eps: number,
  *   random: () => number
  * }} DiscoverOptions
@@ -108,6 +112,9 @@ function collectRedexes(
 function getByPath(tree, path) {
   let current = tree;
   path.forEach(dir => {
+    if (current === Leaf) {
+      throw new Error(`Invalid path ${path.join('')}`);
+    }
     current = dir === 'L' ? current.L : current.R;
   });
   return current;
@@ -121,6 +128,9 @@ function getByPath(tree, path) {
  */
 function setByPath(tree, path, replacement) {
   if (!path.length) return replacement;
+  if (tree === Leaf) {
+    throw new Error(`Invalid path ${path.join('')}`);
+  }
   const [dir, ...rest] = path;
   if (dir === 'L') {
     return Node(setByPath(tree.L, rest, replacement), tree.R);
@@ -264,4 +274,3 @@ export function discoverMotifs(overrides = {}) {
 
   return { motifs, startCounts };
 }
-

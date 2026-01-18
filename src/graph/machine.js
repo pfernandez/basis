@@ -73,15 +73,28 @@ import { invariant } from '../utils.js';
  * }} MachineHooks
  */
 
+/**
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} parentId
+ * @param {0 | 1} index
+ * @param {string} replacementId
+ * @returns {import('./graph.js').Graph}
+ */
 function replaceInPair(graph, parentId, index, replacementId) {
   return updateNode(graph, parentId, node => {
     assertPairNode(node, 'pair frame must target a pair node');
-    const children = [...node.children];
+    const children = [...pairChildren(node)];
     children[index] = replacementId;
     return { ...node, children };
   });
 }
 
+/**
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} binderId
+ * @param {string} replacementId
+ * @returns {import('./graph.js').Graph}
+ */
 function replaceInBinderValue(graph, binderId, replacementId) {
   return updateNode(graph, binderId, node => {
     invariant(node.kind === 'binder', 'binder-value frame must target binder');
@@ -89,6 +102,13 @@ function replaceInBinderValue(graph, binderId, replacementId) {
   });
 }
 
+/**
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} rootId
+ * @param {PathFrame[]} path
+ * @param {string} replacementId
+ * @returns {{ graph: import('./graph.js').Graph, rootId: string }}
+ */
 function replaceAtPath(graph, rootId, path, replacementId) {
   if (!path.length) return { graph, rootId: replacementId };
 
@@ -107,9 +127,14 @@ function replaceAtPath(graph, rootId, path, replacementId) {
     };
   }
 
-  throw new Error(`Unknown path frame kind: ${frame.kind}`);
+  throw new Error('Unknown path frame kind');
 }
 
+/**
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} lambdaId
+ * @returns {{ binderId: string, bodyId: string }}
+ */
 function lambdaParts(graph, lambdaId) {
   const node = getNode(graph, lambdaId);
   assertPairNode(node, 'Lambda root must be a pair node');
@@ -121,6 +146,14 @@ function lambdaParts(graph, lambdaId) {
   return { binderId, bodyId };
 }
 
+/**
+ * Dereference a slot through its binder once (cycle-safe).
+ *
+ * @param {import('./graph.js').Graph} graph
+ * @param {any} slotNode
+ * @param {Set<string>} seenBinders
+ * @returns {string | null}
+ */
 function derefSlotOnce(graph, slotNode, seenBinders) {
   const binderId = slotNode.binderId;
   if (typeof binderId !== 'string') return null;
@@ -132,6 +165,14 @@ function derefSlotOnce(graph, slotNode, seenBinders) {
   return binder.valueId;
 }
 
+/**
+ * Resolve the head of an application by following bound slots (once per
+ * binder).
+ *
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} nodeId
+ * @returns {string}
+ */
 function resolveApplicationHead(graph, nodeId) {
   const seenBinders = new Set();
   let currentId = nodeId;
@@ -144,32 +185,67 @@ function resolveApplicationHead(graph, nodeId) {
   }
 }
 
+/**
+ * @param {import('./graph.js').Graph} graph
+ * @param {any} pairNode
+ * @returns {{ leftId: string, rightId: string, headId: string }}
+ */
 function applicationShape(graph, pairNode) {
   const [leftId, rightId] = pairChildren(pairNode);
   const headId = resolveApplicationHead(graph, leftId);
   return { leftId, rightId, headId };
 }
 
+/**
+ * @param {import('./graph.js').GraphNode} node
+ * @param {MachineHooks} hooks
+ * @returns {node is import('./graph.js').GraphNode & {
+ *   kind: 'symbol',
+ *   label: string
+ * }}
+ */
 function shouldExpandSymbol(node, hooks) {
   return (
     node.kind === 'symbol' &&
+    typeof node.label === 'string' &&
     typeof hooks.canExpandSymbol === 'function' &&
     hooks.canExpandSymbol(node.label)
   );
 }
 
+/**
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} nodeId
+ * @param {any} pairNode
+ * @param {PathFrame[]} path
+ * @returns {CollapseEvent | null}
+ */
 function collapseEventForApplication(graph, nodeId, pairNode, path) {
   const { rightId, headId } = applicationShape(graph, pairNode);
   if (getNode(graph, headId).kind !== 'empty') return null;
   return { kind: 'collapse', nodeId, replacementId: rightId, path };
 }
 
+/**
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} nodeId
+ * @param {any} pairNode
+ * @param {PathFrame[]} path
+ * @returns {ApplyEvent | null}
+ */
 function applyEventForApplication(graph, nodeId, pairNode, path) {
   const { rightId, headId } = applicationShape(graph, pairNode);
   if (!isLambdaPair(graph, headId)) return null;
   return { kind: 'apply', nodeId, lambdaId: headId, argId: rightId, path };
 }
 
+/**
+ * @param {import('./graph.js').Graph} graph
+ * @param {any} slotNode
+ * @param {PathFrame[]} path
+ * @param {Set<string>} seenBinders
+ * @returns {WorkItem | null}
+ */
 function workItemForBoundSlot(graph, slotNode, path, seenBinders) {
   const binderId = slotNode.binderId;
   if (typeof binderId !== 'string') return null;
@@ -189,10 +265,25 @@ function workItemForBoundSlot(graph, slotNode, path, seenBinders) {
   };
 }
 
+/**
+ * @param {WorkItem[]} stack
+ * @param {string} nodeId
+ * @param {PathFrame[]} path
+ * @param {Set<string>} seenBinders
+ * @returns {void}
+ */
 function pushWork(stack, nodeId, path, seenBinders) {
   stack.push({ nodeId, path, seenBinders });
 }
 
+/**
+ * @param {WorkItem[]} stack
+ * @param {string} nodeId
+ * @param {any} pairNode
+ * @param {PathFrame[]} path
+ * @param {Set<string>} seenBinders
+ * @returns {void}
+ */
 function pushPairTraversal(stack, nodeId, pairNode, path, seenBinders) {
   const [leftId, rightId] = pairChildren(pairNode);
   pushWork(
@@ -209,6 +300,14 @@ function pushPairTraversal(stack, nodeId, pairNode, path, seenBinders) {
   );
 }
 
+/**
+ * @param {WorkItem[]} stack
+ * @param {string} nodeId
+ * @param {any} lambdaPair
+ * @param {PathFrame[]} path
+ * @param {Set<string>} seenBinders
+ * @returns {void}
+ */
 function pushLambdaBody(stack, nodeId, lambdaPair, path, seenBinders) {
   const [, bodyId] = pairChildren(lambdaPair);
   pushWork(
@@ -283,6 +382,13 @@ function observeNextEvent(observer, graph, options, hooks) {
   return { event: null, observer: { rootId: observer.rootId, stack } };
 }
 
+/**
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} rootId
+ * @param {ExpandEvent} event
+ * @param {MachineHooks} hooks
+ * @returns {{ graph: import('./graph.js').Graph, rootId: string }}
+ */
 function expandSymbol(graph, rootId, event, hooks) {
   invariant(
     typeof hooks.expandSymbol === 'function',
@@ -292,14 +398,32 @@ function expandSymbol(graph, rootId, event, hooks) {
   return replaceAtPath(expanded.graph, rootId, event.path, expanded.nodeId);
 }
 
+/**
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} rootId
+ * @param {CollapseEvent} event
+ * @returns {{ graph: import('./graph.js').Graph, rootId: string }}
+ */
 function collapseApplication(graph, rootId, event) {
   return replaceAtPath(graph, rootId, event.path, event.replacementId);
 }
 
+/**
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} rootId
+ * @param {boolean} shouldClone
+ * @returns {{ graph: import('./graph.js').Graph, rootId: string }}
+ */
 function cloneIfNeeded(graph, rootId, shouldClone) {
   return shouldClone ? cloneSubgraph(graph, rootId) : { graph, rootId };
 }
 
+/**
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} binderId
+ * @param {string} argId
+ * @returns {import('./graph.js').Graph}
+ */
 function bindArgument(graph, binderId, argId) {
   return updateNode(graph, binderId, binder => ({
     ...binder,
@@ -307,6 +431,13 @@ function bindArgument(graph, binderId, argId) {
   }));
 }
 
+/**
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} lambdaId
+ * @param {string} argId
+ * @param {{ cloneArguments: boolean }} options
+ * @returns {{ graph: import('./graph.js').Graph, bodyId: string }}
+ */
 function applyLambda(graph, lambdaId, argId, options) {
   const lambdaClone = cloneSubgraph(graph, lambdaId);
   const argClone = cloneIfNeeded(
@@ -319,6 +450,14 @@ function applyLambda(graph, lambdaId, argId, options) {
   return { graph: boundGraph, bodyId };
 }
 
+/**
+ * @param {import('./graph.js').Graph} graph
+ * @param {string} rootId
+ * @param {Event} event
+ * @param {{ cloneArguments: boolean }} options
+ * @param {MachineHooks} hooks
+ * @returns {{ graph: import('./graph.js').Graph, rootId: string }}
+ */
 function stepEvent(graph, rootId, event, options, hooks) {
   if (event.kind === 'expand') {
     return expandSymbol(graph, rootId, event, hooks);
@@ -340,7 +479,13 @@ function stepEvent(graph, rootId, event, options, hooks) {
 export function createObserver(rootId) {
   return {
     rootId,
-    stack: [{ nodeId: rootId, path: [], seenBinders: new Set() }],
+    stack: [
+      {
+        nodeId: rootId,
+        path: /** @type {PathFrame[]} */ ([]),
+        seenBinders: new Set(),
+      },
+    ],
   };
 }
 
@@ -375,7 +520,14 @@ export function observeNormalOrder(observer, graph, options, hooks = {}) {
  */
 export function collectEnabledEvents(graph, rootId, options, hooks = {}) {
   const reduceUnderLambdas = options.reduceUnderLambdas ?? true;
-  const stack = [{ nodeId: rootId, path: [], seenBinders: new Set() }];
+  /** @type {WorkItem[]} */
+  const stack = [
+    {
+      nodeId: rootId,
+      path: /** @type {PathFrame[]} */ ([]),
+      seenBinders: new Set(),
+    },
+  ];
 
   /** @type {Event[]} */
   const events = [];
@@ -509,7 +661,7 @@ function nodeIdAtPath(graph, rootId, path) {
       );
       const parent = getNode(graph, currentId);
       assertPairNode(parent, 'path pair frame must target a pair node');
-      currentId = parent.children[frame.index];
+      currentId = pairChildren(parent)[frame.index];
       return;
     }
 
@@ -530,7 +682,7 @@ function nodeIdAtPath(graph, rootId, path) {
       return;
     }
 
-    throw new Error(`Unknown path frame kind: ${frame.kind}`);
+    throw new Error('Unknown path frame kind');
   });
 
   return currentId;
@@ -620,5 +772,5 @@ function assertEventEnabled(graph, event, hooks) {
     return;
   }
 
-  throw new Error(`Unknown event kind: ${event.kind}`);
+  throw new Error('Unknown event kind');
 }

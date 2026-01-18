@@ -10,6 +10,7 @@ import {
   observeNormalOrder,
   stepNormalOrder,
 } from '../src/graph/machine.js';
+import { pairChildren } from '../src/graph/patterns.js';
 import { parseSexpr } from '../src/graph/parser.js';
 
 /**
@@ -141,8 +142,9 @@ test('applyMachineEvent rejects invalid collapse events', () => {
 
   const root = getNode(compiled.graph, compiled.rootId);
   assert.equal(root.kind, 'pair');
-  const replacementId = root.children[1];
+  const replacementId = pairChildren(root)[1];
 
+  /** @type {import('../src/graph/machine.js').CollapseEvent} */
   const event = {
     kind: 'collapse',
     nodeId: compiled.rootId,
@@ -168,15 +170,15 @@ test('applyMachineEvent rejects inconsistent paths (teleportation)', () => {
   const root = getNode(compiled.graph, compiled.rootId);
   assert.equal(root.kind, 'pair');
 
-  const leftId = root.children[0];
-  const rightId = root.children[1];
+  const [leftId, rightId] = pairChildren(root);
   const right = getNode(compiled.graph, rightId);
   assert.equal(right.kind, 'pair');
 
+  /** @type {import('../src/graph/machine.js').CollapseEvent} */
   const event = {
     kind: 'collapse',
     nodeId: leftId,
-    replacementId: right.children[1],
+    replacementId: pairChildren(right)[1],
     path: [{ kind: 'pair', parentId: compiled.rootId, index: 1 }],
   };
 
