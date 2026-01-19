@@ -14,5 +14,15 @@
  * }} Segment
  */
 
-export {};
+/**
+ * @typedef {{
+ *   nodeIds: string[],
+ *   nodeIndexById: Map<string, number>,
+ *   positions: Float32Array,
+ *   segments: Segment[],
+ *   step: (deltaSeconds: number) => void,
+ *   dispose: () => void
+ * }} SimulationEngine
+ */
 
+export {};

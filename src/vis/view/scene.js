@@ -36,6 +36,7 @@ import {
  *   setGraph: (graph: SceneGraph) => void,
  *   update: (positions: Float32Array) => void,
  *   fitToPositions: (positions: Float32Array) => void,
+ *   setCurl: (fold: number) => void,
  *   setPointerLinkOpacity: (opacity: number) => void,
  *   render: () => void,
  *   dispose: () => void
@@ -156,6 +157,165 @@ function boundsFromPositions(positions) {
 }
 
 /**
+ * @param {number} value
+ * @param {number} min
+ * @param {number} max
+ * @returns {number}
+ */
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+/**
+ * @param {number} a
+ * @param {number} b
+ * @param {number} t
+ * @returns {number}
+ */
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+/**
+ * Parameters for the deterministic observer-sheet curl embedding.
+ *
+ * @typedef {{
+ *   maxAbsX: number,
+ *   radius: number,
+ *   maxAngle: number
+ * }} CurlParams
+ */
+
+/**
+ * @param {Float32Array} positions
+ * @returns {CurlParams}
+ */
+function curlParamsFromPositions(positions) {
+  let maxAbsX = 0;
+  for (let i = 0; i < positions.length; i += 3) {
+    const absX = Math.abs(positions[i]);
+    if (absX > maxAbsX) maxAbsX = absX;
+  }
+
+  const maxAngle = Math.PI * 0.85;
+  const safeMaxAbsX = Math.max(1e-3, maxAbsX);
+  const radius = safeMaxAbsX / maxAngle;
+
+  return { maxAbsX: safeMaxAbsX, radius, maxAngle };
+}
+
+/**
+ * Group node indices by undirected connectivity over pointer edges.
+ *
+ * @param {Segment[]} segments
+ * @param {number} nodeCount
+ * @returns {number[][]}
+ */
+function pointerComponentsFromSegments(segments, nodeCount) {
+  const parent = new Array(nodeCount);
+  for (let i = 0; i < nodeCount; i += 1) parent[i] = i;
+
+  /**
+   * @param {number} node
+   * @returns {number}
+   */
+  function find(node) {
+    let root = node;
+    while (parent[root] !== root) root = parent[root];
+    while (parent[node] !== node) {
+      const next = parent[node];
+      parent[node] = root;
+      node = next;
+    }
+    return root;
+  }
+
+  /**
+   * @param {number} a
+   * @param {number} b
+   * @returns {void}
+   */
+  function union(a, b) {
+    const ra = find(a);
+    const rb = find(b);
+    if (ra === rb) return;
+    parent[rb] = ra;
+  }
+
+  segments.forEach(seg => {
+    if (seg.kind !== 'reentry' && seg.kind !== 'value') return;
+    union(seg.fromIndex, seg.toIndex);
+  });
+
+  /** @type {Map<number, number[]>} */
+  const groups = new Map();
+  for (let i = 0; i < nodeCount; i += 1) {
+    const root = find(i);
+    const list = groups.get(root) ?? [];
+    list.push(i);
+    groups.set(root, list);
+  }
+
+  return Array.from(groups.values()).filter(nodes => nodes.length > 1);
+}
+
+/**
+ * Curl pointer-connected nodes together so re-entrant links become local.
+ *
+ * This is a non-injective embedding at `fold=1`: each pointer-connected
+ * component collapses to its centroid. The approach is deterministic and
+ * reversible for `fold<1` (computed from the current sheet pose).
+ *
+ * @param {Float32Array} positions
+ * @param {number[][]} pointerComponents
+ * @param {number} fold
+ * @returns {void}
+ */
+function applyPointerFold(positions, pointerComponents, fold) {
+  const t = clamp(fold, 0, 1);
+  if (t <= 1e-6) return;
+
+  const maxAngle = Math.PI * 1.35;
+  const angle = t * maxAngle;
+  const sin = Math.sin(angle);
+  const cos = Math.cos(angle);
+  const shrink = 1 - t;
+
+  pointerComponents.forEach(component => {
+    let cx = 0;
+    let cy = 0;
+    let cz = 0;
+
+    component.forEach(nodeIndex => {
+      const base = nodeIndex * 3;
+      cx += positions[base];
+      cy += positions[base + 1];
+      cz += positions[base + 2];
+    });
+
+    const count = component.length;
+    if (!count) return;
+    cx /= count;
+    cy /= count;
+    cz /= count;
+
+    component.forEach(nodeIndex => {
+      const base = nodeIndex * 3;
+      const rx = positions[base] - cx;
+      const ry = positions[base + 1] - cy;
+      const rz = positions[base + 2] - cz;
+
+      const rotatedY = ry * cos - rz * sin;
+      const rotatedZ = ry * sin + rz * cos;
+
+      positions[base] = cx + rx * shrink;
+      positions[base + 1] = cy + rotatedY * shrink;
+      positions[base + 2] = cz + rotatedZ * shrink;
+    });
+  });
+}
+
+/**
  * Create a Three.js scene for a graph + physics positions.
  *
  * @param {SceneParams} params
@@ -237,6 +397,27 @@ export function createScene(params) {
   /** @type {ReturnType<typeof createLineSegments> | null} */
   let linkLines = null;
 
+  /** @type {THREE.Mesh | null} */
+  let sheetMesh = null;
+
+  /** @type {THREE.BufferGeometry | null} */
+  let sheetGeometry = null;
+
+  /** @type {THREE.MeshBasicMaterial | null} */
+  let sheetMaterial = null;
+
+  /** @type {Float32Array} */
+  let curledPositions = new Float32Array(0);
+
+  /** @type {CurlParams | null} */
+  let curlParams = null;
+
+  /** @type {number[][]} */
+  let pointerComponents = [];
+
+  /** @type {number} */
+  let curl = 0;
+
   const dummy = new THREE.Object3D();
 
   /**
@@ -258,6 +439,7 @@ export function createScene(params) {
     if (nodes) scene.remove(nodes);
     if (childLines) scene.remove(childLines.object);
     if (linkLines) scene.remove(linkLines.object);
+    if (sheetMesh) scene.remove(sheetMesh);
 
     labelsByIndex.forEach(label => {
       if (!label) return;
@@ -293,13 +475,37 @@ export function createScene(params) {
       }
     }
 
+    if (sheetGeometry) sheetGeometry.dispose();
+    if (sheetMaterial) sheetMaterial.dispose();
+
     nodes = null;
     nodeGeometry = null;
     nodeMaterial = null;
     childLines = null;
     linkLines = null;
+    sheetMesh = null;
+    sheetGeometry = null;
+    sheetMaterial = null;
     nodeCount = 0;
     scaleByIndex = new Float32Array(0);
+    curledPositions = new Float32Array(0);
+    curlParams = null;
+    pointerComponents = [];
+  }
+
+  /**
+   * @returns {void}
+   */
+  function applyCurlVisuals() {
+    const clamped = clamp(curl, 0, 1);
+    const sheetOpacity = 0.22 * clamped;
+
+    if (sheetMesh && sheetMaterial) {
+      sheetMesh.visible = sheetOpacity > 1e-3;
+      sheetMaterial.transparent = true;
+      sheetMaterial.opacity = sheetOpacity;
+      sheetMaterial.needsUpdate = true;
+    }
   }
 
   /**
@@ -310,6 +516,10 @@ export function createScene(params) {
     disposeGraphObjects();
 
     nodeCount = next.nodeIds.length;
+    curledPositions = new Float32Array(nodeCount * 3);
+    curlParams = null;
+    pointerComponents = [];
+
     nodeGeometry = new THREE.SphereGeometry(nodeRadius, 16, 12);
     nodeMaterial = new THREE.MeshStandardMaterial({
       metalness: 0.1,
@@ -344,7 +554,6 @@ export function createScene(params) {
     });
 
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    scene.add(mesh);
 
     const childSegments = next.segments.filter(seg => seg.kind === 'child');
     const linkSegments = next.segments.filter(
@@ -355,6 +564,72 @@ export function createScene(params) {
     linkLines = createLineSegments(linkSegments, 0xf59e0b);
     scene.add(childLines.object);
     scene.add(linkLines.object);
+    pointerComponents = pointerComponentsFromSegments(linkSegments, nodeCount);
+
+    const nodeIndexById = new Map(
+      next.nodeIds.map((nodeId, index) => [nodeId, index]),
+    );
+
+    const childrenByParent = new Map();
+    next.graph.forEachEdge((edgeKey, attrs, source, target) => {
+      if (attrs?.kind !== 'child') return;
+      const index = attrs?.index;
+      if (index !== 0 && index !== 1) return;
+      const existing = childrenByParent.get(source) ?? [null, null];
+      const nextChildren = [...existing];
+      nextChildren[index] = target;
+      childrenByParent.set(source, nextChildren);
+    });
+
+    const triangleIndices = [];
+    childrenByParent.forEach((children, parentId) => {
+      const leftId = children[0];
+      const rightId = children[1];
+      if (!leftId || !rightId) return;
+
+      const parentIndex = nodeIndexById.get(parentId);
+      const leftIndex = nodeIndexById.get(leftId);
+      const rightIndex = nodeIndexById.get(rightId);
+      if (
+        typeof parentIndex !== 'number' ||
+        typeof leftIndex !== 'number' ||
+        typeof rightIndex !== 'number'
+      ) {
+        return;
+      }
+      triangleIndices.push(parentIndex, leftIndex, rightIndex);
+    });
+
+    if (triangleIndices.length) {
+      sheetGeometry = new THREE.BufferGeometry();
+      sheetGeometry.setAttribute(
+        'position',
+        new THREE.BufferAttribute(curledPositions, 3),
+      );
+      sheetGeometry.setIndex(triangleIndices);
+      sheetMaterial = new THREE.MeshBasicMaterial({
+        color: 0x111827,
+        transparent: true,
+        opacity: 0,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      });
+      sheetMesh = new THREE.Mesh(sheetGeometry, sheetMaterial);
+      sheetMesh.frustumCulled = false;
+      scene.add(sheetMesh);
+    }
+
+    scene.add(mesh);
+    applyCurlVisuals();
+  }
+
+  /**
+   * @param {number} fold
+   * @returns {void}
+   */
+  function setCurl(fold) {
+    curl = clamp(fold, 0, 1);
+    applyCurlVisuals();
   }
 
   /**
@@ -417,12 +692,45 @@ export function createScene(params) {
     if (!nodes) return;
     if (!childLines || !linkLines) return;
 
+    if (!curlParams) {
+      curlParams = curlParamsFromPositions(positions);
+    }
+
+    const { maxAbsX, radius, maxAngle } = curlParams;
+    const fold = clamp(curl, 0, 1);
+
     for (let index = 0; index < nodeCount; index += 1) {
       const base = index * 3;
       const x = positions[base];
       const y = positions[base + 1];
       const z = positions[base + 2];
+
+      const theta = (x / maxAbsX) * maxAngle;
+      const sin = Math.sin(theta);
+      const cos = Math.cos(theta);
+      const rolledX = radius * sin;
+      const rolledZ = radius * (1 - cos);
+
+      const targetX = rolledX + sin * z;
+      const targetZ = rolledZ + cos * z;
+      const curledX = lerp(x, targetX, fold);
+      const curledY = y;
+      const curledZ = lerp(z, targetZ, fold);
+
+      curledPositions[base] = curledX;
+      curledPositions[base + 1] = curledY;
+      curledPositions[base + 2] = curledZ;
+    }
+
+    applyPointerFold(curledPositions, pointerComponents, fold);
+
+    for (let index = 0; index < nodeCount; index += 1) {
+      const base = index * 3;
+      const x = curledPositions[base];
+      const y = curledPositions[base + 1];
+      const z = curledPositions[base + 2];
       const scale = scaleByIndex[index] ?? 1;
+
       dummy.position.set(x, y, z);
       dummy.scale.setScalar(scale);
       dummy.updateMatrix();
@@ -435,8 +743,13 @@ export function createScene(params) {
     }
     nodes.instanceMatrix.needsUpdate = true;
 
-    updateLines(childLines, positions);
-    updateLines(linkLines, positions);
+    updateLines(childLines, curledPositions);
+    updateLines(linkLines, curledPositions);
+
+    if (sheetGeometry) {
+      const attr = sheetGeometry.getAttribute('position');
+      attr.needsUpdate = true;
+    }
   }
 
   /**
@@ -497,6 +810,7 @@ export function createScene(params) {
     setGraph,
     update,
     fitToPositions,
+    setCurl,
     setPointerLinkOpacity,
     render,
     dispose,

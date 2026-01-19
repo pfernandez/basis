@@ -5,7 +5,7 @@
  * "Hello World" target:
  * - build a graph for `(((S a) b) c)`
  * - inline `S` then step reducer events
- * - simulate with Jolt + render with Three
+ * - render a deterministic observer sheet (Jolt optional)
  */
 
 import programSource from '../../programs/sk-basis.lisp?raw';
@@ -39,6 +39,16 @@ function parseModeParam(value) {
     return 'multiway-rng';
   }
   return 'normal-order';
+}
+
+/**
+ * @param {string | null} value
+ * @returns {'sheet' | 'jolt'}
+ */
+function parseBackendParam(value) {
+  const normalized = String(value ?? '').toLowerCase().trim();
+  if (normalized === 'jolt' || normalized === 'physics') return 'jolt';
+  return 'sheet';
 }
 
 /**
@@ -101,9 +111,10 @@ function setHudText(hud, text) {
  * }} totalsValue
  * @param {{ isPlaying: boolean }} playback
  * @param {import('./domain/session.js').VisSession} session
+ * @param {'sheet' | 'jolt'} backend
  * @returns {string}
  */
-function hudForPresent(state, totalsValue, playback, session) {
+function hudForPresent(state, totalsValue, playback, session, backend) {
   const lastStep = totalsValue.lastStep ?? '?';
   const reduced = totalsValue.reduced ?? '?';
   const seed = session.seed === null ? '' : ` seed=${session.seed}`;
@@ -126,6 +137,7 @@ function hudForPresent(state, totalsValue, playback, session) {
     `step: ${state.stepIndex}/${lastStep}`,
     `state: ${state.note}`,
     `play: ${playback.isPlaying ? 'playing' : 'paused'}`,
+    `backend: ${backend}`,
     `mode: ${session.mode}${seed}`,
     `choice: ${choice}  scheduler: ${session.schedulerId}${rngState}`,
     `source: ${session.sourceExpr}`,
@@ -151,12 +163,13 @@ async function start() {
 
   const params = new URLSearchParams(window.location.search);
   let mode = parseModeParam(params.get('mode'));
+  const backend = parseBackendParam(params.get('backend'));
   const seed = parseSeedParam(params.get('seed'));
 
   /** @type {import('./domain/session.js').VisSession} */
   let session = createHelloWorldSession(programSource, { mode, seed });
 
-  /** @type {import('./simulation/engine.js').PhysicsEngine | null} */
+  /** @type {import('./types.js').SimulationEngine | null} */
   let engine = null;
 
   const vis = createScene({ container: app });
@@ -194,6 +207,7 @@ async function start() {
         totalsValue,
         { isPlaying },
         session,
+        backend,
       ),
     );
   }
@@ -208,19 +222,25 @@ async function start() {
     engine = null;
     if (previousEngine) previousEngine.dispose();
 
-    const physics = await import('./simulation/engine.js');
-    const nextEngine = await physics.createPhysicsEngine({
-      graph: state.graph,
-      rootId: state.rootId,
-    });
+    const nextEngine = backend === 'jolt'
+      ? await import('./simulation/engine.js')
+        .then(module => module.createPhysicsEngine({
+          graph: state.graph,
+          rootId: state.rootId,
+        }))
+      : await import('./simulation/static-engine.js')
+        .then(module => module.createStaticEngine({
+          graph: state.graph,
+          rootId: state.rootId,
+        }));
     engine = nextEngine;
-    nextEngine.setPointerFold(pointerFold);
 
     vis.setGraph({
       graph: state.graph,
       nodeIds: nextEngine.nodeIds,
       segments: nextEngine.segments,
     });
+    vis.setCurl(pointerFold);
     vis.setPointerLinkOpacity(pointerLinkOpacity(pointerFold));
     vis.update(nextEngine.positions);
 
@@ -276,7 +296,7 @@ async function start() {
    * @returns {void}
    */
   function applyPointerFold() {
-    if (engine) engine.setPointerFold(pointerFold);
+    vis.setCurl(pointerFold);
     vis.setPointerLinkOpacity(pointerLinkOpacity(pointerFold));
   }
 
