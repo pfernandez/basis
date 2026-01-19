@@ -56,8 +56,8 @@ async function createRuntime() {
   const objectLayerPairFilter = new Jolt.ObjectLayerPairFilterTable(
     numObjectLayers,
   );
-  objectLayerPairFilter.EnableCollision(layerNonMoving, layerMoving);
-  objectLayerPairFilter.EnableCollision(layerMoving, layerMoving);
+  // Graph nodes are conceptual; constraints define all interactions.
+  // Disabling contacts avoids solver jitter when edges "fold" tight.
 
   const broadPhaseLayerInterface = new Jolt.BroadPhaseLayerInterfaceTable(
     numObjectLayers,

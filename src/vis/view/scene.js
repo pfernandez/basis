@@ -36,8 +36,9 @@ import {
  *   setGraph: (graph: SceneGraph) => void,
  *   update: (positions: Float32Array) => void,
  *   fitToPositions: (positions: Float32Array) => void,
-  *   render: () => void,
-  *   dispose: () => void
+ *   setPointerLinkOpacity: (opacity: number) => void,
+ *   render: () => void,
+ *   dispose: () => void
  * }} VisScene
  */
 
@@ -357,6 +358,27 @@ export function createScene(params) {
   }
 
   /**
+   * @param {number} opacity
+   * @returns {void}
+   */
+  function setPointerLinkOpacity(opacity) {
+    if (!linkLines) return;
+    const clamped = Math.max(0, Math.min(1, opacity));
+    linkLines.object.visible = clamped > 1e-3;
+    const material = linkLines.object.material;
+    const updateMaterial = entry => {
+      entry.transparent = true;
+      entry.opacity = clamped;
+      entry.needsUpdate = true;
+    };
+    if (Array.isArray(material)) {
+      material.forEach(updateMaterial);
+      return;
+    }
+    updateMaterial(material);
+  }
+
+  /**
    * @param {{
    *   object: THREE.LineSegments,
    *   buffer: Float32Array,
@@ -471,5 +493,12 @@ export function createScene(params) {
     container.removeChild(renderer.domElement);
   }
 
-  return { setGraph, update, fitToPositions, render, dispose };
+  return {
+    setGraph,
+    update,
+    fitToPositions,
+    setPointerLinkOpacity,
+    render,
+    dispose,
+  };
 }

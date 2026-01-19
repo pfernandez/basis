@@ -72,6 +72,18 @@ function mustGetElement(id) {
 }
 
 /**
+ * @param {string} id
+ * @returns {HTMLInputElement}
+ */
+function mustGetInput(id) {
+  const element = mustGetElement(id);
+  if (!(element instanceof HTMLInputElement)) {
+    throw new Error(`Missing input #${id}`);
+  }
+  return element;
+}
+
+/**
  * @param {HTMLElement} hud
  * @param {string} text
  * @returns {void}
@@ -135,6 +147,7 @@ function hudForPresent(state, totalsValue, playback, session) {
 async function start() {
   const app = mustGetElement('app');
   const hud = mustGetElement('hud');
+  const foldInput = mustGetInput('pointer-fold');
 
   const params = new URLSearchParams(window.location.search);
   let mode = parseModeParam(params.get('mode'));
@@ -152,8 +165,20 @@ async function start() {
   let isPlaying = false;
   let isLoading = false;
 
+  let pointerFold = Number.parseFloat(foldInput.value);
+  if (!Number.isFinite(pointerFold)) pointerFold = 0;
+
   const secondsPerStep = 0.8;
   let stepAccumulatorSeconds = 0;
+
+  /**
+   * @param {number} fold
+   * @returns {number}
+   */
+  function pointerLinkOpacity(fold) {
+    const clamped = Math.max(0, Math.min(1, fold));
+    return 0.75 * (1 - clamped);
+  }
 
   /**
    * @param {import('./domain/session.js').VisState | null} state
@@ -189,12 +214,14 @@ async function start() {
       rootId: state.rootId,
     });
     engine = nextEngine;
+    nextEngine.setPointerFold(pointerFold);
 
     vis.setGraph({
       graph: state.graph,
       nodeIds: nextEngine.nodeIds,
       segments: nextEngine.segments,
     });
+    vis.setPointerLinkOpacity(pointerLinkOpacity(pointerFold));
     vis.update(nextEngine.positions);
 
     if (options.fit && !didFit) {
@@ -244,6 +271,20 @@ async function start() {
   }
 
   await loadStateNow(present(session), { fit: true });
+
+  /**
+   * @returns {void}
+   */
+  function applyPointerFold() {
+    if (engine) engine.setPointerFold(pointerFold);
+    vis.setPointerLinkOpacity(pointerLinkOpacity(pointerFold));
+  }
+
+  foldInput.addEventListener('input', () => {
+    pointerFold = Number.parseFloat(foldInput.value);
+    if (!Number.isFinite(pointerFold)) pointerFold = 0;
+    applyPointerFold();
+  });
 
   /**
    * @returns {void}
