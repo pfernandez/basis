@@ -62,7 +62,7 @@ function makeExpansionHooks(env) {
 export function evaluateExpression(expr, env, options = {}) {
   const tracer = options.tracer ?? null;
   const maxSteps = options.maxSteps ?? 10_000;
-  const cloneArguments = options.cloneArguments ?? true;
+  const cloneArguments = options.cloneArguments ?? false;
   const precompile = options.precompile ?? false;
   const hooks = precompile ? {} : makeExpansionHooks(env);
   const onStep =

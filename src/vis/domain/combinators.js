@@ -134,14 +134,14 @@ export function createHelloWorldStates(programSource) {
   const weakTrace = traceUntilStuck(compiled.graph, compiled.nodeId, {
     phase: 'weak',
     reduceUnderLambdas: false,
-    cloneArguments: true,
+    cloneArguments: false,
     maxSteps,
   }, 1);
 
   const fullTrace = traceUntilStuck(weakTrace.graph, weakTrace.rootId, {
     phase: 'full',
     reduceUnderLambdas: true,
-    cloneArguments: true,
+    cloneArguments: false,
     maxSteps,
   }, weakTrace.nextIndex);
 

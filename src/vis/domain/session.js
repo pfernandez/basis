@@ -314,7 +314,7 @@ export function actionLog(session) {
  */
 export function createSession(config) {
   const precompile = config.precompile ?? true;
-  const cloneArguments = config.cloneArguments ?? true;
+  const cloneArguments = config.cloneArguments ?? false;
   const mode = config.mode ?? 'normal-order';
   const seed = config.seed ?? 1;
   const maxSteps = config.maxSteps ?? 5_000;
@@ -322,6 +322,7 @@ export function createSession(config) {
   const hooks = precompile ? {} : makeExpansionHooks(env);
 
   const ast = parseSexpr(config.sourceExpr);
+
   const compiled = precompile
     ? buildGraphInlinedFromSexpr(createGraph(), ast, env)
     : buildGraphFromSexpr(createGraph(), ast, []);
@@ -399,7 +400,7 @@ export function createHelloWorldSession(programSource, options = {}) {
     programSource,
     sourceExpr: '(((S a) b) c)',
     precompile: true,
-    cloneArguments: true,
+    cloneArguments: false,
     mode: options.mode,
     seed: options.seed,
     maxSteps: 5_000,
