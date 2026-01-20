@@ -73,6 +73,7 @@ import { graphologyFromSnapshot } from './snapshot.js';
  *   programSource: string,
  *   hooks: object,
  *   mode: SessionMode,
+ *   compactGraph: import('../../graph/compact.js').GraphCompaction,
  *   seed: number | null,
  *   reducerId: string,
  *   schedulerId: string,
@@ -306,6 +307,7 @@ export function actionLog(session) {
  *   sourceExpr: string,
  *   precompile?: boolean,
  *   cloneArguments?: boolean,
+ *   compactGraph?: import('../../graph/compact.js').GraphCompaction,
  *   mode?: SessionMode,
  *   seed?: number,
  *   maxSteps?: number
@@ -315,6 +317,7 @@ export function actionLog(session) {
 export function createSession(config) {
   const precompile = config.precompile ?? true;
   const cloneArguments = config.cloneArguments ?? false;
+  const compactGraph = config.compactGraph ?? 'none';
   const mode = config.mode ?? 'normal-order';
   const seed = config.seed ?? 1;
   const maxSteps = config.maxSteps ?? 5_000;
@@ -346,6 +349,7 @@ export function createSession(config) {
       options: {
         reduceUnderLambdas: false,
         cloneArguments,
+        compactGraph,
         maxSteps,
       },
     },
@@ -354,6 +358,7 @@ export function createSession(config) {
       options: {
         reduceUnderLambdas: true,
         cloneArguments,
+        compactGraph,
         maxSteps,
       },
     },
@@ -366,6 +371,7 @@ export function createSession(config) {
     sourceExpr: config.sourceExpr,
     programSource: config.programSource,
     hooks,
+    compactGraph,
     phases,
     frames: [
       {
@@ -392,7 +398,11 @@ export function createSession(config) {
  * Convenience wrapper for the current "Hello World" demo.
  *
  * @param {string} programSource
- * @param {{ mode?: SessionMode, seed?: number }} [options]
+ * @param {{
+ *   mode?: SessionMode,
+ *   seed?: number,
+ *   compactGraph?: import('../../graph/compact.js').GraphCompaction
+ * }} [options]
  * @returns {VisSession}
  */
 export function createHelloWorldSession(programSource, options = {}) {
@@ -401,6 +411,7 @@ export function createHelloWorldSession(programSource, options = {}) {
     sourceExpr: '(((S a) b) c)',
     precompile: true,
     cloneArguments: false,
+    compactGraph: options.compactGraph ?? 'none',
     mode: options.mode,
     seed: options.seed,
     maxSteps: 5_000,

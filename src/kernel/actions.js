@@ -15,6 +15,7 @@
  */
 
 import { applyMachineEvent } from '../graph/machine.js';
+import { compactGraph } from '../graph/compact.js';
 
 /**
  * @typedef {{
@@ -45,7 +46,8 @@ import { applyMachineEvent } from '../graph/machine.js';
  * @param {KernelAction} action
  * @param {{
  *   reduceUnderLambdas: boolean,
- *   cloneArguments: boolean
+ *   cloneArguments: boolean,
+ *   compactGraph?: import('../graph/compact.js').GraphCompaction
  * }} options
  * @param {import('../graph/machine.js').MachineHooks} [hooks]
  * @returns {{ state: KernelState, note: string, focus: object | null }}
@@ -63,10 +65,14 @@ export function applyAction(state, action, options, hooks = {}) {
     hooks,
   );
 
+  const compaction = options.compactGraph ?? 'none';
+  const compacted = compactGraph(stepped.graph, stepped.rootId, {
+    mode: compaction,
+  });
+
   return {
-    state: { graph: stepped.graph, rootId: stepped.rootId },
+    state: { graph: compacted.graph, rootId: compacted.rootId },
     note: stepped.note,
     focus: stepped.focus ?? null,
   };
 }
-

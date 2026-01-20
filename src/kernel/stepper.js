@@ -36,7 +36,8 @@ import { applyAction } from './actions.js';
  * @typedef {{
  *   maxSteps?: number,
  *   reduceUnderLambdas: boolean,
- *   cloneArguments: boolean
+ *   cloneArguments: boolean,
+ *   compactGraph?: import('../graph/compact.js').GraphCompaction
  * }} StepOptions
  */
 

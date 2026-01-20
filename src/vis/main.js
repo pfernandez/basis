@@ -52,6 +52,24 @@ function parseBackendParam(value) {
 }
 
 /**
+ * @param {string | null} value
+ * @returns {import('../graph/compact.js').GraphCompaction}
+ */
+function parseCompactParam(value) {
+  const normalized = String(value ?? '').toLowerCase().trim();
+  if (
+    normalized === 'intern' ||
+    normalized === 'compact' ||
+    normalized === 'min' ||
+    normalized === '1' ||
+    normalized === 'true'
+  ) {
+    return 'intern';
+  }
+  return 'none';
+}
+
+/**
  * @param {unknown} error
  * @returns {string}
  */
@@ -127,6 +145,7 @@ function hudForPresent(state, totalsValue, playback, session, backend) {
     `play: ${playback.isPlaying ? 'playing' : 'paused'}`,
     `backend: ${backend}`,
     `mode: ${session.mode}${seed}`,
+    `compact: ${session.compactGraph}`,
     `choice: ${choice}  scheduler: ${session.schedulerId}${rngState}`,
     `source: ${session.sourceExpr}`,
     `expr: ${state.expr}`,
@@ -134,6 +153,7 @@ function hudForPresent(state, totalsValue, playback, session, backend) {
     'step: ←/→',
     'curl: C',
     'mode: M',
+    'compact: N',
     'log: L',
     '',
     `nodes: ${state.graph.order}  edges: ${state.graph.size}`,
@@ -153,9 +173,14 @@ async function start() {
   let mode = parseModeParam(params.get('mode'));
   const backend = parseBackendParam(params.get('backend'));
   const seed = parseSeedParam(params.get('seed'));
+  let compactGraph = parseCompactParam(params.get('compact'));
 
   /** @type {import('./domain/session.js').VisSession} */
-  let session = createHelloWorldSession(programSource, { mode, seed });
+  let session = createHelloWorldSession(programSource, {
+    mode,
+    seed,
+    compactGraph,
+  });
 
   /** @type {import('./types.js').SimulationEngine | null} */
   let engine = null;
@@ -407,7 +432,24 @@ async function start() {
       event.preventDefault();
       pausePlayback();
       mode = mode === 'normal-order' ? 'multiway-rng' : 'normal-order';
-      session = createHelloWorldSession(programSource, { mode, seed });
+      session = createHelloWorldSession(programSource, {
+        mode,
+        seed,
+        compactGraph,
+      });
+      queueLoadState(present(session), { fit: false });
+      return;
+    }
+
+    if (event.key === 'n' || event.key === 'N') {
+      event.preventDefault();
+      pausePlayback();
+      compactGraph = compactGraph === 'none' ? 'intern' : 'none';
+      session = createHelloWorldSession(programSource, {
+        mode,
+        seed,
+        compactGraph,
+      });
       queueLoadState(present(session), { fit: false });
       return;
     }
