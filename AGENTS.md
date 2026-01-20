@@ -11,6 +11,7 @@ Build a clean, maintainable platform where:
 - Multiple equivalent stepping strategies can be plugged in (deterministic,
   stochastic/RNG, physics-guided).
 - Visualizations make "sharing" and "rewriting" explicit, not magical.
+- The primitive step is interpreted as causality: collapse is a causal event.
 
 ## Non-negotiable Constraints
 
@@ -22,6 +23,8 @@ Build a clean, maintainable platform where:
   no `console.*`). Side effects live in explicit adapters and UI.
 - Determinism: prefer replayable traces. If you introduce randomness, thread
   an RNG/seed explicitly and log decisions as data.
+- No cheating: never move logic/substitution from substrate into the observer.
+  The view may embed/visualize but must not add computational meaning.
 
 ## Repository Map
 
@@ -92,3 +95,30 @@ Preferred shape:
 
 Avoid coupling physics to semantics: the simulator should provide observations
 (constraint strain, energy, proximity) and the chooser uses those to decide.
+
+## Causality Framing + Terminology
+
+This project treats collapse as causality:
+- "Collapse potential" is a synonym for possibility/probability.
+- A "program" is a pattern that can act as a causal prefix extension of state.
+
+Catalan structures:
+- Catalan "tree": the set of possible paths/programs under the Dyck and
+  S-expression/pairs/cons bijections.
+- Catalan "lattice": the graph of states/adjacencies we step through.
+
+Minimization hypothesis:
+- The goal is to fold the Catalan lattice into a minimized normal form while
+  preserving causality (may not remain purely binary).
+- If a minimal set of extra primitives is required, treat them as physical
+  hypotheses and keep them explicit and testable (no "ghosts").
+
+Vocabulary guidance (avoid imported metaphors):
+- Prefer: contact, junction, touch, collapse, potential, causal event.
+- Avoid relying on external formalisms as authority; use them only as optional
+  comparisons and always restate in this project's terms.
+
+"Touch" must be substrate-defined:
+- Do not let geometry (3D proximity) define semantics.
+- If "touch" is introduced as a primitive, it must be represented in the
+  substrate state and updated by local, conservative rules.
