@@ -260,4 +260,3 @@ export function layoutGraphPositions(graph, rootId, nodeRadius) {
 
   return normalizePositionsToRoot(positions, rootId);
 }
-

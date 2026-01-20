@@ -11,6 +11,13 @@ import {
   CSS2DObject,
   CSS2DRenderer,
 } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+import {
+  LineSegments2,
+} from 'three/addons/lines/LineSegments2.js';
+import {
+  LineSegmentsGeometry,
+} from 'three/addons/lines/LineSegmentsGeometry.js';
 
 /**
  * @typedef {import('../types.js').Segment} Segment
@@ -50,13 +57,13 @@ import {
 function colorForKind(kind) {
   switch (kind) {
     case 'pair':
-      return 0x4b5563;
+      return 0x000000;
     case 'symbol':
-      return 0x60a5fa;
+      return 0x93c5fd;
     case 'binder':
-      return 0x34d399;
+      return 0x6ee7b7;
     case 'slot':
-      return 0xfbbf24;
+      return 0xfcd34d;
     case 'empty':
       return 0x9ca3af;
     default:
@@ -71,7 +78,7 @@ function colorForKind(kind) {
 function scaleForKind(kind) {
   switch (kind) {
     case 'pair':
-      return 1.25;
+      return 0.85;
     case 'symbol':
       return 1.1;
     case 'binder':
@@ -106,30 +113,70 @@ function labelForNode(attrs) {
   return null;
 }
 
+const EDGE_LINE_WIDTH = 1.5;
+const POINTER_ARC_STEPS = 32;
+
 /**
  * @param {Segment[]} segments
  * @param {number} color
  * @returns {{
- *   object: THREE.LineSegments,
+ *   object: LineSegments2,
  *   buffer: Float32Array,
  *   segments: Segment[]
  * }}
  */
 function createLineSegments(segments, color) {
   const buffer = new Float32Array(segments.length * 2 * 3);
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(buffer, 3));
+  const geometry = new LineSegmentsGeometry();
+  geometry.setPositions(buffer);
 
-  const material = new THREE.LineBasicMaterial({
+  const material = new LineMaterial({
     color,
     transparent: true,
-    opacity: 0.75,
+    opacity: 0.8,
+    linewidth: EDGE_LINE_WIDTH,
   });
 
   return {
-    object: new THREE.LineSegments(geometry, material),
+    object: new LineSegments2(geometry, material),
     buffer,
     segments,
+  };
+}
+
+/**
+ * Pointer links are rendered as sampled arcs (polyline segments).
+ *
+ * @param {Segment[]} segments
+ * @param {number} color
+ * @returns {{
+ *   object: LineSegments2,
+ *   buffer: Float32Array,
+ *   segments: Segment[],
+ *   steps: number,
+ *   layers: Int32Array | null
+ * }}
+ */
+function createArcLines(segments, color) {
+  const steps = POINTER_ARC_STEPS;
+  const segmentsPerArc = Math.max(1, steps - 1);
+  const buffer = new Float32Array(segments.length * segmentsPerArc * 6);
+  const geometry = new LineSegmentsGeometry();
+  geometry.setPositions(buffer);
+
+  const material = new LineMaterial({
+    color,
+    transparent: true,
+    opacity: 0.4,
+    linewidth: EDGE_LINE_WIDTH,
+  });
+
+  return {
+    object: new LineSegments2(geometry, material),
+    buffer,
+    segments,
+    steps,
+    layers: null,
   };
 }
 
@@ -174,6 +221,160 @@ function clamp(value, min, max) {
  */
 function lerp(a, b, t) {
   return a + (b - a) * t;
+}
+
+/**
+ * @param {number} edge0
+ * @param {number} edge1
+ * @param {number} x
+ * @returns {number}
+ */
+function smoothstep(edge0, edge1, x) {
+  const t = clamp((x - edge0) / (edge1 - edge0), 0, 1);
+  return t * t * (3 - 2 * t);
+}
+
+/**
+ * Weight for lifting arcs: 0 near endpoints, 1 across the interior.
+ *
+ * @param {number} t
+ * @returns {number}
+ */
+function arcPlateauWeight(t) {
+  const ramp = 0.15;
+  return smoothstep(0, ramp, t) * smoothstep(0, ramp, 1 - t);
+}
+
+/**
+ * 2D segment intersection test (strict; ignores colinear overlaps).
+ *
+ * @param {number} ax
+ * @param {number} ay
+ * @param {number} bx
+ * @param {number} by
+ * @param {number} cx
+ * @param {number} cy
+ * @param {number} dx
+ * @param {number} dy
+ * @returns {boolean}
+ */
+function segmentsIntersect2D(ax, ay, bx, by, cx, cy, dx, dy) {
+  const eps = 1e-9;
+
+  const abx = bx - ax;
+  const aby = by - ay;
+  const acx = cx - ax;
+  const acy = cy - ay;
+  const adx = dx - ax;
+  const ady = dy - ay;
+
+  const cdx = dx - cx;
+  const cdy = dy - cy;
+  const cax = ax - cx;
+  const cay = ay - cy;
+  const cbx = bx - cx;
+  const cby = by - cy;
+
+  const o1 = abx * acy - aby * acx;
+  const o2 = abx * ady - aby * adx;
+  const o3 = cdx * cay - cdy * cax;
+  const o4 = cdx * cby - cdy * cbx;
+
+  if (Math.abs(o1) < eps || Math.abs(o2) < eps) return false;
+  if (Math.abs(o3) < eps || Math.abs(o4) < eps) return false;
+
+  return (o1 > 0) !== (o2 > 0) && (o3 > 0) !== (o4 > 0);
+}
+
+/**
+ * Assign pointer arcs to layers so arcs in the same layer don't cross when
+ * projected onto the observer sheet.
+ *
+ * @param {Segment[]} segments
+ * @param {Float32Array} positions
+ * @returns {Int32Array}
+ */
+function arcLayersForSegments(segments, positions) {
+  const layers = new Int32Array(segments.length);
+  layers.fill(-1);
+
+  const order = segments
+    .map((segment, index) => {
+      const a = segment.fromIndex * 3;
+      const b = segment.toIndex * 3;
+      const dx = positions[a] - positions[b];
+      const dy = positions[a + 1] - positions[b + 1];
+      return { index, lengthSq: dx * dx + dy * dy };
+    })
+    .sort((left, right) => right.lengthSq - left.lengthSq);
+
+  /** @type {number[][]} */
+  const usedByLayer = [];
+
+  order.forEach(entry => {
+    const segment = segments[entry.index];
+    const aIndex = segment.fromIndex;
+    const bIndex = segment.toIndex;
+    const ax = positions[aIndex * 3];
+    const ay = positions[aIndex * 3 + 1];
+    const bx = positions[bIndex * 3];
+    const by = positions[bIndex * 3 + 1];
+
+    let layer = 0;
+    while (true) {
+      const members = usedByLayer[layer] ?? [];
+      const intersects = members.some(otherIndex => {
+        const other = segments[otherIndex];
+        if (
+          other.fromIndex === aIndex ||
+          other.toIndex === aIndex ||
+          other.fromIndex === bIndex ||
+          other.toIndex === bIndex
+        ) {
+          return false;
+        }
+
+        const cIndex = other.fromIndex;
+        const dIndex = other.toIndex;
+        const cx = positions[cIndex * 3];
+        const cy = positions[cIndex * 3 + 1];
+        const dx = positions[dIndex * 3];
+        const dy = positions[dIndex * 3 + 1];
+        return segmentsIntersect2D(ax, ay, bx, by, cx, cy, dx, dy);
+      });
+
+      if (!intersects) {
+        layers[entry.index] = layer;
+        if (!usedByLayer[layer]) usedByLayer[layer] = [];
+        usedByLayer[layer].push(entry.index);
+        break;
+      }
+
+      layer += 1;
+    }
+  });
+
+  return layers;
+}
+
+/**
+ * Keep slot nodes on the camera-facing side of the observer sheet.
+ *
+ * The sheet curl rotates local Z offsets by `theta`. When `cos(theta) < 0`,
+ * the local normal flips away from the camera; we mirror slot offsets so they
+ * remain in positive Z rather than curling behind the sheet.
+ *
+ * @param {string} kind
+ * @param {number} z
+ * @param {number} cos
+ * @returns {number}
+ */
+function zOffsetForCurl(kind, z, cos) {
+  if (kind !== 'slot') return z;
+
+  const sign = Math.sign(cos);
+  if (sign === 0) return z;
+  return z * sign;
 }
 
 /**
@@ -269,9 +470,10 @@ function pointerComponentsFromSegments(segments, nodeCount) {
  * @param {Float32Array} positions
  * @param {number[][]} pointerComponents
  * @param {number} fold
+ * @param {string[]} kindByIndex
  * @returns {void}
  */
-function applyPointerFold(positions, pointerComponents, fold) {
+function applyPointerFold(positions, pointerComponents, fold, kindByIndex) {
   const t = clamp(fold, 0, 1);
   if (t <= 1e-6) return;
 
@@ -305,8 +507,12 @@ function applyPointerFold(positions, pointerComponents, fold) {
       const ry = positions[base + 1] - cy;
       const rz = positions[base + 2] - cz;
 
-      const rotatedY = ry * cos - rz * sin;
-      const rotatedZ = ry * sin + rz * cos;
+      const kind = kindByIndex[nodeIndex] ?? '';
+      const direction = kind === 'slot' ? -1 : 1;
+      const sinLocal = sin * direction;
+
+      const rotatedY = ry * cos - rz * sinLocal;
+      const rotatedZ = ry * sinLocal + rz * cos;
 
       positions[base] = cx + rx * shrink;
       positions[base + 1] = cy + rotatedY * shrink;
@@ -344,7 +550,7 @@ export function createScene(params) {
   container.appendChild(labelRenderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0b1020);
+  scene.background = new THREE.Color(0xffffff);
 
   const camera = new THREE.PerspectiveCamera(55, 1, 0.01, 500);
   camera.position.set(0, 0, 9);
@@ -363,9 +569,49 @@ export function createScene(params) {
   sun.position.set(5, 10, 6);
   scene.add(sun);
 
-  const grid = new THREE.GridHelper(60, 60, 0x1f2937, 0x111827);
-  grid.rotation.x = Math.PI / 2;
-  scene.add(grid);
+  const layoutSpacing = Math.max(1.6, nodeRadius * 8);
+  const gridDivisions = 40;
+  const gridSize = layoutSpacing * gridDivisions;
+
+  /**
+   * @param {THREE.GridHelper} grid
+   * @param {number} opacity
+   * @returns {void}
+   */
+  function configureGrid(grid, opacity) {
+    grid.rotation.x = Math.PI / 2;
+
+    const gridMaterial = grid.material;
+    const applyGridMaterial = entry => {
+      entry.transparent = true;
+      entry.opacity = opacity;
+      entry.depthWrite = false;
+      entry.needsUpdate = true;
+    };
+    if (Array.isArray(gridMaterial)) {
+      gridMaterial.forEach(applyGridMaterial);
+    } else {
+      applyGridMaterial(gridMaterial);
+    }
+  }
+
+  const minorGrid = new THREE.GridHelper(
+    gridSize,
+    gridDivisions * 2,
+    0x000000,
+    0x000000,
+  );
+  configureGrid(minorGrid, 0.08);
+  scene.add(minorGrid);
+
+  const majorGrid = new THREE.GridHelper(
+    gridSize,
+    gridDivisions,
+    0x000000,
+    0x000000,
+  );
+  configureGrid(majorGrid, 0.1);
+  scene.add(majorGrid);
 
   const axes = new THREE.AxesHelper(2.5);
   scene.add(axes);
@@ -374,7 +620,10 @@ export function createScene(params) {
   scene.add(labelGroup);
 
   /** @type {THREE.InstancedMesh | null} */
-  let nodes = null;
+  let pairNodes = null;
+
+  /** @type {THREE.InstancedMesh | null} */
+  let otherNodes = null;
 
   /** @type {THREE.SphereGeometry | null} */
   let nodeGeometry = null;
@@ -382,11 +631,23 @@ export function createScene(params) {
   /** @type {THREE.MeshStandardMaterial | null} */
   let nodeMaterial = null;
 
+  /** @type {THREE.MeshStandardMaterial | null} */
+  let pairMaterial = null;
+
   /** @type {number} */
   let nodeCount = 0;
 
   /** @type {Float32Array} */
   let scaleByIndex = new Float32Array(0);
+
+  /** @type {string[]} */
+  let kindByIndex = [];
+
+  /** @type {Int32Array} */
+  let pairInstanceByIndex = new Int32Array(0);
+
+  /** @type {Int32Array} */
+  let otherInstanceByIndex = new Int32Array(0);
 
   /** @type {(CSS2DObject | null)[]} */
   let labelsByIndex = [];
@@ -394,8 +655,8 @@ export function createScene(params) {
   /** @type {ReturnType<typeof createLineSegments> | null} */
   let childLines = null;
 
-  /** @type {ReturnType<typeof createLineSegments> | null} */
-  let linkLines = null;
+  /** @type {ReturnType<typeof createArcLines> | null} */
+  let pointerLines = null;
 
   /** @type {THREE.Mesh | null} */
   let sheetMesh = null;
@@ -430,15 +691,21 @@ export function createScene(params) {
     labelRenderer.setSize(width, height);
     camera.aspect = width / Math.max(1, height);
     camera.updateProjectionMatrix();
+
+    [childLines, pointerLines].forEach(lines => {
+      if (!lines) return;
+      lines.object.material.resolution.set(width, height);
+    });
   }
 
   /**
    * @returns {void}
    */
   function disposeGraphObjects() {
-    if (nodes) scene.remove(nodes);
+    if (pairNodes) scene.remove(pairNodes);
+    if (otherNodes) scene.remove(otherNodes);
     if (childLines) scene.remove(childLines.object);
-    if (linkLines) scene.remove(linkLines.object);
+    if (pointerLines) scene.remove(pointerLines.object);
     if (sheetMesh) scene.remove(sheetMesh);
 
     labelsByIndex.forEach(label => {
@@ -450,44 +717,42 @@ export function createScene(params) {
     });
     labelsByIndex = [];
 
-    if (nodes && nodes.instanceColor) {
-      nodes.instanceColor.needsUpdate = false;
+    if (pairNodes && pairNodes.instanceColor) {
+      pairNodes.instanceColor.needsUpdate = false;
+    }
+    if (otherNodes && otherNodes.instanceColor) {
+      otherNodes.instanceColor.needsUpdate = false;
     }
 
     if (nodeGeometry) nodeGeometry.dispose();
     if (nodeMaterial) nodeMaterial.dispose();
+    if (pairMaterial) pairMaterial.dispose();
     if (childLines) {
       childLines.object.geometry.dispose();
-      const material = childLines.object.material;
-      if (Array.isArray(material)) {
-        material.forEach(entry => entry.dispose());
-      } else {
-        material.dispose();
-      }
+      childLines.object.material.dispose();
     }
-    if (linkLines) {
-      linkLines.object.geometry.dispose();
-      const material = linkLines.object.material;
-      if (Array.isArray(material)) {
-        material.forEach(entry => entry.dispose());
-      } else {
-        material.dispose();
-      }
+    if (pointerLines) {
+      pointerLines.object.geometry.dispose();
+      pointerLines.object.material.dispose();
     }
 
     if (sheetGeometry) sheetGeometry.dispose();
     if (sheetMaterial) sheetMaterial.dispose();
 
-    nodes = null;
+    pairNodes = null;
+    otherNodes = null;
     nodeGeometry = null;
     nodeMaterial = null;
+    pairMaterial = null;
     childLines = null;
-    linkLines = null;
+    pointerLines = null;
     sheetMesh = null;
     sheetGeometry = null;
     sheetMaterial = null;
     nodeCount = 0;
     scaleByIndex = new Float32Array(0);
+    pairInstanceByIndex = new Int32Array(0);
+    otherInstanceByIndex = new Int32Array(0);
     curledPositions = new Float32Array(0);
     curlParams = null;
     pointerComponents = [];
@@ -519,6 +784,10 @@ export function createScene(params) {
     curledPositions = new Float32Array(nodeCount * 3);
     curlParams = null;
     pointerComponents = [];
+    pairInstanceByIndex = new Int32Array(nodeCount);
+    otherInstanceByIndex = new Int32Array(nodeCount);
+    pairInstanceByIndex.fill(-1);
+    otherInstanceByIndex.fill(-1);
 
     nodeGeometry = new THREE.SphereGeometry(nodeRadius, 16, 12);
     nodeMaterial = new THREE.MeshStandardMaterial({
@@ -526,21 +795,20 @@ export function createScene(params) {
       roughness: 0.65,
     });
 
-    const mesh = new THREE.InstancedMesh(nodeGeometry, nodeMaterial, nodeCount);
-    nodes = mesh;
-    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    mesh.frustumCulled = false;
-
     scaleByIndex = new Float32Array(nodeCount);
     labelsByIndex = new Array(nodeCount).fill(null);
 
     const tempColor = new THREE.Color();
+    kindByIndex = new Array(nodeCount);
+    let pairCount = 0;
+    let otherCount = 0;
+
     next.nodeIds.forEach((nodeId, index) => {
       const attrs = next.graph.getNodeAttributes(nodeId);
       const kind = String(attrs?.kind ?? 'unknown');
-      scaleByIndex[index] = scaleForKind(kind);
-      tempColor.setHex(colorForKind(kind));
-      mesh.setColorAt(index, tempColor);
+      kindByIndex[index] = kind;
+      if (kind === 'pair') pairCount += 1;
+      else otherCount += 1;
 
       const label = labelForNode(attrs ?? {});
       if (!label) return;
@@ -553,18 +821,82 @@ export function createScene(params) {
       labelsByIndex[index] = object;
     });
 
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    pairMaterial = new THREE.MeshStandardMaterial({
+      metalness: 0.1,
+      roughness: 0.65,
+      transparent: true,
+      opacity: 0.8,
+    });
+
+    if (otherCount) {
+      const mesh = new THREE.InstancedMesh(
+        nodeGeometry,
+        nodeMaterial,
+        otherCount,
+      );
+      otherNodes = mesh;
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      mesh.frustumCulled = false;
+      scene.add(mesh);
+    }
+
+    if (pairCount) {
+      const mesh = new THREE.InstancedMesh(
+        nodeGeometry,
+        pairMaterial,
+        pairCount,
+      );
+      pairNodes = mesh;
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      mesh.frustumCulled = false;
+      scene.add(mesh);
+    }
+
+    let nextPairInstance = 0;
+    let nextOtherInstance = 0;
+    next.nodeIds.forEach((nodeId, index) => {
+      const kind = kindByIndex[index] ?? 'unknown';
+      scaleByIndex[index] = scaleForKind(kind);
+      tempColor.setHex(colorForKind(kind));
+
+      if (kind === 'pair') {
+        if (!pairNodes) return;
+        pairInstanceByIndex[index] = nextPairInstance;
+        pairNodes.setColorAt(nextPairInstance, tempColor);
+        nextPairInstance += 1;
+        return;
+      }
+
+      if (!otherNodes) return;
+      otherInstanceByIndex[index] = nextOtherInstance;
+      otherNodes.setColorAt(nextOtherInstance, tempColor);
+      nextOtherInstance += 1;
+    });
+
+    if (pairNodes && pairNodes.instanceColor) {
+      pairNodes.instanceColor.needsUpdate = true;
+    }
+    if (otherNodes && otherNodes.instanceColor) {
+      otherNodes.instanceColor.needsUpdate = true;
+    }
 
     const childSegments = next.segments.filter(seg => seg.kind === 'child');
-    const linkSegments = next.segments.filter(
-      seg => seg.kind === 'reentry' || seg.kind === 'value',
+    const pointerSegments = next.segments.filter(seg =>
+      seg.kind === 'reentry' || seg.kind === 'value'
     );
 
-    childLines = createLineSegments(childSegments, 0x64748b);
-    linkLines = createLineSegments(linkSegments, 0xf59e0b);
+    childLines = createLineSegments(childSegments, 0x000000);
+    childLines.object.frustumCulled = false;
     scene.add(childLines.object);
-    scene.add(linkLines.object);
-    pointerComponents = pointerComponentsFromSegments(linkSegments, nodeCount);
+    if (pointerSegments.length) {
+      pointerLines = createArcLines(pointerSegments, 0x000000);
+      pointerLines.object.frustumCulled = false;
+      scene.add(pointerLines.object);
+    }
+    pointerComponents = pointerComponentsFromSegments(
+      pointerSegments,
+      nodeCount,
+    );
 
     const nodeIndexById = new Map(
       next.nodeIds.map((nodeId, index) => [nodeId, index]),
@@ -619,8 +951,8 @@ export function createScene(params) {
       scene.add(sheetMesh);
     }
 
-    scene.add(mesh);
     applyCurlVisuals();
+    resize();
   }
 
   /**
@@ -637,25 +969,17 @@ export function createScene(params) {
    * @returns {void}
    */
   function setPointerLinkOpacity(opacity) {
-    if (!linkLines) return;
     const clamped = Math.max(0, Math.min(1, opacity));
-    linkLines.object.visible = clamped > 1e-3;
-    const material = linkLines.object.material;
-    const updateMaterial = entry => {
-      entry.transparent = true;
-      entry.opacity = clamped;
-      entry.needsUpdate = true;
-    };
-    if (Array.isArray(material)) {
-      material.forEach(updateMaterial);
-      return;
-    }
-    updateMaterial(material);
+    if (!pointerLines) return;
+    pointerLines.object.visible = clamped > 1e-3;
+    pointerLines.object.material.transparent = true;
+    pointerLines.object.material.opacity = clamped;
+    pointerLines.object.material.needsUpdate = true;
   }
 
   /**
    * @param {{
-   *   object: THREE.LineSegments,
+   *   object: LineSegments2,
    *   buffer: Float32Array,
    *   segments: Segment[]
    * }} lines
@@ -677,7 +1001,65 @@ export function createScene(params) {
       buffer[base + 5] = positions[b + 2];
     });
 
-    const attr = lines.object.geometry.getAttribute('position');
+    const attr = lines.object.geometry.getAttribute('instanceStart');
+    attr.needsUpdate = true;
+  }
+
+  /**
+   * @param {ReturnType<typeof createArcLines>} lines
+   * @param {Float32Array} positions
+   * @returns {void}
+   */
+  function updatePointerArcs(lines, positions) {
+    if (!lines.segments.length) return;
+
+    if (!lines.layers) {
+      lines.layers = arcLayersForSegments(lines.segments, positions);
+    }
+
+    const steps = lines.steps;
+    const segmentsPerArc = Math.max(1, steps - 1);
+    const buffer = lines.buffer;
+    const baseLift = layoutSpacing * 0.8;
+    const layerLift = layoutSpacing * 0.35;
+
+    lines.segments.forEach((segment, edgeIndex) => {
+      const fromBase = segment.fromIndex * 3;
+      const toBase = segment.toIndex * 3;
+      const ax = positions[fromBase];
+      const ay = positions[fromBase + 1];
+      const az = positions[fromBase + 2];
+      const bx = positions[toBase];
+      const by = positions[toBase + 1];
+      const bz = positions[toBase + 2];
+
+      const layer = lines.layers ? lines.layers[edgeIndex] : 0;
+      const lift = baseLift + Math.max(0, layer) * layerLift;
+
+      for (let step = 0; step < segmentsPerArc; step += 1) {
+        const t0 = step / segmentsPerArc;
+        const t1 = (step + 1) / segmentsPerArc;
+        const w0 = arcPlateauWeight(t0);
+        const w1 = arcPlateauWeight(t1);
+
+        const p0x = lerp(ax, bx, t0);
+        const p0y = lerp(ay, by, t0);
+        const p0z = lerp(az, bz, t0) + w0 * lift;
+        const p1x = lerp(ax, bx, t1);
+        const p1y = lerp(ay, by, t1);
+        const p1z = lerp(az, bz, t1) + w1 * lift;
+
+        const base = (edgeIndex * segmentsPerArc + step) * 6;
+        buffer[base] = p0x;
+        buffer[base + 1] = p0y;
+        buffer[base + 2] = p0z;
+        buffer[base + 3] = p1x;
+        buffer[base + 4] = p1y;
+        buffer[base + 5] = p1z;
+      }
+    });
+
+    const attr = lines.object.geometry.getAttribute('instanceStart');
     attr.needsUpdate = true;
   }
 
@@ -689,8 +1071,8 @@ export function createScene(params) {
    * @returns {void}
    */
   function update(positions) {
-    if (!nodes) return;
-    if (!childLines || !linkLines) return;
+    if (!pairNodes && !otherNodes) return;
+    if (!childLines) return;
 
     if (!curlParams) {
       curlParams = curlParamsFromPositions(positions);
@@ -703,11 +1085,12 @@ export function createScene(params) {
       const base = index * 3;
       const x = positions[base];
       const y = positions[base + 1];
-      const z = positions[base + 2];
-
       const theta = (x / maxAbsX) * maxAngle;
       const sin = Math.sin(theta);
       const cos = Math.cos(theta);
+      const kind = kindByIndex[index] ?? '';
+      const baseZ = positions[base + 2];
+      const z = zOffsetForCurl(kind, baseZ, cos);
       const rolledX = radius * sin;
       const rolledZ = radius * (1 - cos);
 
@@ -715,14 +1098,14 @@ export function createScene(params) {
       const targetZ = rolledZ + cos * z;
       const curledX = lerp(x, targetX, fold);
       const curledY = y;
-      const curledZ = lerp(z, targetZ, fold);
+      const curledZ = lerp(baseZ, targetZ, fold);
 
       curledPositions[base] = curledX;
       curledPositions[base + 1] = curledY;
       curledPositions[base + 2] = curledZ;
     }
 
-    applyPointerFold(curledPositions, pointerComponents, fold);
+    applyPointerFold(curledPositions, pointerComponents, fold, kindByIndex);
 
     for (let index = 0; index < nodeCount; index += 1) {
       const base = index * 3;
@@ -734,17 +1117,25 @@ export function createScene(params) {
       dummy.position.set(x, y, z);
       dummy.scale.setScalar(scale);
       dummy.updateMatrix();
-      nodes.setMatrixAt(index, dummy.matrix);
+      const pairInstance = pairInstanceByIndex[index];
+      const otherInstance = otherInstanceByIndex[index];
+      if (pairNodes && pairInstance >= 0) {
+        pairNodes.setMatrixAt(pairInstance, dummy.matrix);
+      }
+      if (otherNodes && otherInstance >= 0) {
+        otherNodes.setMatrixAt(otherInstance, dummy.matrix);
+      }
 
       const label = labelsByIndex[index];
       if (label) {
         label.position.set(x, y + nodeRadius * 2.1 * scale, z);
       }
     }
-    nodes.instanceMatrix.needsUpdate = true;
+    if (pairNodes) pairNodes.instanceMatrix.needsUpdate = true;
+    if (otherNodes) otherNodes.instanceMatrix.needsUpdate = true;
 
     updateLines(childLines, curledPositions);
-    updateLines(linkLines, curledPositions);
+    if (pointerLines) updatePointerArcs(pointerLines, curledPositions);
 
     if (sheetGeometry) {
       const attr = sheetGeometry.getAttribute('position');

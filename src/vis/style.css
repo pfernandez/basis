@@ -33,31 +33,6 @@ body {
   white-space: pre-wrap;
 }
 
-#controls {
-  position: absolute;
-  left: 12px;
-  bottom: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  font-size: 12px;
-  line-height: 16px;
-  user-select: none;
-  pointer-events: auto;
-}
-
-#controls label {
-  color: rgba(229, 231, 235, 0.9);
-}
-
-#controls input[type='range'] {
-  width: 240px;
-}
-
 .node-label {
   padding: 2px 5px;
   background: rgba(0, 0, 0, 0.55);

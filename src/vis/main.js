@@ -82,18 +82,6 @@ function mustGetElement(id) {
 }
 
 /**
- * @param {string} id
- * @returns {HTMLInputElement}
- */
-function mustGetInput(id) {
-  const element = mustGetElement(id);
-  if (!(element instanceof HTMLInputElement)) {
-    throw new Error(`Missing input #${id}`);
-  }
-  return element;
-}
-
-/**
  * @param {HTMLElement} hud
  * @param {string} text
  * @returns {void}
@@ -144,6 +132,7 @@ function hudForPresent(state, totalsValue, playback, session, backend) {
     `expr: ${state.expr}`,
     'play/pause: Space',
     'step: ←/→',
+    'curl: C',
     'mode: M',
     'log: L',
     '',
@@ -159,7 +148,6 @@ function hudForPresent(state, totalsValue, playback, session, backend) {
 async function start() {
   const app = mustGetElement('app');
   const hud = mustGetElement('hud');
-  const foldInput = mustGetInput('pointer-fold');
 
   const params = new URLSearchParams(window.location.search);
   let mode = parseModeParam(params.get('mode'));
@@ -178,11 +166,19 @@ async function start() {
   let isPlaying = false;
   let isLoading = false;
 
-  let pointerFold = Number.parseFloat(foldInput.value);
-  if (!Number.isFinite(pointerFold)) pointerFold = 0;
+  let pointerFold = 0;
+  let pointerFoldTarget = 0;
 
   const secondsPerStep = 0.8;
   let stepAccumulatorSeconds = 0;
+  const curlDurationSeconds = 1;
+
+  /** @type {{
+   *   from: number,
+   *   to: number,
+   *   elapsedSeconds: number
+   * } | null} */
+  let curlAnimation = null;
 
   /**
    * @param {number} fold
@@ -190,7 +186,7 @@ async function start() {
    */
   function pointerLinkOpacity(fold) {
     const clamped = Math.max(0, Math.min(1, fold));
-    return 0.75 * (1 - clamped);
+    return 0.4 * (1 - clamped);
   }
 
   /**
@@ -300,11 +296,54 @@ async function start() {
     vis.setPointerLinkOpacity(pointerLinkOpacity(pointerFold));
   }
 
-  foldInput.addEventListener('input', () => {
-    pointerFold = Number.parseFloat(foldInput.value);
-    if (!Number.isFinite(pointerFold)) pointerFold = 0;
+  /**
+   * @param {number} value
+   * @returns {number}
+   */
+  function clamp01(value) {
+    return Math.max(0, Math.min(1, value));
+  }
+
+  /**
+   * @param {number} fold
+   * @returns {void}
+   */
+  function setPointerFoldNow(fold) {
+    pointerFold = clamp01(fold);
     applyPointerFold();
-  });
+  }
+
+  /**
+   * @returns {void}
+   */
+  function toggleCurl() {
+    pointerFoldTarget = pointerFoldTarget < 0.5 ? 1 : 0;
+    curlAnimation = {
+      from: pointerFold,
+      to: pointerFoldTarget,
+      elapsedSeconds: 0,
+    };
+    renderHud(null);
+  }
+
+  /**
+   * @param {number} deltaSeconds
+   * @returns {void}
+   */
+  function updateCurlAnimation(deltaSeconds) {
+    if (!curlAnimation) return;
+
+    curlAnimation.elapsedSeconds += deltaSeconds;
+    const t = clamp01(curlAnimation.elapsedSeconds / curlDurationSeconds);
+    const next = curlAnimation.from +
+      (curlAnimation.to - curlAnimation.from) * t;
+    setPointerFoldNow(next);
+
+    if (t >= 1) {
+      setPointerFoldNow(curlAnimation.to);
+      curlAnimation = null;
+    }
+  }
 
   /**
    * @returns {void}
@@ -379,6 +418,12 @@ async function start() {
       return;
     }
 
+    if (event.key === 'c' || event.key === 'C') {
+      event.preventDefault();
+      toggleCurl();
+      return;
+    }
+
     if (event.key === 'ArrowLeft') {
       event.preventDefault();
       stepFrame(-1);
@@ -414,6 +459,8 @@ async function start() {
   function animate(nowMs) {
     const dt = (nowMs - lastTimeMs) / 1000;
     lastTimeMs = nowMs;
+
+    updateCurlAnimation(dt);
 
     if (isPlaying && !isLoading) {
       stepAccumulatorSeconds += dt;
