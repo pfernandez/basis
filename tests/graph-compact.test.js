@@ -111,3 +111,38 @@ test('interning compaction preserves evaluator results', () => {
   assert.equal(compactExpr, baselineExpr);
 });
 
+test('full compaction inlines stable bound slots', () => {
+  const ast = parseSexpr('(((S a) b) c)');
+  const compiled = buildGraphInlinedFromSexpr(createGraph(), ast, env);
+
+  let graph = compiled.graph;
+  let rootId = compiled.nodeId;
+  let observer = createObserver(rootId);
+
+  for (let stepIndex = 0; stepIndex < 3; stepIndex += 1) {
+    const stepped = stepNormalOrder(
+      graph,
+      rootId,
+      { reduceUnderLambdas: false, cloneArguments: false },
+      observer,
+      {},
+    );
+    assert.equal(stepped.didStep, true);
+    graph = stepped.graph;
+    rootId = stepped.rootId;
+    observer = stepped.observer;
+  }
+
+  const expr = serializeGraph(graph, rootId);
+  assert.equal(expr, '((a c) (b c))');
+
+  const compacted = compactGraph(graph, rootId, { mode: 'full' });
+  assert.equal(
+    serializeGraph(compacted.graph, compacted.rootId),
+    expr,
+  );
+
+  const kinds = new Set(compacted.graph.nodes.map(node => node.kind));
+  assert.equal(kinds.has('binder'), false);
+  assert.equal(kinds.has('slot'), false);
+});

@@ -11,6 +11,7 @@ import { parseSexpr } from '../../graph/parser.js';
 import { createGraph } from '../../graph/graph.js';
 import { buildGraphFromSexpr } from '../../graph/compile.js';
 import { buildGraphInlinedFromSexpr } from '../../graph/precompile.js';
+import { compactGraph } from '../../graph/compact.js';
 import { parseDefinitionsSource } from '../../graph/definitions.js';
 import { serializeGraph } from '../../graph/serializer.js';
 import { snapshotFromGraph } from '../../graph/trace.js';
@@ -120,14 +121,34 @@ function snapshotVisState(state) {
  * @param {string} note
  * @param {number} stepIndex
  * @param {object | null} focus
+ * @param {import('../../graph/compact.js').GraphCompaction} compaction
+ * @param {{ canExpandSymbol?: (name: string) => boolean }} hooks
  * @returns {VisState}
  */
-function visStateFromKernel(kernel, note, stepIndex, focus) {
-  const expr = serializeGraph(kernel.graph, kernel.rootId);
-  const snapshot = snapshotFromGraph(kernel.graph, kernel.rootId, note, focus);
+function visStateFromKernel(
+  kernel,
+  note,
+  stepIndex,
+  focus,
+  compaction,
+  hooks,
+) {
+  const canExpandSymbol =
+    typeof hooks?.canExpandSymbol === 'function' ? hooks.canExpandSymbol : null;
+  const compacted = compactGraph(kernel.graph, kernel.rootId, {
+    mode: compaction,
+    canExpandSymbol: canExpandSymbol ?? undefined,
+  });
+  const expr = serializeGraph(compacted.graph, compacted.rootId);
+  const snapshot = snapshotFromGraph(
+    compacted.graph,
+    compacted.rootId,
+    note,
+    focus,
+  );
   return snapshotVisState({
     graph: graphologyFromSnapshot(snapshot),
-    rootId: kernel.rootId,
+    rootId: compacted.rootId,
     note,
     expr,
     stepIndex,
@@ -148,6 +169,31 @@ export function present(session) {
  */
 export function presentFrame(session) {
   return session.frames[session.index];
+}
+
+/**
+ * Update the view compaction mode while preserving history.
+ *
+ * @param {VisSession} session
+ * @param {import('../../graph/compact.js').GraphCompaction} compaction
+ * @returns {VisSession}
+ */
+export function setCompaction(session, compaction) {
+  if (session.compactGraph === compaction) return session;
+
+  const frames = session.frames.map(frame => ({
+    ...frame,
+    state: visStateFromKernel(
+      frame.kernel,
+      frame.state.note,
+      frame.state.stepIndex,
+      null,
+      compaction,
+      session.hooks,
+    ),
+  }));
+
+  return { ...session, compactGraph: compaction, frames };
 }
 
 /**
@@ -253,6 +299,8 @@ export function stepForward(session, context = null) {
       note,
       nextIndex,
       stepped.focus ?? null,
+      session.compactGraph,
+      session.hooks,
     );
 
     const nextFrame = {
@@ -317,7 +365,7 @@ export function actionLog(session) {
 export function createSession(config) {
   const precompile = config.precompile ?? true;
   const cloneArguments = config.cloneArguments ?? false;
-  const compactGraph = config.compactGraph ?? 'none';
+  const compaction = config.compactGraph ?? 'none';
   const mode = config.mode ?? 'normal-order';
   const seed = config.seed ?? 1;
   const maxSteps = config.maxSteps ?? 5_000;
@@ -349,7 +397,6 @@ export function createSession(config) {
       options: {
         reduceUnderLambdas: false,
         cloneArguments,
-        compactGraph,
         maxSteps,
       },
     },
@@ -358,20 +405,26 @@ export function createSession(config) {
       options: {
         reduceUnderLambdas: true,
         cloneArguments,
-        compactGraph,
         maxSteps,
       },
     },
   ];
 
   const initialStepperState = stepper.init(initialKernel, phases[0].options);
-  const initialState = visStateFromKernel(initialKernel, 'init', 0, null);
+  const initialState = visStateFromKernel(
+    initialKernel,
+    'init',
+    0,
+    null,
+    compaction,
+    hooks,
+  );
 
   return {
     sourceExpr: config.sourceExpr,
     programSource: config.programSource,
     hooks,
-    compactGraph,
+    compactGraph: compaction,
     phases,
     frames: [
       {

@@ -10,7 +10,8 @@
  * - drop unreachable garbage, and
  * - intern `slot` nodes by `binderId` (one slot per binder), and
  * - intern `symbol` nodes by `label`, and
- * - intern all `empty` nodes.
+ * - intern all `empty` nodes, and
+ * - inline bound slots whose values are stable.
  *
  * This intentionally does *not* merge `pair` or `binder` nodes: both
  * participate in causal update semantics (pair child rewrites and
@@ -18,6 +19,7 @@
  */
 
 import { assertValidNode, getNode } from './graph.js';
+import { isLambdaPair } from './patterns.js';
 import { invariant } from '../utils.js';
 
 /**
@@ -26,7 +28,7 @@ import { invariant } from '../utils.js';
  */
 
 /**
- * @typedef {'none' | 'intern'} GraphCompaction
+ * @typedef {'none' | 'intern' | 'full'} GraphCompaction
  */
 
 /**
@@ -79,9 +81,46 @@ function internKey(node) {
  * @returns {string}
  */
 function resolveRedirect(redirects, nodeId) {
-  const next = redirects.get(nodeId);
-  if (typeof next !== 'string') return nodeId;
-  return next;
+  let currentId = nodeId;
+  const seen = new Set();
+
+  for (;;) {
+    const nextId = redirects.get(currentId);
+    if (typeof nextId !== 'string') return currentId;
+    if (seen.has(nextId)) return currentId;
+    seen.add(nextId);
+    currentId = nextId;
+  }
+}
+
+/**
+ * Decide whether a bound value is stable enough to inline.
+ *
+ * Stable values will never be replaced at the root by the machine's local
+ * rewrites (apply/collapse/expand).
+ *
+ * @param {Graph} graph
+ * @param {string} nodeId
+ * @param {{ canExpandSymbol?: (name: string) => boolean }} options
+ * @returns {boolean}
+ */
+function valueRootIsStable(graph, nodeId, options) {
+  const node = getNode(graph, nodeId);
+  if (node.kind === 'empty') return true;
+
+  if (node.kind === 'symbol') {
+    const label = String(node.label ?? '');
+    if (typeof options.canExpandSymbol === 'function') {
+      return !options.canExpandSymbol(label);
+    }
+    return true;
+  }
+
+  if (node.kind === 'pair') {
+    return isLambdaPair(graph, nodeId);
+  }
+
+  return false;
 }
 
 /**
@@ -92,9 +131,15 @@ function resolveRedirect(redirects, nodeId) {
  * - all `symbol` nodes with the same `label`,
  * - all `slot` nodes with the same `binderId` (one slot per binder).
  *
+ * The `full` mode additionally inlines bound slots when the bound value is
+ * stable and cannot be replaced at its root (e.g. symbols, empty, lambdas).
+ *
  * @param {Graph} graph
  * @param {string} rootId
- * @param {{ mode?: GraphCompaction }} [options]
+ * @param {{
+ *   mode?: GraphCompaction,
+ *   canExpandSymbol?: (name: string) => boolean
+ * }} [options]
  * @returns {{ graph: Graph, rootId: string }}
  */
 export function compactGraph(graph, rootId, options = {}) {
@@ -108,7 +153,7 @@ export function compactGraph(graph, rootId, options = {}) {
     return { graph: { ...graph, nodes }, rootId };
   }
 
-  if (mode !== 'intern') {
+  if (mode !== 'intern' && mode !== 'full') {
     throw new Error(`Unknown compaction mode: ${String(mode)}`);
   }
 
@@ -129,6 +174,27 @@ export function compactGraph(graph, rootId, options = {}) {
     }
     canonicalByKey.set(key, node.id);
   });
+
+  if (mode === 'full') {
+    graph.nodes.forEach(node => {
+      if (!reachable.has(node.id)) return;
+      if (node.kind !== 'slot') return;
+      invariant(
+        typeof node.binderId === 'string',
+        'slot binderId must be a string',
+      );
+
+      const binder = getNode(graph, node.binderId);
+      if (binder.kind !== 'binder') return;
+      if (typeof binder.valueId !== 'string') return;
+
+      const boundValueId = resolveRedirect(redirects, binder.valueId);
+      if (!valueRootIsStable(graph, boundValueId, options)) return;
+
+      const canonicalSlotId = resolveRedirect(redirects, node.id);
+      redirects.set(canonicalSlotId, boundValueId);
+    });
+  }
 
   const canonicalRootId = resolveRedirect(redirects, rootId);
 
@@ -179,5 +245,16 @@ export function compactGraph(graph, rootId, options = {}) {
     nodes.push(next);
   });
 
-  return { graph: { ...graph, nodes }, rootId: canonicalRootId };
+  const compactedGraph = { ...graph, nodes };
+  if (mode !== 'full') {
+    return { graph: compactedGraph, rootId: canonicalRootId };
+  }
+
+  const reachableAfter = reachableNodeIds(compactedGraph, canonicalRootId);
+  const pruned = compactedGraph.nodes.filter(node =>
+    reachableAfter.has(node.id)
+  );
+  pruned.forEach(assertValidNode);
+
+  return { graph: { ...graph, nodes: pruned }, rootId: canonicalRootId };
 }

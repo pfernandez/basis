@@ -14,6 +14,7 @@ import {
   canStepForward,
   actionLog,
   createHelloWorldSession,
+  setCompaction,
   present,
   presentFrame,
   stepBack,
@@ -57,6 +58,9 @@ function parseBackendParam(value) {
  */
 function parseCompactParam(value) {
   const normalized = String(value ?? '').toLowerCase().trim();
+  if (normalized === 'full' || normalized === 'readback') {
+    return 'full';
+  }
   if (
     normalized === 'intern' ||
     normalized === 'compact' ||
@@ -444,12 +448,13 @@ async function start() {
     if (event.key === 'n' || event.key === 'N') {
       event.preventDefault();
       pausePlayback();
-      compactGraph = compactGraph === 'none' ? 'intern' : 'none';
-      session = createHelloWorldSession(programSource, {
-        mode,
-        seed,
-        compactGraph,
-      });
+      compactGraph =
+        compactGraph === 'none'
+          ? 'intern'
+          : compactGraph === 'intern'
+            ? 'full'
+            : 'none';
+      session = setCompaction(session, compactGraph);
       queueLoadState(present(session), { fit: false });
       return;
     }
