@@ -26,7 +26,9 @@ import {
 /**
  * @typedef {{
  *   container: HTMLElement,
- *   nodeRadius?: number
+ *   nodeRadius?: number,
+ *   gridDimensions?: import('../types.js').GridDimensions,
+ *   pointerStyle?: 'arcs' | 'lines'
  * }} SceneParams
  */
 
@@ -43,6 +45,8 @@ import {
  *   setGraph: (graph: SceneGraph) => void,
  *   update: (positions: Float32Array) => void,
  *   fitToPositions: (positions: Float32Array) => void,
+ *   setCameraMode: (mode: 'perspective' | 'orthographic') => void,
+ *   setGridMode: (mode: 'none' | 'xy' | 'xz' | 'yz' | 'xyz') => void,
  *   setCurl: (fold: number) => void,
  *   setPointerLinkOpacity: (opacity: number) => void,
  *   render: () => void,
@@ -115,6 +119,106 @@ function labelForNode(attrs) {
 
 const EDGE_LINE_WIDTH = 1.5;
 const POINTER_ARC_STEPS = 32;
+
+/**
+ * Create an XYZ lattice using line segments.
+ *
+ * `dimensions` are half-extents in grid steps from the origin.
+ *
+ * @param {import('../types.js').GridDimensions} dimensions
+ * @param {number} spacing
+ * @param {number} color
+ * @param {number} opacity
+ * @returns {THREE.LineSegments}
+ */
+function createXYZGrid(dimensions, spacing, color, opacity) {
+  const safeSpacing =
+    spacing > 0 && Number.isFinite(spacing) ? spacing : 1;
+  const xExtent = Math.max(1, Math.floor(dimensions.x));
+  const yExtent = Math.max(1, Math.floor(dimensions.y));
+  const zExtent = Math.max(1, Math.floor(dimensions.z));
+
+  const halfX = xExtent * safeSpacing;
+  const halfY = yExtent * safeSpacing;
+  const halfZ = zExtent * safeSpacing;
+  const pointsX = xExtent * 2 + 1;
+  const pointsY = yExtent * 2 + 1;
+  const pointsZ = zExtent * 2 + 1;
+
+  const linesX = pointsY * pointsZ;
+  const linesY = pointsX * pointsZ;
+  const linesZ = pointsX * pointsY;
+  const buffer = new Float32Array((linesX + linesY + linesZ) * 2 * 3);
+
+  const coordsX = new Float32Array(pointsX);
+  const coordsY = new Float32Array(pointsY);
+  const coordsZ = new Float32Array(pointsZ);
+
+  for (let i = 0; i < pointsX; i += 1) {
+    coordsX[i] = -halfX + i * safeSpacing;
+  }
+  for (let i = 0; i < pointsY; i += 1) {
+    coordsY[i] = -halfY + i * safeSpacing;
+  }
+  for (let i = 0; i < pointsZ; i += 1) {
+    coordsZ[i] = -halfZ + i * safeSpacing;
+  }
+
+  let cursor = 0;
+  for (let yi = 0; yi < pointsY; yi += 1) {
+    const y = coordsY[yi];
+    for (let zi = 0; zi < pointsZ; zi += 1) {
+      const z = coordsZ[zi];
+      buffer[cursor] = -halfX;
+      buffer[cursor + 1] = y;
+      buffer[cursor + 2] = z;
+      buffer[cursor + 3] = halfX;
+      buffer[cursor + 4] = y;
+      buffer[cursor + 5] = z;
+      cursor += 6;
+    }
+  }
+
+  for (let xi = 0; xi < pointsX; xi += 1) {
+    const x = coordsX[xi];
+    for (let zi = 0; zi < pointsZ; zi += 1) {
+      const z = coordsZ[zi];
+      buffer[cursor] = x;
+      buffer[cursor + 1] = -halfY;
+      buffer[cursor + 2] = z;
+      buffer[cursor + 3] = x;
+      buffer[cursor + 4] = halfY;
+      buffer[cursor + 5] = z;
+      cursor += 6;
+    }
+  }
+
+  for (let xi = 0; xi < pointsX; xi += 1) {
+    const x = coordsX[xi];
+    for (let yi = 0; yi < pointsY; yi += 1) {
+      const y = coordsY[yi];
+      buffer[cursor] = x;
+      buffer[cursor + 1] = y;
+      buffer[cursor + 2] = -halfZ;
+      buffer[cursor + 3] = x;
+      buffer[cursor + 4] = y;
+      buffer[cursor + 5] = halfZ;
+      cursor += 6;
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(buffer, 3));
+  const material = new THREE.LineBasicMaterial({
+    color,
+    transparent: true,
+    opacity,
+    depthWrite: false,
+  });
+  const lines = new THREE.LineSegments(geometry, material);
+  lines.frustumCulled = false;
+  return lines;
+}
 
 /**
  * @param {Segment[]} segments
@@ -612,6 +716,7 @@ function applyPointerFold(positions, pointerComponents, fold, kindByIndex) {
 export function createScene(params) {
   const nodeRadius = params.nodeRadius ?? 0.18;
   const container = params.container;
+  const pointerStyle = params.pointerStyle ?? 'arcs';
 
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
@@ -634,15 +739,127 @@ export function createScene(params) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xffffff);
 
-  const camera = new THREE.PerspectiveCamera(55, 1, 0.01, 500);
-  camera.position.set(0, 0, 9);
-  camera.lookAt(0, 0, 0);
+  const perspectiveCamera = new THREE.PerspectiveCamera(55, 1, 0.01, 500);
+  perspectiveCamera.position.set(0, 0, 9);
+  perspectiveCamera.lookAt(0, 0, 0);
+
+  const orthographicCamera = new THREE.OrthographicCamera(
+    -1,
+    1,
+    1,
+    -1,
+    0.01,
+    500,
+  );
+  orthographicCamera.position.copy(perspectiveCamera.position);
+  orthographicCamera.quaternion.copy(perspectiveCamera.quaternion);
+  orthographicCamera.up.copy(perspectiveCamera.up);
+
+  /** @type {THREE.PerspectiveCamera | THREE.OrthographicCamera} */
+  let camera = perspectiveCamera;
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
   controls.target.set(0, 0, 0);
   controls.update();
+
+  /**
+   * @param {number} distance
+   * @returns {number}
+   */
+  function viewHeightForPerspective(distance) {
+    const fovRad = perspectiveCamera.fov * Math.PI / 180;
+    return 2 * Math.max(0, distance) * Math.tan(fovRad / 2);
+  }
+
+  /** @type {number} */
+  let currentAspect = 1;
+
+  /** @type {number} */
+  let orthoHeight = viewHeightForPerspective(
+    perspectiveCamera.position.distanceTo(controls.target),
+  );
+
+  /** @type {'perspective' | 'orthographic'} */
+  let cameraMode = 'perspective';
+
+  /**
+   * @returns {void}
+   */
+  function updateOrthoFrustum() {
+    const safeHeight = Math.max(0.01, orthoHeight);
+    const halfHeight = safeHeight / 2;
+    const halfWidth = halfHeight * currentAspect;
+
+    orthographicCamera.left = -halfWidth;
+    orthographicCamera.right = halfWidth;
+    orthographicCamera.top = halfHeight;
+    orthographicCamera.bottom = -halfHeight;
+    orthographicCamera.updateProjectionMatrix();
+  }
+
+  /**
+   * @param {THREE.Camera} source
+   * @param {THREE.Camera} target
+   * @returns {void}
+   */
+  function copyCameraPose(source, target) {
+    target.position.copy(source.position);
+    target.quaternion.copy(source.quaternion);
+    target.up.copy(source.up);
+  }
+
+  /**
+   * @param {'perspective' | 'orthographic'} mode
+   * @returns {void}
+   */
+  function setCameraMode(mode) {
+    const normalized = mode === 'orthographic' ? 'orthographic' : 'perspective';
+    if (normalized === cameraMode) return;
+
+    const target = controls.target;
+    const offset = new THREE.Vector3().copy(camera.position).sub(target);
+    let currentDistance = offset.length();
+    if (currentDistance < 1e-4) {
+      offset.set(0, 0.35, 1);
+      currentDistance = 9;
+    }
+    offset.normalize();
+
+    if (normalized === 'orthographic') {
+      orthoHeight = viewHeightForPerspective(currentDistance);
+      orthoHeight *= Math.max(1e-6, orthographicCamera.zoom);
+      updateOrthoFrustum();
+      copyCameraPose(camera, orthographicCamera);
+      orthographicCamera.near = Math.max(0.01, currentDistance / 100);
+      orthographicCamera.far = Math.max(500, currentDistance * 20);
+      orthographicCamera.updateProjectionMatrix();
+      camera = orthographicCamera;
+      controls.object = camera;
+      cameraMode = normalized;
+      controls.update();
+      return;
+    }
+
+    const effectiveHeight =
+      orthoHeight / Math.max(1e-6, orthographicCamera.zoom);
+    const rawDistance =
+      (effectiveHeight / 2) /
+      Math.tan((perspectiveCamera.fov * Math.PI / 180) / 2);
+    const nextDistance = Math.max(2, rawDistance);
+    perspectiveCamera.position
+      .copy(target)
+      .add(offset.multiplyScalar(nextDistance));
+    perspectiveCamera.near = Math.max(0.01, nextDistance / 100);
+    perspectiveCamera.far = Math.max(500, nextDistance * 20);
+    perspectiveCamera.updateProjectionMatrix();
+
+    camera = perspectiveCamera;
+    controls.object = camera;
+    cameraMode = normalized;
+    controls.update();
+  }
 
   const ambient = new THREE.AmbientLight(0xffffff, 0.55);
   scene.add(ambient);
@@ -652,16 +869,33 @@ export function createScene(params) {
   scene.add(sun);
 
   const layoutSpacing = Math.max(1.6, nodeRadius * 8);
-  const gridDivisions = 40;
-  const gridSize = layoutSpacing * gridDivisions;
+  const gridDimensions = params.gridDimensions ?? { x: 20, y: 20, z: 20 };
+  const xExtent = Math.max(1, Math.floor(gridDimensions.x));
+  const yExtent = Math.max(1, Math.floor(gridDimensions.y));
+  const zExtent = Math.max(1, Math.floor(gridDimensions.z));
+
+  const xyHalf = Math.max(xExtent, yExtent);
+  const xzHalf = Math.max(xExtent, zExtent);
+  const yzHalf = Math.max(yExtent, zExtent);
+
+  const xyDivisions = xyHalf * 2;
+  const xzDivisions = xzHalf * 2;
+  const yzDivisions = yzHalf * 2;
+
+  const xySize = layoutSpacing * xyDivisions;
+  const xzSize = layoutSpacing * xzDivisions;
+  const yzSize = layoutSpacing * yzDivisions;
 
   /**
    * @param {THREE.GridHelper} grid
    * @param {number} opacity
+   * @param {'xy' | 'xz' | 'yz'} plane
    * @returns {void}
    */
-  function configureGrid(grid, opacity) {
-    grid.rotation.x = Math.PI / 2;
+  function configureGrid(grid, opacity, plane) {
+    grid.rotation.set(0, 0, 0);
+    if (plane === 'xy') grid.rotation.x = Math.PI / 2;
+    if (plane === 'yz') grid.rotation.z = Math.PI / 2;
 
     const gridMaterial = grid.material;
     const applyGridMaterial = entry => {
@@ -678,22 +912,69 @@ export function createScene(params) {
   }
 
   const minorGrid = new THREE.GridHelper(
-    gridSize,
-    gridDivisions * 2,
+    xySize,
+    xyDivisions * 2,
     0x000000,
     0x000000,
   );
-  configureGrid(minorGrid, 0.08);
+  configureGrid(minorGrid, 0.08, 'xy');
+  const minorGridXZ = new THREE.GridHelper(
+    xzSize,
+    xzDivisions * 2,
+    0x000000,
+    0x000000,
+  );
+  configureGrid(minorGridXZ, 0.08, 'xz');
+  minorGridXZ.visible = false;
+  scene.add(minorGridXZ);
+  const minorGridYZ = new THREE.GridHelper(
+    yzSize,
+    yzDivisions * 2,
+    0x000000,
+    0x000000,
+  );
+  configureGrid(minorGridYZ, 0.08, 'yz');
+  minorGridYZ.visible = false;
+  scene.add(minorGridYZ);
+
   scene.add(minorGrid);
 
   const majorGrid = new THREE.GridHelper(
-    gridSize,
-    gridDivisions,
+    xySize,
+    xyDivisions,
     0x000000,
     0x000000,
   );
-  configureGrid(majorGrid, 0.1);
+  configureGrid(majorGrid, 0.1, 'xy');
+  const majorGridXZ = new THREE.GridHelper(
+    xzSize,
+    xzDivisions,
+    0x000000,
+    0x000000,
+  );
+  configureGrid(majorGridXZ, 0.1, 'xz');
+  majorGridXZ.visible = false;
+  scene.add(majorGridXZ);
+  const majorGridYZ = new THREE.GridHelper(
+    yzSize,
+    yzDivisions,
+    0x000000,
+    0x000000,
+  );
+  configureGrid(majorGridYZ, 0.1, 'yz');
+  majorGridYZ.visible = false;
+  scene.add(majorGridYZ);
+
   scene.add(majorGrid);
+
+  const xyzGrid = createXYZGrid(
+    { x: xExtent, y: yExtent, z: zExtent },
+    layoutSpacing,
+    0x000000,
+    0.035,
+  );
+  xyzGrid.visible = false;
+  scene.add(xyzGrid);
 
   const axes = new THREE.AxesHelper(2.5);
   scene.add(axes);
@@ -734,11 +1015,12 @@ export function createScene(params) {
   /** @type {(CSS2DObject | null)[]} */
   let labelsByIndex = [];
 
-  /** @type {ReturnType<typeof createLineSegments> | null} */
-  let childLines = null;
+	  /** @type {ReturnType<typeof createLineSegments> | null} */
+	  let childLines = null;
 
-  /** @type {ReturnType<typeof createArcLines> | null} */
-  let pointerLines = null;
+	  /** @type {ReturnType<typeof createArcLines> |
+	   *   ReturnType<typeof createLineSegments> | null} */
+	  let pointerLines = null;
 
   /** @type {THREE.Mesh | null} */
   let sheetMesh = null;
@@ -774,8 +1056,10 @@ export function createScene(params) {
     const height = container.clientHeight;
     renderer.setSize(width, height);
     labelRenderer.setSize(width, height);
-    camera.aspect = width / Math.max(1, height);
-    camera.updateProjectionMatrix();
+    currentAspect = width / Math.max(1, height);
+    perspectiveCamera.aspect = currentAspect;
+    perspectiveCamera.updateProjectionMatrix();
+    updateOrthoFrustum();
 
     [childLines, pointerLines].forEach(lines => {
       if (!lines) return;
@@ -977,14 +1261,16 @@ export function createScene(params) {
       nodeCount,
     );
 
-    childLines = createLineSegments(childSegments, 0x000000);
-    childLines.object.frustumCulled = false;
-    scene.add(childLines.object);
-    if (pointerSegments.length) {
-      pointerLines = createArcLines(pointerSegments, 0x000000);
-      pointerLines.object.frustumCulled = false;
-      scene.add(pointerLines.object);
-    }
+	    childLines = createLineSegments(childSegments, 0x000000);
+	    childLines.object.frustumCulled = false;
+	    scene.add(childLines.object);
+	    if (pointerSegments.length) {
+	      pointerLines = pointerStyle === 'lines'
+	        ? createLineSegments(pointerSegments, 0x000000)
+	        : createArcLines(pointerSegments, 0x000000);
+	      pointerLines.object.frustumCulled = false;
+	      scene.add(pointerLines.object);
+	    }
     pointerComponents = pointerComponentsFromSegments(
       pointerSegments,
       nodeCount,
@@ -1225,16 +1511,22 @@ export function createScene(params) {
         label.position.set(x, y + nodeRadius * 2.1 * scale, z);
       }
     }
-    if (pairNodes) pairNodes.instanceMatrix.needsUpdate = true;
-    if (otherNodes) otherNodes.instanceMatrix.needsUpdate = true;
+	    if (pairNodes) pairNodes.instanceMatrix.needsUpdate = true;
+	    if (otherNodes) otherNodes.instanceMatrix.needsUpdate = true;
 
-    updateLines(childLines, curledPositions);
-    if (pointerLines) updatePointerArcs(pointerLines, curledPositions);
+	    updateLines(childLines, curledPositions);
+	    if (pointerLines) {
+	      if ('steps' in pointerLines) {
+	        updatePointerArcs(pointerLines, curledPositions);
+	      } else {
+	        updateLines(pointerLines, curledPositions);
+	      }
+	    }
 
-    if (sheetGeometry) {
-      const attr = sheetGeometry.getAttribute('position');
-      attr.needsUpdate = true;
-    }
+	    if (sheetGeometry) {
+	      const attr = sheetGeometry.getAttribute('position');
+	      attr.needsUpdate = true;
+	    }
   }
 
   /**
@@ -1249,25 +1541,74 @@ export function createScene(params) {
 
     const padding = 1.25;
     const radius = Math.max(bounds.radius, nodeRadius) * padding;
+    const offset = new THREE.Vector3()
+      .copy(camera.position)
+      .sub(controls.target);
+    let currentDistance = offset.length();
+    if (currentDistance < 1e-4) {
+      offset.set(0, 0.35, 1);
+      currentDistance = 9;
+    }
+    offset.normalize();
 
-    const vFov = camera.fov * Math.PI / 180;
+    controls.target.copy(bounds.center);
+
+    if (camera.isOrthographicCamera) {
+      const halfHeight = radius * Math.max(1, 1 / currentAspect);
+      orthographicCamera.zoom = 1;
+      orthoHeight = halfHeight * 2;
+      updateOrthoFrustum();
+
+      const distance = Math.max(currentDistance, 2);
+      orthographicCamera.position
+        .copy(bounds.center)
+        .add(offset.multiplyScalar(distance));
+      orthographicCamera.near = Math.max(0.01, distance / 100);
+      orthographicCamera.far = distance * 20 + radius * 2;
+      orthographicCamera.updateProjectionMatrix();
+      controls.update();
+      return;
+    }
+
+    const vFov = perspectiveCamera.fov * Math.PI / 180;
     const vDistance = radius / Math.tan(vFov / 2);
-    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
+    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * currentAspect);
     const hDistance = radius / Math.tan(hFov / 2);
     const distance = Math.max(vDistance, hDistance, 2);
 
-    const direction = new THREE.Vector3()
-      .copy(camera.position)
-      .sub(controls.target);
-    if (direction.lengthSq() < 1e-8) direction.set(0, 0.35, 1);
-    direction.normalize();
-
-    controls.target.copy(bounds.center);
-    camera.position.copy(bounds.center).add(direction.multiplyScalar(distance));
-    camera.near = Math.max(0.01, distance / 100);
-    camera.far = distance * 20 + radius * 2;
-    camera.updateProjectionMatrix();
+    perspectiveCamera.position
+      .copy(bounds.center)
+      .add(offset.multiplyScalar(distance));
+    perspectiveCamera.near = Math.max(0.01, distance / 100);
+    perspectiveCamera.far = distance * 20 + radius * 2;
+    perspectiveCamera.updateProjectionMatrix();
     controls.update();
+  }
+
+  /**
+   * @param {'none' | 'xy' | 'xz' | 'yz' | 'xyz'} mode
+   * @returns {void}
+   */
+  function setGridMode(mode) {
+    const normalized = (
+      mode === 'none' ||
+      mode === 'xz' ||
+      mode === 'yz' ||
+      mode === 'xyz'
+    )
+      ? mode
+      : 'xy';
+    const showXY = normalized === 'xy';
+    const showXZ = normalized === 'xz';
+    const showYZ = normalized === 'yz';
+    const showXYZ = normalized === 'xyz';
+    minorGrid.visible = showXY;
+    majorGrid.visible = showXY;
+    minorGridXZ.visible = showXZ;
+    majorGridXZ.visible = showXZ;
+    minorGridYZ.visible = showYZ;
+    majorGridYZ.visible = showYZ;
+    xyzGrid.visible = showXYZ;
   }
 
   /**
@@ -1285,6 +1626,26 @@ export function createScene(params) {
   function dispose() {
     window.removeEventListener('resize', resize);
     disposeGraphObjects();
+    [minorGrid, majorGrid, minorGridXZ, majorGridXZ, minorGridYZ, majorGridYZ]
+      .forEach(grid => {
+        scene.remove(grid);
+        grid.geometry.dispose();
+        const gridMaterial = grid.material;
+        if (Array.isArray(gridMaterial)) {
+          gridMaterial.forEach(material => material.dispose());
+        } else {
+          gridMaterial.dispose();
+        }
+      });
+
+    scene.remove(xyzGrid);
+    xyzGrid.geometry.dispose();
+    const xyzMaterial = xyzGrid.material;
+    if (Array.isArray(xyzMaterial)) {
+      xyzMaterial.forEach(material => material.dispose());
+    } else {
+      xyzMaterial.dispose();
+    }
     controls.dispose();
     renderer.dispose();
     container.removeChild(labelRenderer.domElement);
@@ -1295,6 +1656,8 @@ export function createScene(params) {
     setGraph,
     update,
     fitToPositions,
+    setCameraMode,
+    setGridMode,
     setCurl,
     setPointerLinkOpacity,
     render,

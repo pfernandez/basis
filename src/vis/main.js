@@ -29,6 +29,14 @@ import { createScene } from './view/scene.js';
  */
 
 /**
+ * @typedef {'layout' | 'unit' | 'lattice'} EdgeLengthMode
+ */
+
+/**
+ * @typedef {'none' | 'xy' | 'xz' | 'yz' | 'xyz'} GridMode
+ */
+
+/**
  * @param {string | null} value
  * @returns {'normal-order' | 'multiway-rng'}
  */
@@ -102,6 +110,31 @@ function parseTransitionParam(value) {
 }
 
 /**
+ * @param {string | null} value
+ * @returns {EdgeLengthMode}
+ */
+function parseEdgesParam(value) {
+  const normalized = String(value ?? '').toLowerCase().trim();
+  if (
+    normalized === 'lattice' ||
+    normalized === 'grid' ||
+    normalized === 'snap'
+  ) {
+    return 'lattice';
+  }
+  if (
+    normalized === 'unit' ||
+    normalized === 'equal' ||
+    normalized === 'rigid' ||
+    normalized === '1' ||
+    normalized === 'true'
+  ) {
+    return 'unit';
+  }
+  return 'layout';
+}
+
+/**
  * @param {unknown} error
  * @returns {string}
  */
@@ -151,6 +184,8 @@ function setHudText(hud, text) {
  * @param {import('./domain/session.js').VisSession} session
  * @param {'sheet' | 'jolt'} backend
  * @param {TransitionStyle} transitionStyle
+ * @param {EdgeLengthMode} edgeLengthMode
+ * @param {'perspective' | 'orthographic'} cameraMode
  * @returns {string}
  */
 function hudForPresent(
@@ -160,6 +195,8 @@ function hudForPresent(
   session,
   backend,
   transitionStyle,
+  edgeLengthMode,
+  cameraMode,
 ) {
   const lastStep = totalsValue.lastStep ?? '?';
   const reduced = totalsValue.reduced ?? '?';
@@ -177,7 +214,8 @@ function hudForPresent(
     typeof frame.stepperState?.schedulerState === 'number'
       ? ` rng=${frame.stepperState.schedulerState}`
       : '';
-  return [
+  /** @type {string[]} */
+  const lines = [
     '3D Combinator Visualizer (Hello World)',
     '',
     `step: ${state.stepIndex}/${lastStep}`,
@@ -187,21 +225,30 @@ function hudForPresent(
     `mode: ${session.mode}${seed}`,
     `compact: ${session.compactGraph}`,
     `transition: ${transitionStyle}`,
+    `camera: ${cameraMode}`,
+  ];
+  if (backend === 'jolt') lines.push(`edges: ${edgeLengthMode}`);
+  lines.push(
     `choice: ${choice}  scheduler: ${session.schedulerId}${rngState}`,
     `source: ${session.sourceExpr}`,
     `expr: ${state.expr}`,
     'play/pause: Space',
     'step: ←/→',
     'curl: C',
+    'camera: O',
     'mode: M',
     'compact: N',
     'transition: T',
+  );
+  if (backend === 'jolt') lines.push('edges: E');
+  lines.push(
     'log: L',
     '',
     `nodes: ${state.graph.order}  edges: ${state.graph.size}`,
     `init nodes: ${totalsValue.initial}`,
     `reduced nodes: ${reduced}`,
-  ].join('\n');
+  );
+  return lines.join('\n');
 }
 
 /**
@@ -217,6 +264,13 @@ async function start() {
   const seed = parseSeedParam(params.get('seed'));
   let compactGraph = parseCompactParam(params.get('compact'));
   let transitionStyle = parseTransitionParam(params.get('transition'));
+  let edgeLengthMode = parseEdgesParam(params.get('edges'));
+  /** @type {GridMode} */
+  let gridMode = 'xy';
+  /** @type {'perspective' | 'orthographic'} */
+  let cameraMode = 'perspective';
+
+  const pointerStyle = backend === 'jolt' ? 'lines' : 'arcs';
 
   /** @type {import('./domain/session.js').VisSession} */
   let session = createHelloWorldSession(programSource, {
@@ -224,11 +278,17 @@ async function start() {
     seed,
     compactGraph,
   });
+  const gridDimensions = session.gridDimensions;
 
   /** @type {import('./types.js').SimulationEngine | null} */
   let engine = null;
 
-  const vis = createScene({ container: app });
+  const vis = createScene({
+    container: app,
+    pointerStyle,
+    gridDimensions,
+  });
+  vis.setGridMode(gridMode);
 
   let didFit = false;
   let isPlaying = false;
@@ -303,28 +363,31 @@ async function start() {
    */
   function pointerLinkOpacity(fold) {
     const clamped = Math.max(0, Math.min(1, fold));
-    return 0.4 * (1 - clamped);
+    const base = pointerStyle === 'lines' ? 0.8 : 0.4;
+    return base * (1 - clamped);
   }
 
   /**
    * @param {import('./domain/session.js').VisState | null} state
    * @returns {void}
    */
-  function renderHud(state = null) {
-    const effectiveState = state ?? present(session);
-    const totalsValue = totals(session);
-    setHudText(
-      hud,
-      hudForPresent(
-        effectiveState,
-        totalsValue,
-        { isPlaying },
-        session,
-        backend,
-        transitionStyle,
-      ),
-    );
-  }
+	  function renderHud(state = null) {
+	    const effectiveState = state ?? present(session);
+	    const totalsValue = totals(session);
+	    setHudText(
+	      hud,
+	      hudForPresent(
+	        effectiveState,
+	        totalsValue,
+	        { isPlaying },
+	        session,
+	        backend,
+	        transitionStyle,
+	        edgeLengthMode,
+	        cameraMode,
+	      ),
+	    );
+	  }
 
   /**
    * @param {string[]} nodeIds
@@ -1004,16 +1067,17 @@ async function start() {
     engine = null;
     if (previousEngine) previousEngine.dispose();
 
-    const nextEngine = backend === 'jolt'
-      ? await import('./simulation/engine.js')
-        .then(module => module.createPhysicsEngine({
-          graph: state.graph,
-          rootId: state.rootId,
-        }))
-      : await import('./simulation/static-engine.js')
-        .then(module => module.createStaticEngine({
-          graph: state.graph,
-          rootId: state.rootId,
+	    const nextEngine = backend === 'jolt'
+	      ? await import('./simulation/engine.js')
+	        .then(module => module.createPhysicsEngine({
+	          graph: state.graph,
+	          rootId: state.rootId,
+	          edgeLengthMode,
+	        }))
+	      : await import('./simulation/static-engine.js')
+	        .then(module => module.createStaticEngine({
+	          graph: state.graph,
+	          rootId: state.rootId,
         }));
     engine = nextEngine;
 
@@ -1238,6 +1302,7 @@ async function start() {
         mode,
         seed,
         compactGraph,
+        gridDimensions,
       });
       queueLoadFrame(presentFrame(session), { fit: false });
       return;
@@ -1257,17 +1322,55 @@ async function start() {
       return;
     }
 
-    if (event.key === 't' || event.key === 'T') {
+	    if (event.key === 't' || event.key === 'T') {
+	      event.preventDefault();
+	      pausePlayback();
+	      transitionStyle = transitionStyle === 'direct' ? 'path' : 'direct';
+	      renderHud(null);
+	      return;
+	    }
+
+	    if (event.key === 'e' || event.key === 'E') {
+	      event.preventDefault();
+	      pausePlayback();
+	      edgeLengthMode =
+	        edgeLengthMode === 'layout'
+	          ? 'lattice'
+	          : edgeLengthMode === 'lattice'
+	            ? 'unit'
+	            : 'layout';
+	      queueLoadFrame(presentFrame(session), { fit: false });
+	      return;
+	    }
+
+	    if (event.key === 'l' || event.key === 'L') {
+	      event.preventDefault();
+	      console.log(JSON.stringify(actionLog(session), null, 2));
+	      return;
+	    }
+
+    if (event.key === 'g' || event.key === 'G') {
       event.preventDefault();
-      pausePlayback();
-      transitionStyle = transitionStyle === 'direct' ? 'path' : 'direct';
-      renderHud(null);
+      gridMode =
+        gridMode === 'none'
+          ? 'xy'
+          : gridMode === 'xy'
+            ? 'xz'
+            : gridMode === 'xz'
+              ? 'yz'
+              : gridMode === 'yz'
+                ? 'xyz'
+                : 'none';
+      vis.setGridMode(gridMode);
       return;
     }
 
-    if (event.key === 'l' || event.key === 'L') {
+    if (event.key === 'o' || event.key === 'O') {
       event.preventDefault();
-      console.log(JSON.stringify(actionLog(session), null, 2));
+      cameraMode =
+        cameraMode === 'perspective' ? 'orthographic' : 'perspective';
+      vis.setCameraMode(cameraMode);
+      renderHud(null);
       return;
     }
 

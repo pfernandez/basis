@@ -15,6 +15,19 @@
  */
 
 /**
+ * Integer half-extents for visualization grids.
+ *
+ * Values are measured in grid steps from the origin (e.g. `x: 10` spans
+ * `[-10, +10]`).
+ *
+ * @typedef {{
+ *   x: number,
+ *   y: number,
+ *   z: number
+ * }} GridDimensions
+ */
+
+/**
  * @typedef {{
  *   nodeIds: string[],
  *   nodeIndexById: Map<string, number>,

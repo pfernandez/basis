@@ -74,6 +74,7 @@ import { graphologyFromSnapshot } from './snapshot.js';
  *   programSource: string,
  *   hooks: object,
  *   mode: SessionMode,
+ *   gridDimensions: import('../types.js').GridDimensions,
  *   compactGraph: import('../../graph/compact.js').GraphCompaction,
  *   seed: number | null,
  *   reducerId: string,
@@ -350,6 +351,46 @@ export function actionLog(session) {
 }
 
 /**
+ * @param {unknown} value
+ * @param {number} fallback
+ * @returns {number}
+ */
+function toPositiveInt(value, fallback) {
+  const numberValue = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(numberValue)) return fallback;
+  return Math.max(1, Math.floor(numberValue));
+}
+
+/**
+ * Normalize `GridDimensions`, clamping to positive integers.
+ *
+ * Values are interpreted as half-extents in grid steps from the origin.
+ *
+ * @param {unknown} value
+ * @returns {import('../types.js').GridDimensions}
+ */
+function normalizeGridDimensions(value) {
+  /** @type {import('../types.js').GridDimensions} */
+  const fallback = { x: 8, y: 8, z: 4 };
+
+  if (typeof value === 'number') {
+    const extent = toPositiveInt(value, fallback.x);
+    return { x: extent, y: extent, z: extent };
+  }
+
+  if (!value || typeof value !== 'object') return fallback;
+
+  const candidate = /** @type {{ x?: unknown, y?: unknown, z?: unknown }} */ (
+    value
+  );
+  return {
+    x: toPositiveInt(candidate.x, fallback.x),
+    y: toPositiveInt(candidate.y, fallback.y),
+    z: toPositiveInt(candidate.z, fallback.z),
+  };
+}
+
+/**
  * @param {{
  *   programSource: string,
  *   sourceExpr: string,
@@ -358,6 +399,7 @@ export function actionLog(session) {
  *   compactGraph?: import('../../graph/compact.js').GraphCompaction,
  *   mode?: SessionMode,
  *   seed?: number,
+ *   gridDimensions?: import('../types.js').GridDimensions | number,
  *   maxSteps?: number
  * }} config
  * @returns {VisSession}
@@ -369,6 +411,7 @@ export function createSession(config) {
   const mode = config.mode ?? 'normal-order';
   const seed = config.seed ?? 1;
   const maxSteps = config.maxSteps ?? 5_000;
+  const gridDimensions = normalizeGridDimensions(config.gridDimensions);
   const env = parseDefinitionsSource(config.programSource);
   const hooks = precompile ? {} : makeExpansionHooks(env);
 
@@ -424,6 +467,7 @@ export function createSession(config) {
     sourceExpr: config.sourceExpr,
     programSource: config.programSource,
     hooks,
+    gridDimensions,
     compactGraph: compaction,
     phases,
     frames: [
@@ -454,7 +498,8 @@ export function createSession(config) {
  * @param {{
  *   mode?: SessionMode,
  *   seed?: number,
- *   compactGraph?: import('../../graph/compact.js').GraphCompaction
+ *   compactGraph?: import('../../graph/compact.js').GraphCompaction,
+ *   gridDimensions?: import('../types.js').GridDimensions | number
  * }} [options]
  * @returns {VisSession}
  */
@@ -470,6 +515,7 @@ export function createHelloWorldSession(programSource, options = {}) {
     compactGraph: options.compactGraph ?? 'none',
     mode: options.mode,
     seed: options.seed,
+    gridDimensions: options.gridDimensions,
     maxSteps: 5_000,
   });
 }

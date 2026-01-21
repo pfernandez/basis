@@ -10,6 +10,7 @@
  */
 
 import { childAdjacency, layoutGraphPositions } from './layout.js';
+import { embedGraphToLattice } from './lattice-embed.js';
 
 import { invariant } from '../../utils.js';
 import { getPhysicsRuntime } from './runtime.js';
@@ -23,6 +24,10 @@ import { getPhysicsRuntime } from './runtime.js';
  */
 
 /**
+ * @typedef {'layout' | 'unit' | 'lattice'} EdgeLengthMode
+ */
+
+/**
  * @typedef {{
  *   nodeIds: string[],
  *   nodeIndexById: Map<string, number>,
@@ -33,6 +38,109 @@ import { getPhysicsRuntime } from './runtime.js';
  *   dispose: () => void
  * }} PhysicsEngine
  */
+
+/**
+ * @param {VisGraph} graph
+ * @param {Map<string, number>} nodeIndexById
+ * @returns {Segment[]}
+ */
+function segmentsFromGraph(graph, nodeIndexById) {
+  /** @type {Segment[]} */
+  const segments = [];
+
+  graph.forEachEdge((_edgeKey, attrs, source, target) => {
+    const kind = attrs?.kind;
+    if (kind !== 'child' && kind !== 'reentry' && kind !== 'value') return;
+
+    const fromIndex = nodeIndexById.get(source);
+    const toIndex = nodeIndexById.get(target);
+    if (typeof fromIndex !== 'number' || typeof toIndex !== 'number') return;
+
+    segments.push({ kind, fromIndex, toIndex });
+  });
+
+  return segments;
+}
+
+/**
+ * Create a deterministic lattice embedding engine for the provided graph.
+ *
+ * The returned `positions` always lie on grid vertices (integer multiples of
+ * `gridSpacing`). Constrained edges have constant length `edgeLength`.
+ *
+ * @param {{
+ *   graph: VisGraph,
+ *   rootId: string,
+ *   nodeRadius: number,
+ *   edgeLength: number
+ * }} params
+ * @returns {PhysicsEngine | null}
+ */
+function createLatticeEngine(params) {
+  const graph = params.graph;
+  const rootId = params.rootId;
+  const nodeRadius = params.nodeRadius;
+  const edgeLength = params.edgeLength;
+
+  const gridSpacing = edgeLength / Math.SQRT2;
+  if (!(gridSpacing > 0) || !Number.isFinite(gridSpacing)) return null;
+
+  const nodeIds = graph.nodes();
+  const nodeIndexById = new Map(
+    nodeIds.map((nodeId, index) => [nodeId, index]),
+  );
+
+  const positions = new Float32Array(nodeIds.length * 3);
+  const segments = segmentsFromGraph(graph, nodeIndexById);
+
+  const layoutHints = layoutGraphPositions(graph, rootId, nodeRadius);
+  /** @type {Map<string, [number, number, number]>} */
+  const hints = new Map();
+  layoutHints.forEach((pos, nodeId) => {
+    hints.set(nodeId, [pos[0] / gridSpacing, pos[1] / gridSpacing, 0]);
+  });
+
+  const embedded = embedGraphToLattice(graph, rootId, {
+    edgeSquaredSteps: 2,
+    hints,
+  });
+  if (!embedded) return null;
+
+  nodeIds.forEach((nodeId, index) => {
+    const steps = embedded.positions.get(nodeId) ?? [0, 0, 0];
+    const base = index * 3;
+    positions[base] = steps[0] * gridSpacing;
+    positions[base + 1] = steps[1] * gridSpacing;
+    positions[base + 2] = steps[2] * gridSpacing;
+  });
+
+  /**
+   * @param {number} _fold
+   * @returns {void}
+   */
+  function setPointerFold(_fold) {}
+
+  /**
+   * @param {number} _deltaSeconds
+   * @returns {void}
+   */
+  function step(_deltaSeconds) {}
+
+  /**
+   * @returns {void}
+   */
+  function dispose() {}
+
+  return {
+    nodeIds,
+    nodeIndexById,
+    positions,
+    segments,
+    setPointerFold,
+    step,
+    dispose,
+  };
+}
 
 /**
  * @param {number} value
@@ -82,6 +190,32 @@ function distance(ax, ay, az, bx, by, bz) {
   const dy = ay - by;
   const dz = az - bz;
   return Math.sqrt(dx * dx + dy * dy + dz * dz);
+}
+
+/**
+ * Snap a coordinate to the nearest lattice vertex.
+ *
+ * @param {number} value
+ * @param {number} spacing
+ * @returns {number}
+ */
+function snapToGrid(value, spacing) {
+  if (!(spacing > 0) || !Number.isFinite(spacing)) return value;
+  return Math.round(value / spacing) * spacing;
+}
+
+/**
+ * Project a position map onto the XY plane (`z = 0`).
+ *
+ * @param {Map<string, [number, number, number]>} positions
+ * @returns {Map<string, [number, number, number]>}
+ */
+function projectPositionsToPlane(positions) {
+  const next = new Map();
+  positions.forEach((pos, nodeId) => {
+    next.set(nodeId, [pos[0], pos[1], 0]);
+  });
+  return next;
 }
 
 /**
@@ -195,7 +329,9 @@ function edgeIsSpring(graph, edgeKey, adjacency) {
  * @param {{
  *   graph: VisGraph,
  *   rootId: string,
- *   nodeRadius?: number
+ *   nodeRadius?: number,
+ *   edgeLengthMode?: EdgeLengthMode,
+ *   edgeLength?: number
  * }} params
  * @returns {Promise<PhysicsEngine>}
  */
@@ -203,9 +339,31 @@ export async function createPhysicsEngine(params) {
   const nodeRadius = params.nodeRadius ?? 0.18;
   const graph = params.graph;
   const rootId = params.rootId;
+  const edgeLengthMode =
+    params.edgeLengthMode === 'unit' || params.edgeLengthMode === 'lattice'
+      ? params.edgeLengthMode
+      : 'layout';
+  const useUnitEdges = edgeLengthMode !== 'layout';
+  const useLattice = edgeLengthMode === 'lattice';
+  const layoutSpacing = Math.max(1.6, nodeRadius * 8);
+  const edgeLength = (
+    typeof params.edgeLength === 'number' && Number.isFinite(params.edgeLength)
+  )
+    ? params.edgeLength
+    : layoutSpacing;
 
   invariant(typeof rootId === 'string', 'rootId must be a string');
   invariant(graph && typeof graph === 'object', 'graph is required');
+
+  if (edgeLengthMode === 'lattice') {
+    const latticeEngine = createLatticeEngine({
+      graph,
+      rootId,
+      nodeRadius,
+      edgeLength,
+    });
+    if (latticeEngine) return latticeEngine;
+  }
 
   const runtime = await getPhysicsRuntime();
   const Jolt = runtime.Jolt;
@@ -220,14 +378,19 @@ export async function createPhysicsEngine(params) {
     nodeIds.map((nodeId, index) => [nodeId, index]),
   );
   const positions = new Float32Array(nodeIds.length * 3);
-  const initialPositions = layoutGraphPositions(graph, rootId, nodeRadius);
+  const layoutPositions = layoutGraphPositions(graph, rootId, nodeRadius);
+  const initialPositions = useUnitEdges
+    ? projectPositionsToPlane(layoutPositions)
+    : layoutPositions;
   const layoutRadius = layoutRadiusFromPositions(initialPositions);
   const sphereShape = new Jolt.SphereShape(nodeRadius);
   sphereShape.AddRef();
   const zeroVelocity = new Jolt.Vec3(0, 0, 0);
   const identityRotation = new Jolt.Quat(0, 0, 0, 1);
+  const latticeForce = useLattice ? new Jolt.Vec3(0, 0, 0) : null;
 
   const bodies = new Map();
+  const masses = new Map();
   nodeIds.forEach(nodeId => {
     const position = initialPositions.get(nodeId) ?? [0, 0, 0];
     const [x, y, z] = position;
@@ -247,8 +410,8 @@ export async function createPhysicsEngine(params) {
       layer,
     );
     bodySettings.mGravityFactor = 0;
-    bodySettings.mLinearDamping = 0.7;
-    bodySettings.mAngularDamping = 0.7;
+    bodySettings.mLinearDamping = useLattice ? 0.82 : 0.7;
+    bodySettings.mAngularDamping = useLattice ? 0.82 : 0.7;
     bodySettings.mFriction = 0;
     bodySettings.mRestitution = 0;
     bodySettings.mMaxLinearVelocity = 25;
@@ -258,34 +421,41 @@ export async function createPhysicsEngine(params) {
     const body = bodyInterface.CreateBody(bodySettings);
     bodyInterface.AddBody(body.GetID(), Jolt.EActivation_Activate);
     bodies.set(nodeId, body);
+    if (useLattice && nodeId !== rootId) {
+      const motion = body.GetMotionProperties();
+      const invMass = motion.GetInverseMass();
+      masses.set(nodeId, invMass > 0 ? 1 / invMass : 1);
+    }
     Jolt.destroy(bodySettings);
     Jolt.destroy(positionVec);
   });
 
   const anchorBodies = new Map();
-  nodeIds.forEach(nodeId => {
-    if (nodeId === rootId) return;
-    const position = initialPositions.get(nodeId) ?? [0, 0, 0];
+  if (!useUnitEdges) {
+    nodeIds.forEach(nodeId => {
+      if (nodeId === rootId) return;
+      const position = initialPositions.get(nodeId) ?? [0, 0, 0];
 
-    const anchorPosition = new Jolt.RVec3(...position);
-    const anchorSettings = new Jolt.BodyCreationSettings(
-      sphereShape,
-      anchorPosition,
-      identityRotation,
-      Jolt.EMotionType_Static,
-      layerNonMoving,
-    );
-    anchorSettings.mGravityFactor = 0;
+      const anchorPosition = new Jolt.RVec3(...position);
+      const anchorSettings = new Jolt.BodyCreationSettings(
+        sphereShape,
+        anchorPosition,
+        identityRotation,
+        Jolt.EMotionType_Static,
+        layerNonMoving,
+      );
+      anchorSettings.mGravityFactor = 0;
 
-    const anchorBody = bodyInterface.CreateBody(anchorSettings);
-    bodyInterface.AddBody(
-      anchorBody.GetID(),
-      Jolt.EActivation_DontActivate,
-    );
-    anchorBodies.set(nodeId, anchorBody);
-    Jolt.destroy(anchorSettings);
-    Jolt.destroy(anchorPosition);
-  });
+      const anchorBody = bodyInterface.CreateBody(anchorSettings);
+      bodyInterface.AddBody(
+        anchorBody.GetID(),
+        Jolt.EActivation_DontActivate,
+      );
+      anchorBodies.set(nodeId, anchorBody);
+      Jolt.destroy(anchorSettings);
+      Jolt.destroy(anchorPosition);
+    });
+  }
 
   const pointerCycles = pointerAdjacency(graph);
   const childFrequency = 8.0;
@@ -294,6 +464,17 @@ export async function createPhysicsEngine(params) {
   const siblingFrequency = 4.5;
   const siblingDamping = 0.92;
   const siblingRange = 0.06;
+  const unitFrequency = 18.0;
+  const unitDamping = 0.95;
+  const latticeSpacing = edgeLength;
+  const latticeGridFrequency = 1.35;
+  const latticePlaneFrequency = 1.8;
+  const latticeGridOmega = Math.PI * 2 * latticeGridFrequency;
+  const latticePlaneOmega = Math.PI * 2 * latticePlaneFrequency;
+  const latticeGridK = latticeGridOmega * latticeGridOmega;
+  const latticePlaneK = latticePlaneOmega * latticePlaneOmega;
+  const latticeGridDamping = 2 * latticeGridOmega;
+  const latticePlaneDamping = 2 * latticePlaneOmega;
   /** @type {any[]} */
   const constraints = [];
   /** @type {Segment[]} */
@@ -321,11 +502,21 @@ export async function createPhysicsEngine(params) {
 
     const aPos = initialPositions.get(source) ?? [0, 0, 0];
     const bPos = initialPositions.get(target) ?? [0, 0, 0];
-    const rest = Math.max(0.4, distance(...aPos, ...bPos));
     const isPointer = kind === 'reentry' || kind === 'value';
     const isCycle = isPointer && edgeIsSpring(graph, edgeKey, pointerCycles);
-    const baseFrequency = isCycle ? 1.5 : 4.0;
-    const baseDamping = isCycle ? 0.9 : 0.75;
+    const rest = useUnitEdges
+      ? edgeLength
+      : Math.max(0.4, distance(...aPos, ...bPos));
+    const baseFrequency = useUnitEdges
+      ? unitFrequency
+      : isCycle
+        ? 1.5
+        : 4.0;
+    const baseDamping = useUnitEdges
+      ? unitDamping
+      : isCycle
+        ? 0.9
+        : 0.75;
 
     const constraintSettings = new Jolt.DistanceConstraintSettings();
     constraintSettings.mSpace = Jolt.EConstraintSpace_WorldSpace;
@@ -334,7 +525,15 @@ export async function createPhysicsEngine(params) {
     constraintSettings.mPoint1 = point1;
     constraintSettings.mPoint2 = point2;
 
-    if (isPointer) {
+    if (useUnitEdges) {
+      constraintSettings.mMinDistance = rest;
+      constraintSettings.mMaxDistance = rest;
+
+      const spring = constraintSettings.mLimitsSpringSettings;
+      spring.mMode = Jolt.ESpringMode_FrequencyAndDamping;
+      spring.mFrequency = baseFrequency;
+      spring.mDamping = baseDamping;
+    } else if (isPointer) {
       constraintSettings.mMinDistance = rest * 0.8;
       constraintSettings.mMaxDistance = rest * 1.2;
 
@@ -390,7 +589,9 @@ export async function createPhysicsEngine(params) {
 
     const aPos = initialPositions.get(leftId) ?? [0, 0, 0];
     const bPos = initialPositions.get(rightId) ?? [0, 0, 0];
-    const rest = Math.max(0.4, distance(...aPos, ...bPos));
+    const rest = useUnitEdges
+      ? edgeLength
+      : Math.max(0.4, distance(...aPos, ...bPos));
 
     const constraintSettings = new Jolt.DistanceConstraintSettings();
     constraintSettings.mSpace = Jolt.EConstraintSpace_WorldSpace;
@@ -398,13 +599,18 @@ export async function createPhysicsEngine(params) {
     const point2 = new Jolt.RVec3(...bPos);
     constraintSettings.mPoint1 = point1;
     constraintSettings.mPoint2 = point2;
-    constraintSettings.mMinDistance = Math.max(0, rest * (1 - siblingRange));
-    constraintSettings.mMaxDistance = rest * (1 + siblingRange);
+    if (useUnitEdges) {
+      constraintSettings.mMinDistance = rest;
+      constraintSettings.mMaxDistance = rest;
+    } else {
+      constraintSettings.mMinDistance = Math.max(0, rest * (1 - siblingRange));
+      constraintSettings.mMaxDistance = rest * (1 + siblingRange);
+    }
 
     const spring = constraintSettings.mLimitsSpringSettings;
     spring.mMode = Jolt.ESpringMode_FrequencyAndDamping;
-    spring.mFrequency = siblingFrequency;
-    spring.mDamping = siblingDamping;
+    spring.mFrequency = useUnitEdges ? unitFrequency : siblingFrequency;
+    spring.mDamping = useUnitEdges ? unitDamping : siblingDamping;
 
     const baseConstraint = constraintSettings.Create(bodyA, bodyB);
     const distanceConstraint = castDistanceConstraint(Jolt, baseConstraint);
@@ -422,37 +628,39 @@ export async function createPhysicsEngine(params) {
   const anchorMinFrequency = 0.4;
   const anchorDamping = 0.95;
 
-  nodeIds.forEach(nodeId => {
-    if (nodeId === rootId) return;
-    const body = bodies.get(nodeId);
-    const anchor = anchorBodies.get(nodeId);
-    if (!body || !anchor) return;
+  if (!useUnitEdges) {
+    nodeIds.forEach(nodeId => {
+      if (nodeId === rootId) return;
+      const body = bodies.get(nodeId);
+      const anchor = anchorBodies.get(nodeId);
+      if (!body || !anchor) return;
 
-    const position = initialPositions.get(nodeId) ?? [0, 0, 0];
-    const constraintSettings = new Jolt.DistanceConstraintSettings();
-    constraintSettings.mSpace = Jolt.EConstraintSpace_WorldSpace;
-    const point1 = new Jolt.RVec3(...position);
-    const point2 = new Jolt.RVec3(...position);
-    constraintSettings.mPoint1 = point1;
-    constraintSettings.mPoint2 = point2;
-    constraintSettings.mMinDistance = 0;
-    constraintSettings.mMaxDistance = anchorLoose;
+      const position = initialPositions.get(nodeId) ?? [0, 0, 0];
+      const constraintSettings = new Jolt.DistanceConstraintSettings();
+      constraintSettings.mSpace = Jolt.EConstraintSpace_WorldSpace;
+      const point1 = new Jolt.RVec3(...position);
+      const point2 = new Jolt.RVec3(...position);
+      constraintSettings.mPoint1 = point1;
+      constraintSettings.mPoint2 = point2;
+      constraintSettings.mMinDistance = 0;
+      constraintSettings.mMaxDistance = anchorLoose;
 
-    const spring = constraintSettings.mLimitsSpringSettings;
-    spring.mMode = Jolt.ESpringMode_FrequencyAndDamping;
-    spring.mFrequency = anchorBaseFrequency;
-    spring.mDamping = anchorDamping;
+      const spring = constraintSettings.mLimitsSpringSettings;
+      spring.mMode = Jolt.ESpringMode_FrequencyAndDamping;
+      spring.mFrequency = anchorBaseFrequency;
+      spring.mDamping = anchorDamping;
 
-    const baseConstraint = constraintSettings.Create(body, anchor);
-    const distanceConstraint = castDistanceConstraint(Jolt, baseConstraint);
-    distanceConstraint.AddRef();
-    physicsSystem.AddConstraint(distanceConstraint);
-    constraints.push(distanceConstraint);
-    anchorConstraints.push({ constraint: distanceConstraint });
-    Jolt.destroy(constraintSettings);
-    Jolt.destroy(point1);
-    Jolt.destroy(point2);
-  });
+      const baseConstraint = constraintSettings.Create(body, anchor);
+      const distanceConstraint = castDistanceConstraint(Jolt, baseConstraint);
+      distanceConstraint.AddRef();
+      physicsSystem.AddConstraint(distanceConstraint);
+      constraints.push(distanceConstraint);
+      anchorConstraints.push({ constraint: distanceConstraint });
+      Jolt.destroy(constraintSettings);
+      Jolt.destroy(point1);
+      Jolt.destroy(point2);
+    });
+  }
 
   /**
    * @returns {void}
@@ -477,10 +685,43 @@ export async function createPhysicsEngine(params) {
   let snappedAtRest = false;
 
   /**
+   * @returns {void}
+   */
+  function applyLatticeForces() {
+    if (!useLattice || !latticeForce) return;
+
+    nodeIds.forEach(nodeId => {
+      if (nodeId === rootId) return;
+      const body = bodies.get(nodeId);
+      if (!body) return;
+
+      const mass = masses.get(nodeId) ?? 1;
+      const position = body.GetPosition();
+      const x = position.GetX();
+      const y = position.GetY();
+      const z = position.GetZ();
+      const velocity = body.GetLinearVelocity();
+      const vx = velocity.GetX();
+      const vy = velocity.GetY();
+      const vz = velocity.GetZ();
+
+      const targetX = snapToGrid(x, latticeSpacing);
+      const targetY = snapToGrid(y, latticeSpacing);
+      const ax = latticeGridK * (targetX - x) - latticeGridDamping * vx;
+      const ay = latticeGridK * (targetY - y) - latticeGridDamping * vy;
+      const az = latticePlaneK * -z - latticePlaneDamping * vz;
+
+      latticeForce.Set(mass * ax, mass * ay, mass * az);
+      body.AddForce(latticeForce);
+    });
+  }
+
+  /**
    * @param {number} fold
    * @returns {void}
    */
   function applyPointerFold(fold) {
+    if (useUnitEdges) return;
     const clamped = clamp(fold, 0, 1);
     const collapsedBase = nodeRadius * 2.2;
     const range = lerp(0.2, 0.05, clamped);
@@ -587,7 +828,8 @@ export async function createPhysicsEngine(params) {
       applyPointerFold(pointerFoldCurrent);
     }
 
-    const subSteps = 4;
+    const subSteps = useUnitEdges ? 12 : 4;
+    applyLatticeForces();
     joltInterface.Step(dt, subSteps);
     maybeSnapAtRest();
     syncPositions();
@@ -615,6 +857,7 @@ export async function createPhysicsEngine(params) {
     });
 
     sphereShape.Release();
+    if (latticeForce) Jolt.destroy(latticeForce);
     Jolt.destroy(zeroVelocity);
     Jolt.destroy(identityRotation);
   }
