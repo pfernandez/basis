@@ -78,7 +78,7 @@ function colorForKind(kind) {
 function scaleForKind(kind) {
   switch (kind) {
     case 'pair':
-      return 0.85;
+      return 0.35;
     case 'symbol':
       return 1.1;
     case 'binder':
@@ -406,6 +406,88 @@ function curlParamsFromPositions(positions) {
 }
 
 /**
+ * Compute per-node curl weights so only the local binder/slot neighborhood
+ * participates fully in the sheet curl.
+ *
+ * The neighborhood is defined over undirected `child` connectivity, seeded by:
+ * - all `binder` + `slot` nodes, and
+ * - any parent `pair` node that directly contains a binder/slot.
+ *
+ * @param {Segment[]} childSegments
+ * @param {string[]} kindByIndex
+ * @param {number} nodeCount
+ * @returns {Float32Array}
+ */
+function curlWeightsFromGraph(childSegments, kindByIndex, nodeCount) {
+  const maxDepth = 5;
+  const anchors = new Set();
+
+  for (let index = 0; index < nodeCount; index += 1) {
+    const kind = kindByIndex[index] ?? '';
+    if (kind === 'binder' || kind === 'slot') anchors.add(index);
+  }
+
+  childSegments.forEach(seg => {
+    const childKind = kindByIndex[seg.toIndex] ?? '';
+    if (childKind !== 'binder' && childKind !== 'slot') return;
+    anchors.add(seg.fromIndex);
+  });
+
+  const weights = new Float32Array(nodeCount);
+  if (!anchors.size) {
+    weights.fill(1);
+    return weights;
+  }
+
+  /** @type {number[][]} */
+  const adjacency = new Array(nodeCount);
+  for (let index = 0; index < nodeCount; index += 1) adjacency[index] = [];
+
+  childSegments.forEach(seg => {
+    adjacency[seg.fromIndex]?.push(seg.toIndex);
+    adjacency[seg.toIndex]?.push(seg.fromIndex);
+  });
+
+  const distances = new Int16Array(nodeCount);
+  distances.fill(-1);
+
+  /** @type {number[]} */
+  const queue = [];
+  anchors.forEach(nodeIndex => {
+    distances[nodeIndex] = 0;
+    queue.push(nodeIndex);
+  });
+
+  let cursor = 0;
+  while (cursor < queue.length) {
+    const nodeIndex = queue[cursor];
+    cursor += 1;
+    const depth = distances[nodeIndex] ?? 0;
+    if (depth >= maxDepth) continue;
+
+    adjacency[nodeIndex]?.forEach(neighbor => {
+      if (neighbor < 0 || neighbor >= nodeCount) return;
+      if (distances[neighbor] >= 0) return;
+      distances[neighbor] = depth + 1;
+      queue.push(neighbor);
+    });
+  }
+
+  for (let index = 0; index < nodeCount; index += 1) {
+    const depth = distances[index];
+    if (depth < 0) {
+      weights[index] = 0;
+      continue;
+    }
+    const t = 1 - depth / Math.max(1, maxDepth);
+    const eased = clamp(t, 0, 1);
+    weights[index] = eased * eased;
+  }
+
+  return weights;
+}
+
+/**
  * Group node indices by undirected connectivity over pointer edges.
  *
  * @param {Segment[]} segments
@@ -670,6 +752,9 @@ export function createScene(params) {
   /** @type {Float32Array} */
   let curledPositions = new Float32Array(0);
 
+  /** @type {Float32Array} */
+  let curlWeightByIndex = new Float32Array(0);
+
   /** @type {CurlParams | null} */
   let curlParams = null;
 
@@ -754,6 +839,7 @@ export function createScene(params) {
     pairInstanceByIndex = new Int32Array(0);
     otherInstanceByIndex = new Int32Array(0);
     curledPositions = new Float32Array(0);
+    curlWeightByIndex = new Float32Array(0);
     curlParams = null;
     pointerComponents = [];
   }
@@ -782,6 +868,7 @@ export function createScene(params) {
 
     nodeCount = next.nodeIds.length;
     curledPositions = new Float32Array(nodeCount * 3);
+    curlWeightByIndex = new Float32Array(nodeCount);
     curlParams = null;
     pointerComponents = [];
     pairInstanceByIndex = new Int32Array(nodeCount);
@@ -883,6 +970,11 @@ export function createScene(params) {
     const childSegments = next.segments.filter(seg => seg.kind === 'child');
     const pointerSegments = next.segments.filter(seg =>
       seg.kind === 'reentry' || seg.kind === 'value'
+    );
+    curlWeightByIndex = curlWeightsFromGraph(
+      childSegments,
+      kindByIndex,
+      nodeCount,
     );
 
     childLines = createLineSegments(childSegments, 0x000000);
@@ -1096,9 +1188,11 @@ export function createScene(params) {
 
       const targetX = rolledX + sin * z;
       const targetZ = rolledZ + cos * z;
-      const curledX = lerp(x, targetX, fold);
+      const weight = curlWeightByIndex[index] ?? 1;
+      const localFold = fold * clamp(weight, 0, 1);
+      const curledX = lerp(x, targetX, localFold);
       const curledY = y;
-      const curledZ = lerp(baseZ, targetZ, fold);
+      const curledZ = lerp(baseZ, targetZ, localFold);
 
       curledPositions[base] = curledX;
       curledPositions[base + 1] = curledY;

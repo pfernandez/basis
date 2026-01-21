@@ -461,7 +461,10 @@ export function createSession(config) {
 export function createHelloWorldSession(programSource, options = {}) {
   return createSession({
     programSource,
-    sourceExpr: 'I',
+    // sourceExpr: 'I',
+    // sourceExpr: '(I a)',
+    // sourceExpr: '((K a) b)',
+    sourceExpr: '(((S a) b) c)',
     precompile: true,
     cloneArguments: false,
     compactGraph: options.compactGraph ?? 'none',
