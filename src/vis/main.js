@@ -268,7 +268,7 @@ async function start() {
   /** @type {GridMode} */
   let gridMode = 'xy';
   /** @type {'perspective' | 'orthographic'} */
-  let cameraMode = 'perspective';
+  let cameraMode = 'orthographic';
 
   const pointerStyle = backend === 'jolt' ? 'lines' : 'arcs';
 
@@ -851,10 +851,36 @@ async function start() {
     }
     layoutTransition = null;
 
+    /**
+     * Create a simulation engine for the requested state.
+     *
+     * @param {import('./domain/session.js').VisState} nextState
+     * @returns {Promise<import('./types.js').SimulationEngine>}
+     */
+    async function createEngineForState(nextState) {
+      if (backend === 'jolt') {
+        return await import('./simulation/engine.js')
+          .then(module => module.createPhysicsEngine({
+            graph: nextState.graph,
+            rootId: nextState.rootId,
+            edgeLengthMode,
+          }));
+      }
+
+      return await import('./simulation/static-engine.js')
+        .then(module => module.createStaticEngine({
+          graph: nextState.graph,
+          rootId: nextState.rootId,
+        }));
+    }
+
     const action = frame.action;
     if (
       transitionStyle === 'path' &&
-      backend === 'sheet' &&
+      (
+        backend === 'sheet' ||
+        (backend === 'jolt' && edgeLengthMode === 'lattice')
+      ) &&
       previousEngine &&
       displayedFrame &&
       displayedPositions &&
@@ -869,11 +895,7 @@ async function start() {
       const previousGraph = displayedFrame.state.graph;
       const event = action.event;
 
-      const nextEngine = await import('./simulation/static-engine.js')
-        .then(module => module.createStaticEngine({
-          graph: state.graph,
-          rootId: state.rootId,
-        }));
+      const nextEngine = await createEngineForState(state);
 
       const rootIndex = nextEngine.nodeIndexById.get(state.rootId) ?? 0;
       const rootBase = rootIndex * 3;
@@ -1067,18 +1089,7 @@ async function start() {
     engine = null;
     if (previousEngine) previousEngine.dispose();
 
-	    const nextEngine = backend === 'jolt'
-	      ? await import('./simulation/engine.js')
-	        .then(module => module.createPhysicsEngine({
-	          graph: state.graph,
-	          rootId: state.rootId,
-	          edgeLengthMode,
-	        }))
-	      : await import('./simulation/static-engine.js')
-	        .then(module => module.createStaticEngine({
-	          graph: state.graph,
-	          rootId: state.rootId,
-        }));
+    const nextEngine = await createEngineForState(state);
     engine = nextEngine;
 
     const rootIndex = nextEngine.nodeIndexById.get(state.rootId) ?? 0;
@@ -1090,7 +1101,7 @@ async function start() {
     ];
 
     const shouldAnimate =
-      backend !== 'jolt' &&
+      (backend !== 'jolt' || edgeLengthMode === 'lattice') &&
       Boolean(displayedById) &&
       nextEngine.positions.length > 0;
 
