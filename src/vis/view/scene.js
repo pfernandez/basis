@@ -1553,7 +1553,7 @@ export function createScene(params) {
 
     controls.target.copy(bounds.center);
 
-    if (camera.isOrthographicCamera) {
+    if (cameraMode === 'orthographic') {
       const halfHeight = radius * Math.max(1, 1 / currentAspect);
       orthographicCamera.zoom = 1;
       orthoHeight = halfHeight * 2;

@@ -95,6 +95,39 @@ function stepVectors(edgeSquaredSteps) {
 }
 
 /**
+ * @param {string} parentId
+ * @param {string} childId
+ * @returns {string}
+ */
+function childEdgeKey(parentId, childId) {
+  return `${parentId}\0${childId}`;
+}
+
+/**
+ * Record directed child-edge indices (`index: 0 | 1`) for orientation hints.
+ *
+ * The embedding constraints are undirected, but the underlying application
+ * tree is ordered. Preserving that order makes lattice mode match the
+ * left/right convention of layout mode (right children to the right).
+ *
+ * @param {VisGraph} graph
+ * @returns {Map<string, 0 | 1>}
+ */
+function childEdgeIndices(graph) {
+  /** @type {Map<string, 0 | 1>} */
+  const indices = new Map();
+
+  graph.forEachEdge((_edgeKey, attrs, source, target) => {
+    if (String(attrs?.kind ?? '') !== 'child') return;
+    const index = attrs?.index;
+    if (index !== 0 && index !== 1) return;
+    indices.set(childEdgeKey(source, target), index);
+  });
+
+  return indices;
+}
+
+/**
  * @param {VisGraph} graph
  * @param {Set<string>} edgeKinds
  * @returns {Map<string, Set<string>>}
@@ -210,6 +243,7 @@ function hintDistanceSq(steps, hint) {
  *
  * @param {string[]} nodeIds
  * @param {Map<string, Set<string>>} adjacency
+ * @param {Map<string, 0 | 1>} childIndices
  * @param {string} rootId
  * @param {GridSteps} rootSteps
  * @param {GridSteps[]} vectors
@@ -223,6 +257,7 @@ function hintDistanceSq(steps, hint) {
 function embedComponent(
   nodeIds,
   adjacency,
+  childIndices,
   rootId,
   rootSteps,
   vectors,
@@ -238,6 +273,42 @@ function embedComponent(
   const occupied = new Set();
 
   let calls = 0;
+
+  /**
+   * Penalize candidates that violate left/right child orientation.
+   *
+   * This is a soft preference (not a constraint): the solver can still flip an
+   * edge if necessary to satisfy collisions and cycle constraints.
+   *
+   * @param {string} nodeId
+   * @param {GridSteps} candidate
+   * @returns {number}
+   */
+  function orientationPenalty(nodeId, candidate) {
+    const neighbors = adjacency.get(nodeId);
+    if (!neighbors) return 0;
+
+    let penalty = 0;
+    neighbors.forEach(neighborId => {
+      const neighborSteps = placed.get(neighborId);
+      if (!neighborSteps) return;
+
+      const asChild = childIndices.get(childEdgeKey(neighborId, nodeId));
+      const asParent = childIndices.get(childEdgeKey(nodeId, neighborId));
+      if (asChild === undefined && asParent === undefined) return;
+
+      const childIndex = asChild ?? asParent;
+      if (childIndex !== 0 && childIndex !== 1) return;
+
+      const childExpected = childIndex === 0 ? -1 : 1;
+      const expectedSign =
+        asChild !== undefined ? childExpected : -childExpected;
+      const dx = candidate[0] - neighborSteps[0];
+      if (dx * expectedSign <= 0) penalty += 1;
+    });
+
+    return penalty;
+  }
 
   /**
    * @param {string} nodeId
@@ -281,6 +352,9 @@ function embedComponent(
       const az = absZ(a);
       const bz = absZ(b);
       if (az !== bz) return az - bz;
+      const pa = orientationPenalty(nodeId, a);
+      const pb = orientationPenalty(nodeId, b);
+      if (pa !== pb) return pa - pb;
       const ha = hintDistanceSq(a, hint);
       const hb = hintDistanceSq(b, hint);
       if (ha !== hb) return ha - hb;
@@ -299,48 +373,53 @@ function embedComponent(
 
     if (placed.size === nodeIds.length) return true;
 
-    /** @type {{ id: string, candidates: GridSteps[] } | null} */
-    let chosen = null;
+    /**
+     * Pick the next node to place using a minimum-remaining-values heuristic.
+     *
+     * @returns {{ id: string, candidates: GridSteps[] } | null}
+     */
+    function chooseNextNode() {
+      /** @type {{ id: string, candidates: GridSteps[] } | null} */
+      let chosen = null;
 
-    nodeIds.forEach(nodeId => {
-      if (placed.has(nodeId)) return;
-      const neighbors = adjacency.get(nodeId);
-      if (!neighbors) return;
+      for (let i = 0; i < nodeIds.length; i += 1) {
+        const nodeId = nodeIds[i];
+        if (placed.has(nodeId)) continue;
+        const neighbors = adjacency.get(nodeId);
+        if (!neighbors) continue;
 
-      let hasPlacedNeighbor = false;
-      neighbors.forEach(neighborId => {
-        if (placed.has(neighborId)) hasPlacedNeighbor = true;
-      });
-      if (!hasPlacedNeighbor) return;
+        let hasPlacedNeighbor = false;
+        neighbors.forEach(neighborId => {
+          if (placed.has(neighborId)) hasPlacedNeighbor = true;
+        });
+        if (!hasPlacedNeighbor) continue;
 
-      const candidates = candidatesFor(nodeId);
-      if (!candidates.length) {
-        chosen = { id: nodeId, candidates };
-        return;
-      }
-
-      if (!chosen) {
-        chosen = { id: nodeId, candidates };
-        return;
-      }
-
-      if (candidates.length !== chosen.candidates.length) {
-        if (candidates.length < chosen.candidates.length) {
-          chosen = { id: nodeId, candidates };
+        const candidates = candidatesFor(nodeId);
+        const next = { id: nodeId, candidates };
+        if (!chosen) {
+          chosen = next;
+          continue;
         }
-        return;
+
+        if (candidates.length !== chosen.candidates.length) {
+          if (candidates.length < chosen.candidates.length) chosen = next;
+          continue;
+        }
+
+        const degree = neighbors.size;
+        const chosenDegree = adjacency.get(chosen.id)?.size ?? 0;
+        if (degree !== chosenDegree) {
+          if (degree > chosenDegree) chosen = next;
+          continue;
+        }
+
+        if (nodeId < chosen.id) chosen = next;
       }
 
-      const degree = adjacency.get(nodeId)?.size ?? 0;
-      const chosenDegree = adjacency.get(chosen.id)?.size ?? 0;
-      if (degree !== chosenDegree) {
-        if (degree > chosenDegree) chosen = { id: nodeId, candidates };
-        return;
-      }
+      return chosen;
+    }
 
-      if (nodeId < chosen.id) chosen = { id: nodeId, candidates };
-    });
-
+    const chosen = chooseNextNode();
     if (!chosen) return false;
     if (!chosen.candidates.length) return false;
 
@@ -402,6 +481,7 @@ export function embedGraphToLattice(graph, rootId, options = {}) {
   const vectorKeys2D = vectorKeySet(vectors2D);
 
   const adjacency = constraintAdjacency(graph, edgeKinds);
+  const childIndices = childEdgeIndices(graph);
   const components = connectedComponents(adjacency)
     .map(component => component.slice().sort())
     .sort((a, b) => {
@@ -451,6 +531,7 @@ export function embedGraphToLattice(graph, rootId, options = {}) {
       embedded = embedComponent(
         componentNodes,
         adjacency,
+        childIndices,
         componentRoot,
         rootSteps,
         chosenVectors,

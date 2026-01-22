@@ -93,12 +93,41 @@ function createLatticeEngine(params) {
   const positions = new Float32Array(nodeIds.length * 3);
   const segments = segmentsFromGraph(graph, nodeIndexById);
 
+  /**
+   * Convert layout positions into lattice hints.
+   *
+   * We intentionally project onto the XY plane (`z = 0`) so the solver
+   * minimizes Z unless needed to avoid overlap. To preserve the familiar
+   * left/right convention from `edgeLengthMode: layout`, we bias X hints:
+   * binders to the left, and slots/arguments to the right. This breaks mirror
+   * symmetry while staying planar.
+   *
+   * @param {Map<string, [number, number, number]>} layoutHints
+   * @returns {Map<string, [number, number, number]>}
+   */
+  function latticeHintsFromLayout(layoutHints) {
+    /** @type {Map<string, [number, number, number]>} */
+    const hints = new Map();
+
+    layoutHints.forEach((pos, nodeId) => {
+      const attrs = graph.getNodeAttributes(nodeId);
+      const kind = String(attrs?.kind ?? '');
+      let biasSteps = 0;
+      if (kind === 'binder') biasSteps = -2;
+      else if (kind === 'slot') biasSteps = 2;
+      else if (kind === 'symbol') biasSteps = 1;
+      hints.set(nodeId, [
+        pos[0] / gridSpacing + biasSteps,
+        pos[1] / gridSpacing,
+        0,
+      ]);
+    });
+
+    return hints;
+  }
+
   const layoutHints = layoutGraphPositions(graph, rootId, nodeRadius);
-  /** @type {Map<string, [number, number, number]>} */
-  const hints = new Map();
-  layoutHints.forEach((pos, nodeId) => {
-    hints.set(nodeId, [pos[0] / gridSpacing, pos[1] / gridSpacing, 0]);
-  });
+  const hints = latticeHintsFromLayout(layoutHints);
 
   const embedded = embedGraphToLattice(graph, rootId, {
     edgeSquaredSteps: 2,
